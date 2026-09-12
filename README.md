@@ -38,7 +38,7 @@ IslandForge a donc fusionné ces deux visions :
 Mon avencement :
 
 - [x] Serveur HTTP local fonctionnel dans UEFN (~1 500 ops/s mesurées).
-- [x] Indexation SQLite des 201 843 assets du catalogue UEFN.
+- [x] Indexation d'assets du catalogue UEFN pour eviter les recherches.
 
 Prevu/en cour :
 - Interface web locale de gestion et de monitoring.
