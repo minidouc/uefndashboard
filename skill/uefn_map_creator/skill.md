@@ -24,6 +24,10 @@ Charge les ressources auxiliaires du skill uniquement lorsque l'etape l'exige :
 - En cas d'erreur de distance, de collision ou pour un gros projet : Consulte `./examples/map-cases-and-fixes.md`.
 - Pour tous les calculs 3D et audits : Execute `./scripts/uefn_spatial_cli.py`.
 
+- Avant les Etapes 1, 3 et 4 (Architecture par mode) : Lis `./references/level-design-patterns.md`.
+- Avant les Etapes 5 et 9 (Armes whitelistees et cablage `savedActor`) : Lis `./references/devices-catalog-and-wiring.md`.
+- Avant les Etapes 6 et 10 (Repères visuels et session PIC) : Lis `./references/finitions-and-atmosphere.md`.
+
 ## Adaptation Automatique a la Taille du Projet (Scaling Strategy)
 
 1. **Petits Projets (`<= 8 x 8` tuiles : 1v1, Box Fight, Aim Trainer, Micro-Arena)** :
