@@ -1,119 +1,103 @@
-# Catalogue des Appareils UEFN, Whitelist d'Armes et Protocole de Cablage `@editable`
+# Devices UEFN : pose, proprietes, equipe, cablage
 
-## 1. Protocole Officiel de Cablage `@editable` via `savedActor` (Etape 9)
+Statuts issus des tests du 2026-10-19 (`mcp_tests/RAPPORT_MCP.md`, phase 4, devices `PID_Device_Button`, classe `Device_Button_V2_C`).
+Tout ce qui n'est pas marque **proven** est a verifier dans l'editeur avant usage.
+Dans les arguments, un chemin d'acteur s'ecrit toujours `{"refPath": "<chemin complet>"}`.
 
-### Pourquoi `SetDeviceProperty` echoue sur les references Verse
-L'appel direct `SetDeviceProperty` ou `ObjectTools.set_properties` sur le composant script principal echoue avec l'erreur :
-`BP_Creative_..._C is not valid <device_type> for property '__verse_0x...'`
-ou `the following properties could not be set: <property_name>`.
-Le runtime Verse exige un wrapper de type strict, tandis que le niveau UEFN stocke des instances de Blueprints (`_C`).
+## 1. Trouver le chemin d'un device
 
-### La Methode Infaillible en 3 Etapes (`ObjectTools` -> `__verse_0x*` -> `savedActor`)
-Chaque propriete `@editable` declaree dans un `creative_device` Verse genere automatiquement un **sous-objet interne** sous le composant script de l'acteur Verse, nomme `__verse_0x<HASH_8_HEX>_<NomPropriete>` (ou `__verse_0x<HASH_8_HEX>`). Ce sous-objet expose une propriete bas niveau **`savedActor`** typee `/Script/Engine.Actor` qui accepte directement le chemin complet du Blueprint sans rejet de type.
+- Ne jamais deviner un chemin. Lancer `Device.ListDeviceAssets {"nameFilter": "<mot>"}` (proven) et prendre `assetPath`.
+- Forme attendue : `/Plugin/Dossier/PID_Nom.PID_Nom` (chemin de paquet + `.` + nom d'objet).
+- Plusieurs entrees peuvent correspondre au meme device. Exemple observe : `ListDeviceAssets("Button")` renvoie `/CR_Legacy/Playsets/PID_CP_Devices_CreativeButton.PID_CP_Devices_CreativeButton`, alors que le bouton pose pendant les tests etait `/CreativeCoreDevices/SetupAssets/PID_Device_Button.PID_Device_Button`. Leur equivalence n'est pas prouvee : poser, puis lire la classe (`Object.get_class {"instance"}`).
+- Un `nameFilter` sans resultat renvoie `[]` sans erreur : cela ne prouve pas que le device n'existe pas.
+- Inscrire le chemin retenu dans `02_palette.json` (`uefn_path`, `category: "DEVICE_..."`), puis lancer `measure-palette`.
 
-1. **Etape 9.1 - Inspecter la hierarchie du Device Verse place** :
-   Lister les sous-objets du composant script (ex. `<LevelPrefix>.<VerseDevice_UAID>.<nom_classe_verse>_0`) pour relever la correspondance exacte entre chaque nom de propriete `@editable` et son hash `__verse_0x<HASH>`. Ne jamais deviner le hash.
-2. **Etape 9.2 - Ecrire `savedActor` via `ObjectTools.set_properties`** :
-   Pour chacune des proprietes `@editable`, executer :
-   ```json
-   {
-     "tool": "editor_toolset.toolsets.object.ObjectTools.set_properties",
-     "arguments": {
-       "object_path": "<LevelPrefix>.<VerseDevice_UAID>.<nom_classe_verse>_0.__verse_0x<HASH>",
-       "properties": {
-         "savedActor": "<LevelPrefix>.<TargetDevice_Exact_UAID>"
-       }
-     }
-   }
-   ```
-3. **Etape 9.3 - Relecture et Recompilation de Validation** :
-   Relire chaque sous-objet avec `ObjectTools.get_properties` pour confirmer que `savedActor` est non vide, puis lancer une compilation Verse (*Build Verse Code*) qui doit retourner `0 Error`.
+## 2. Poser un device
 
----
+- `Device.PlaceDevice {"assetPath": {"refPath": "<chemin>"}, "transform": {...}}` (proven) renvoie `{"refPath"}`.
+- **Piege prouve** : le yaw demande est ignore (yaw 0 demande, yaw 90 relu). Toujours enchainer `Actor.set_actor_transform`, puis relire avec `get_actor_transform`. `place-scene` et `measure-palette` le font.
+- `measure-palette` mesure a yaw 0 et rejette la mesure si le yaw relu n'est pas 0 ; `place-scene` force la transform puis la relit. Les devices et les props sont donc dans le meme referentiel.
+- `PlaceDevice` ne pose pas de label : le CLI appelle `set_label`, puis `add_tag`, juste apres. Un timeout entre les deux laisse un device anonyme (voir `mcp-routing.md`, section 6).
+- Taille et pivot : seulement par `measure-palette` (bounds relus a yaw 0). Les tailles des anciennes notes ne sont pas des mesures de cette campagne.
 
-## 2. Whitelist Stricte d'Armes et Objets (`item_granter_device`)
+## 3. Lire et regler les proprietes
 
-**INTERDICTION ABSOLUE** d'utiliser des assets du namespace `/Figment_...` (ex. `WID_Figment_Assault_Auto_Athena_SR`), des armes Mythiques de boss saisonniers ou des chemins `WID_` devines non listes ci-dessous, car ils provoquent un rejet bloquant du validateur UEFN a l'Etape 10.
+**Device natif (Creatif V2, non Verse) : ObjectTools seulement.**
 
-Utiliser uniquement des armes issues de la liste blanche Creative standard ou verifier systematiquement l'asset avec `validate_selected` immediatement a l'Etape 5 :
+| outil | statut | constat |
+|---|---|---|
+| `Object.list_properties {"instance"}` | proven | 331 proprietes sur le Button V2 |
+| `Object.get_properties {"instance", "properties": ["bIsEnabled", "interaction Text"]}` | proven | renvoie une chaine JSON nom -> valeur |
+| `Object.set_properties {"instance", "values": "{\"bIsEnabled\": false}"}` | proven | `values` est une **chaine JSON**, pas un objet |
+| `Device.ListDeviceProperties` / `GetDeviceProperties` / `SetDeviceProperty {"device", "propertyName", "value"}` | unknown | sur un device natif : « is not valid ScriptDevice for property 'Device' ». Reserve aux devices Verse ; jamais teste sur un device Verse |
 
-| Categorie | Role Gameplay | Chemin / Pattern Autorise | Action si Rejete par `validate_selected` |
-| :--- | :--- | :--- | :--- |
-| **Fusil a pompe (Shotgun)** | Arme principale Slot 1 (`Clear Inventory` + `Equip: true`) | `/Figment_Shotgun_Standard_Athena/Gameplay/WID_Figment_Shotgun_Standard_Athena_SR` *(Verifie valide)* ou `WID_Shotgun_Standard_Athena_UC_Ore_T03` | Remplacer immediatement a l'Etape 5 avant de continuer |
-| **Fusil d'assaut (AR)** | Arme secondaire Slot 2 (`Keep All` + `Equip: false`) | `WID_Assault_AutoHigh_Athena_SR_Ore_T03` (Scar Standard) ou `WID_Assault_Auto_Athena_R_Ore_T03` | **Ne jamais utiliser** `WID_Figment_Assault_Auto_Athena_SR` (Interdit) |
-| **Pistolet-mitrailleur (SMG)** | Arme de pression Slot 2/3 | `WID_Pistol_AutoHeavyPDW_Athena_SR_Ore_T03` | Verifier via `validate_selected` |
-| **Soin rapide (Heal)** | Slot 3/4 en Box Fight / Zone Wars | `Athena_Medkit` / `Athena_ShieldSmall` (Mini Potions) / `WID_Athena_Flopper` | Verifier via `validate_selected` |
+Regles :
+- Toujours lancer `list_properties` d'abord : les noms reels contiennent parfois des espaces (`interaction Text`) et ne suivent pas le libelle de l'interface.
+- Toujours relire avec `get_properties` apres `set_properties`, **meme en cas d'erreur** : une erreur peut accompagner une ecriture partielle.
+- Si une propriete est illisible (« the following properties could not be read: <nom> »), ne pas inventer un autre nom : relire la liste.
 
-**Regle de securite Etape 5 :** Des qu'un `item_granter_device` ou `vending_machine_device` recoit un `item_asset`, lancer un controle de validation sur cet acteur. Si le validateur signale une reference illegale, changer d'arme **immediatement a l'Etape 5** (ne jamais cliquer sur "Effectuer la correction automatique" sans reassigner une arme valide, sinon le Granter reste vide et casse `RunSelfTest`).
+## 4. Equipe (CreativeTeamOption)
 
----
+Prouve sur `activatingTeam` du Button V2 :
 
-## 3. Fiches Techniques des Appareils Fondamentaux (`ValkyrieToolset.DeviceToolset`)
+| ecrit | relu |
+|---|---|
+| `{"teamIndex": 3}` | `{"teamType": "Any", "teamIndex": 3}` |
+| `{"teamType": "TeamIndex", "teamIndex": 2}` | `{"teamType": "TeamIndex", "teamIndex": 2}` |
+| `{"teamType": "All"}` | `{"teamType": "All", "teamIndex": <inchange>}` |
+| `{"teamType": "Specific", "teamIndex": 5}` (hors enum) | **erreur**, mais relu `{"teamType": "Any", "teamIndex": 5}` |
 
-### 3.1 `player_spawner_device`
-- **Chemin Asset** : `/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner`
-- **Taille reelle (`get_actor_bounds`)** : `[379.6, 284.7, 323.9]` cm (Decalage centre : `[+61.8, -14.4, +33.9]` cm)
-- **Proprietes critiques** :
-  ```json
-  {
-    "playerTeam": {"teamType": "TeamIndex", "teamIndex": 1},
-    "visibleInGame": false,
-    "enabledDuringPhase": "Always"
-  }
-  ```
-- **Regle Verse** : Lors d'un `fort_character.TeleportTo` vers la position d'un spawner, toujours ajouter **`+100.0 cm` sur l'axe Z** pour eviter que la capsule joueur (192 cm) ne traverse la dalle de sol (`31.9 cm` d'epaisseur).
+- Ecrire `teamType` **et** `teamIndex` ensemble, avec une valeur d'enum deja relue sur un device du meme type.
+- Valeurs vues : `Any`, `TeamIndex`, `All`. Toute autre valeur (ex. `ActivatingTeam`) est a verifier sur le device cible.
+- Le nom du champ d'equipe change selon le device (`activatingTeam` sur le bouton) : le trouver avec `list_properties`.
 
-### 3.2 `item_granter_device`
-- **Chemin Asset** : `/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter`
-- **Taille reelle** : `[256.0, 256.0, 291.7]` cm (Placer en `Zone_Logic`)
-- **Pattern Séquentiel Obligatoire (Multi-Armes)** :
-  - **Granter 1 (Arme principale en main)** : `"onGrantAction": "Clear Inventory"`, `"bEquipGrantedItem": true`, `"grantCondition": "Always"`, `"bGrantOnGameStart": false`.
-  - **Granter 2+ (Armes suivantes et soins)** : `"onGrantAction": "Keep All"`, `"bEquipGrantedItem": false`, `"grantCondition": "Always"`, `"bGrantOnGameStart": false`.
-- **Regle Verse** : Toujours attendre `ItemGrantedEvent` du Granter 1 avant d'appeler `GrantItem` sur le Granter 2 afin d'eviter qu'un `Clear Inventory` tardif n'efface la seconde arme.
+## 5. Cablage evenement -> fonction (proven)
 
-### 3.3 `explosive_device` (Reset de Builds)
-- **Chemin Asset** : `/CreativeCoreDevices/SetupAssets/PID_Device_ExplosiveBarrel`
-- **Taille reelle** : `[71.3, 71.3, 115.5]` cm
-- **Proprietes de Reset Non-Letal** :
-  ```json
-  {
-    "blast Radius": 100,
-    "player Damage": 0,
-    "structure Damage": 1000000,
-    "visible During Game": false,
-    "can be Damaged": false,
-    "damage Indestructible Buildings": false,
-    "play Audio/VFX": false
-  }
-  ```
-- **Regle de Couverture** : Un seul baril a un rayon limite. Sur une arene 8x8 (`4096 x 4096 cm`, diagonale `5793 cm`), 4 barils places uniquement aux coins extremes ne suffisent pas a detruire les constructions au centre. Toujours placer **1 baril central sous/sur la zone de depart (`O`)** en plus des 4 barils de cadrage pour casser la base portante des builds joueurs (la gravite Fortnite detruit alors instantanement tout le reste de la tour).
+1. `Device.GetBindingOptions {"devicePath": {"refPath": "<source>"}}` -> `{"sourceEvents": ["On Interact"], "targetFunctions": ["Enable", "Disable"]}`. Utiliser ces chaines exactes.
+2. `Device.AddEventBinding {"sourceDevicePath", "sourceEvent", "targetDevicePath", "targetFunction"}`. Il est idempotent : un second appel identique ne cree pas de doublon.
+3. `Device.ListEventBindings {"devicePath": <CIBLE>}` : le lien apparait sur le device **cible**, pas sur la source.
+4. `Device.RemoveEventBinding` (memes arguments) renvoie `null` : relire `ListEventBindings` pour confirmer.
 
-### 3.4 `barrier_device`
-- **Role** : Bloquer les joueurs dans leur box ou devant leur rampe de depart pendant l'etat `Countdown` (`3, 2, 1`).
-- **Usage Verse** : Activer avec `Barrier.Enable()` dans `Preparing`, desactiver avec `Barrier.Disable()` exactement au tick `OnCountdownFinished`.
+Cablage par canal : non prouve. Un essai anterieur avec un entier a echoue ; le champ attendrait un `GameplayTagContainer`.
 
-### 3.5 `score_manager_device` & `end_game_device`
-- **Chemins Assets** :
-  - `/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager`
-  - `/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2`
-- **Configuration `Match_End_Game`** :
-  ```json
-  {
-    "whatToEnd": "EndGame",
-    "winningTeam": {"teamType": "ActivatingTeam", "teamIndex": 0},
-    "activatingTeam": {"teamType": "Any", "teamIndex": 0}
-  }
-  ```
+## 6. References @editable d'un device Verse (savedActor) : UNKNOWN
 
-### 3.6 `hud_message_device`
-- **Chemin Asset** : `/CreativeCoreDevices/SetupAssets/PID_Device_HUDMessage`
-- **Configuration Score Persistant** :
-  ```json
-  {
-    "showForDuration": false,
-    "placement": "Top Center",
-    "showOnRoundStart": false,
-    "priority": 1,
-    "layer": 0
-  }
-  ```
+Hypothese non verifiee : chaque `@editable` d'un `creative_device` Verse aurait un sous-objet `__verse_0x<HASH>` portant une propriete `savedActor`.
+Le projet de test ne contenait aucun device Verse : l'hypothese n'a pas pu etre testee.
+
+Si l'utilisateur accepte de la tester (il faut alors ecrire et compiler du Verse) :
+1. `Object.list_properties` sur le composant script du device Verse pose ; relever les vrais noms. Ne jamais deviner un hash.
+2. `Object.set_properties {"instance": {"refPath": "<sous-objet>"}, "values": "{\"savedActor\": \"<refPath cible>\"}"}`.
+3. `Object.get_properties {"instance", "properties": ["savedActor"]}` doit renvoyer la cible.
+4. Essayer aussi `Device.SetDeviceProperty` (unknown) et noter lequel marche.
+5. `Verse.BuildAll` doit finir sans erreur.
+
+Tant que ce n'est pas fait, dire a l'utilisateur que les `@editable` se cablent a la main dans l'editeur.
+
+## 7. Fiches de devices : NON VERIFIEES
+
+Les chemins et noms de proprietes ci-dessous viennent d'anciennes notes. Aucun n'a ete relu pendant la campagne. Ils servent de piste de recherche.
+Avant usage : `ListDeviceAssets`, `measure-palette`, `list_properties`, puis relecture de chaque valeur ecrite.
+
+| device | chemin note | proprietes notees |
+|---|---|---|
+| player_spawner_device | `/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner` | `playerTeam {teamType: "TeamIndex", teamIndex: N}`, `visibleInGame: false`, `enabledDuringPhase: "Always"` |
+| item_granter_device | `/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter` | granter 1 : `onGrantAction: "Clear Inventory"`, `bEquipGrantedItem: true` ; suivants : `"Keep All"`, `false` ; `grantCondition: "Always"`, `bGrantOnGameStart: false` |
+| explosive_device | `/CreativeCoreDevices/SetupAssets/PID_Device_ExplosiveBarrel` | `blast Radius`, `player Damage: 0`, `structure Damage`, `visible During Game: false`, `can be Damaged: false` |
+| score_manager_device | `/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager` | |
+| end_game_device | `/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2` | `whatToEnd: "EndGame"`, `winningTeam` (valeur `ActivatingTeam` hors des valeurs vues) |
+| hud_message_device | `/CreativeCoreDevices/SetupAssets/PID_Device_HUDMessage` | `showForDuration: false`, `placement: "Top Center"`, `showOnRoundStart: false` |
+| barrier_device | a chercher | `Enable()` / `Disable()` depuis Verse |
+
+Regles de jeu reprises des notes (logique Verse, pas des faits d'editeur) :
+- Teleportation vers un spawner : ajouter environ 100 cm en Z pour ne pas traverser le sol.
+- Plusieurs granters : attendre `ItemGrantedEvent` du granter 1 avant d'appeler le granter 2, sinon `Clear Inventory` peut effacer la seconde arme.
+- Reset des constructions par barils : la portee d'un baril est limitee. Poser un baril central en plus de ceux des coins.
+- Barriere : `Enable()` pendant le compte a rebours, `Disable()` a la fin du compte.
+
+## 8. Armes (item_granter) : hors perimetre, rien de prouve
+
+- Ce skill ne traite pas la legalite des assets. Aucune liste blanche d'armes n'a ete validee.
+- Rapporte par l'utilisateur, non reverifie : `WID_Figment_Assault_Auto_Athena_SR` a ete refuse a la publication. Les autres `WID_` des anciennes notes (dont des `WID_Figment_*` notes « valides ») n'ont aucune preuve.
+- Aucun outil `validate_selected` / `validate_folder` n'est prouve via MCP. Proposer a l'utilisateur de lancer la validation dans l'editeur. Ne pas accepter une correction automatique qui viderait le granter.
+- Un `WID_` ne se pose pas dans la scene : il s'assigne au granter (trouver le champ avec `list_properties`, puis relire).

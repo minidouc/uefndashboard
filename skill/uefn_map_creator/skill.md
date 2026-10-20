@@ -1,187 +1,169 @@
 ---
 name: uefn-map-creator
-description: Orchestre la conception, la construction 3D, le code Verse, le cablage et la verification complete d'une carte UEFN (Unreal Editor for Fortnite) a partir d'une simple invite. Utiliser ce skill des que l'utilisateur demande de creer une map Fortnite (1v1, Box Fight, Zone Wars, Red vs Blue, Tycoon, Deathrun, RPG, Battle Royale), d'automatiser le level design via Python Bridge et MCP, ou de corriger les distances et collisions d'une scene.
+description: Concoit, construit en 3D, cable et verifie une carte UEFN (Unreal Editor for Fortnite) a partir d'une simple invite, en pilotant l'editeur par le serveur MCP officiel (http://127.0.0.1:8000/mcp). A utiliser des que l'utilisateur demande de creer une map Fortnite (1v1, Box Fight, Zone Wars, Red vs Blue, Tycoon, Deathrun, RPG), de placer ou mesurer des acteurs et devices dans le niveau courant, d'ecrire et compiler du Verse, ou de corriger des distances et collisions d'une scene.
 ---
 
-# UEFN Autonomous Map Builder (`/uefn-map-builder`)
+# Constructeur de carte UEFN
 
-## Goal
-Transformer une simple invite utilisateur en une carte UEFN complete, jouable, sans erreur de distance ni de collision, avec son code Verse compile et ses appareils cables, en executant une boucle autonome stricte en **10 etapes verrouillees**.
+## Objectif
 
-## Gestion de l'Etat sur Disque et Ressources du Skill
-Ne conserve jamais l'architecture de la carte uniquement dans la memoire de conversation. Cree et mets a jour un dossier `workspace_map/` dans le repertoire de travail avec les 6 fichiers d'etat :
-- `workspace_map/01_gdd.json` (Cahier des charges et simulation)
-- `workspace_map/02_palette.json` (Catalogue des assets et dimensions 3D mesurees)
-- `workspace_map/03_grid.json` (Matrice 2D en tuiles Fortnite par etage)
-- `workspace_map/04_devices.json` (Placement des appareils par ancre de tuile)
-- `workspace_map/05_props.json` (Placement des decors par distance relative)
-- `workspace_map/06_audit_report.json` (Dernier rapport de collision, gravite et circulation)
+Transformer une invite en carte UEFN assemblee dans le niveau courant : structure, devices, decors, code Verse compile, avec un rapport de verification qui distingue ce qui a ete **relu dans l'editeur** de ce qui reste **inconnu**.
 
-Charge les ressources auxiliaires du skill uniquement lorsque l'etape l'exige :
-- Avant les Etapes 3, 5 et 6 : Lis `./references/spatial-system.md`.
-- Avant d'appeler le Bridge ou le MCP : Lis `./references/bridge-vs-mcp-routing.md`.
-- Avant les Etapes 8 et 9 : Lis `./references/verse-qa-standard.md`.
-- En cas d'erreur de distance, de collision ou pour un gros projet : Consulte `./examples/map-cases-and-fixes.md`.
-- Pour tous les calculs 3D et audits : Execute `./scripts/uefn_spatial_cli.py`.
+## Regles non negociables
 
-- Avant les Etapes 1, 3 et 4 (Architecture par mode) : Lis `./references/level-design-patterns.md`.
-- Avant les Etapes 5 et 9 (Armes whitelistees et cablage `savedActor`) : Lis `./references/devices-catalog-and-wiring.md`.
-- Avant les Etapes 6 et 10 (Repères visuels et session PIC) : Lis `./references/finitions-and-atmosphere.md`.
+1. **Un seul appel MCP a la fois**, jamais en parallele, jamais deux agents sur l'editeur.
+2. Le serveur MCP est sur `http://127.0.0.1:8000/mcp`, sans authentification : ne jamais l'exposer hors de la machine.
+3. **Ne jamais sauvegarder** (`Save`, `SaveAll`), jamais publier, jamais lancer une session, jamais modifier un asset du projet sans demande explicite de l'utilisateur.
+4. Ne tenir pour vrai que ce qui a ete relu par un second appel. Une reponse vide (`[]`, `null`, `false`) vaut « inconnu », pas « absent ».
+5. Tout etat est sur disque dans `workspace_map/`, jamais seulement dans la conversation.
+6. Signaler a l'utilisateur, dans le rapport final, ce qui n'a pas ete verifie.
 
-## Adaptation Automatique a la Taille du Projet (Scaling Strategy)
+## Pilotage
 
-1. **Petits Projets (`<= 8 x 8` tuiles : 1v1, Box Fight, Aim Trainer, Micro-Arena)** :
-   - Executer les Etapes 3 a 7 sur l'ensemble de la carte en une seule passe.
-2. **Projets Moyens et Gros (`> 8 x 8` tuiles : Red vs Blue, Zone Wars, Tycoon, RPG, Mini-BR)** :
-   - **Decoupage en Zones (Chunking obligatoire)** : Dans `01_gdd.json`, diviser la carte en zones independantes de `6 x 6` ou `8 x 8` tuiles maximum (ex. `Zone_A_SpawnTeam1`, `Zone_B_CenterArena`, `Zone_C_Shop`).
-   - **Priorite aux Prefabriques** : Pour les batiments complexes, privilegier les Prefabriques Fortnite entiers mesures dans `02_palette.json` plutot que de poser chaque mur individuellement.
-   - Executer et valider les Etapes 3 a 7 **zone par zone** (verrouiller la `Zone_A` avec `0 erreur` avant de commencer la `Zone_B`).
+Tout passe par le CLI `script/uefn_spatial_cli.py` (client MCP `script/mcp_client.py`). Ne pas recoder le protocole.
+Il n'existe **pas** de Bridge Python, pas de `batch.exec`, pas d'`editor.undo`, pas de `validate_folder` : les mentions de ces commandes dans d'anciennes notes sont caduques.
 
-   ## Pipeline d'Execution en 10 Etapes Verrouillees
+```bash
+python script/uefn_spatial_cli.py <commande> --workspace workspace_map [--dry-run]
+```
+Codes retour : `0` PASSED, `1` FAILED, `2` editeur injoignable (rien n'a ete execute), `3` timeout (etat inconnu, relire avant de rejouer).
+Chaque appel est journalise dans `workspace_map/_mcp_calls.jsonl`.
 
-Il est formellement interdit de passer a l'etape `N+1` tant que le **Gatekeeper** de l'etape `N` n'est pas valide avec `0 erreur`.
+## Fichiers d'etat (`workspace_map/`)
 
-### Etape 1 : Simulation Papier et Cahier des Charges
-- **Entree** : Invite initiale de l'utilisateur.
-- **Action** : Simuler une partie complete seconde par seconde (spawn, equipement, action, score, victoire). Rediger la structure des zones, la liste des appareils Creatif requis et l'architecture des fichiers Verse.
-- **Sortie** : `workspace_map/01_gdd.json`.
-- **Gatekeeper** : Relire `01_gdd.json` et verifier que chaque mecanique de jeu possede son appareil Creatif associe et sa fonction Verse.
+- `01_gdd.json` cahier des charges et simulation
+- `02_palette.json` assets, chemins MCP, tailles et pivots **mesures**
+- `03_grid.json` matrice 2D par etage
+- `04_devices.json` devices par tuile et ancre
+- `05_props.json` decors par ancre ou par distance relative
+- `06_audit_report.json` dernier rapport de collision, gravite et circulation
+- `_compiled_structure.json`, `_compiled_scene.json`, `_placed.json` intermediaires calcules
 
-### Etape 2 : Selection et Profilage 3D des Assets
-- **Entree** : `workspace_map/01_gdd.json`.
-- **Action** : Chercher les assets dans UEFN via le Bridge (`assets.search`), puis executer `python ./scripts/uefn_spatial_cli.py measure-palette` pour les instancier temporairement en `(0, 0, 0)`, mesurer leur boite englobante exacte (`get_actor_bounds`) et leur decalage de pivot (`pivot_offset_cm`).
-- **Sortie** : `workspace_map/02_palette.json`.
-- **Gatekeeper** : Verifier que 100% des assets choisis possedent des dimensions `[X, Y, Z]` strictement positives dans `02_palette.json`.
+## Ressources a charger (au besoin seulement)
 
-### Etape 3 : Dessin du Plan 2D en Tuiles
-- **Entree** : `01_gdd.json`, `02_palette.json` et `./references/spatial-system.md`.
-- **Action** : Dessiner la topologie etage par etage sous forme de matrice 2D ou `1 case = 1 tuile (512 x 512 x 384 cm)` avec la legende (`#` Mur, `.` Sol, `P` Porte, `S1`/`S2` Spawns, `O` Objectif, `T` Tremie d'escalier).
-- **Sortie** : `workspace_map/03_grid.json`.
-- **Gatekeeper** : Executer `python ./scripts/uefn_spatial_cli.py validate-grid workspace_map/03_grid.json` (controle de fermeture des murs, symetrie, tremies d'escaliers et chemin 2D entre `S` et `O`). Doit retourner `0 erreur`.
+- Avant tout appel editeur : `references/mcp-routing.md` (outils prouves, signatures, pieges, protocole timeout).
+- Etapes 1, 3, 4 : `references/level-design-patterns.md`.
+- Etapes 3 a 7 : `references/spatial-system.md` (grille, ancres, formules, schemas).
+- Etapes 5 et 9 : `references/devices-catalog-and-wiring.md`.
+- Etapes 6 et 10 : `references/finitions-and-atmosphere.md`.
+- Etape 8 : `references/verse-qa-standard.md`.
+- Erreur de distance, de collision, ou gros projet : `exemple/map-cases-and-fixes.md`.
+- Outil absent de la matrice de routage : `mcp_tools/index.md`, puis `grep` dans le sous-dossier de
+  la famille. Ne jamais lire un fichier d'inventaire en entier hors `index.md` et `sommaire.md`.
 
-### Etape 4 : Construction du Squelette 3D
-- **Entree** : `workspace_map/03_grid.json` et `workspace_map/02_palette.json`.
-- **Action** : Executer `python ./scripts/uefn_spatial_cli.py build-structure` pour placer les sols, murs et escaliers en un seul appel `batch.exec` via le Bridge (avec conversion `XYZ <-> LUF` et masquage temporaire du plafond).
-- **Sortie** : Capture orthographique de dessus (`Pitch = -90`) avec grille `A1, B2...` via `python ./scripts/uefn_spatial_cli.py visual-snapshot`.
-- **Gatekeeper** : Inspecter visuellement la capture 2D quadrillee pour confirmer qu'aucun mur, porte ou escalier n'est tourne a l'envers.
+## Adaptation a la taille du projet
 
-### Etape 5 : Placement des Appareils de Gameplay (Devices)
-- **Entree** : `01_gdd.json`, `03_grid.json` et `./references/spatial-system.md`.
-- **Action** : Definir la position de chaque appareil uniquement par indice de tuile `[TileX, TileY, TileZ]` et ancre (`CENTER`, `NORTH_EDGE`, `CORNER_NE`, etc.) avec `"on_floor": true` et un `actor_label` explicite (ex. `Spawner_Team1_01`). Instancier via `ValkyrieToolset.DeviceToolset` ou le Bridge.
-- **Sortie** : `workspace_map/04_devices.json`.
-- **Gatekeeper** : Executer `python ./scripts/uefn_spatial_cli.py audit-scene` et verifier qu'aucun appareil ne flotte ni ne chevauche un mur (`0 erreur`).
+- `<= 8 x 8` tuiles : etapes 3 a 7 en une passe.
+- `> 8 x 8` tuiles : decoupage obligatoire en zones de `6 x 6` ou `8 x 8` max, declarees dans `01_gdd.json` (`zones`, `connects_to`, `status`), validees zone par zone. Prefabriques mesures plutot que mur par mur. Pas de PCG ni de duplication dans le MCP : une grande carte = beaucoup d'acteurs poses par lots de 10.
 
-### Etape 6 : Habillage et Decoration par Distance Relative (Props)
-- **Entree** : `02_palette.json`, `03_grid.json`, `04_devices.json` et `./examples/map-cases-and-fixes.md`.
-- **Action** : Definir les decors et couvertures dans `05_props.json` uniquement par placement relatif (`reference_actor`, `direction`, `gap_cm`, `face_towards`, `snap_to_floor`). Executer `python ./scripts/uefn_spatial_cli.py compile-transforms` pour calculer les positions par boite englobante et les placer en batch.
-- **Sortie** : `workspace_map/05_props.json` et `workspace_map/06_audit_report.json`.
-- **Gatekeeper** : Executer `python ./scripts/uefn_spatial_cli.py audit-scene`. Tant que `06_audit_report.json` contient un `OVERLAP_ERROR` (`> 5 cm`) ou un `GRAVITY_ERROR` (`> 2 cm`), ajuster `gap_cm` ou supprimer l'objet fautif et relancer jusqu'a obtenir `0 erreur`.
+## Pipeline en 10 etapes verrouillees
 
-### Etape 7 : Test du Fil d'Ariane (Jouabilite et Circulation)
-- **Entree** : Scene 3D complete et `workspace_map/06_audit_report.json`.
-- **Action** : Executer `python ./scripts/uefn_spatial_cli.py check-navigation` pour simuler le passage d'une capsule joueur (`rayon = 42 cm`, `hauteur = 192 cm`) depuis chaque `Player Spawner` vers toutes les portes `P` et objectifs `O`.
-- **Sortie** : Mise a jour de `workspace_map/06_audit_report.json`.
-- **Gatekeeper** : Aucun passage libre ne doit etre inferieur a `100 cm` de large (`200 cm` de haut) et aucun saut ne doit depasser `190 cm` de haut (`550 cm` de long). Si bloque, corriger `05_props.json` a l'Etape 6.
+Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est pas vert.
 
-### Etape 8 : Ecriture et Compilation du Code Verse
-- **Entree** : `01_gdd.json`, `04_devices.json` et `./references/verse-qa-standard.md`.
-- **Action** : Rediger les fichiers `.verse` du projet avec les proprietes `@editable` portant le meme nom que les `actor_label` de `04_devices.json`. Integrer la methode `RunSelfTest()` dans `OnBegin()` qui imprime `[ASSERT_OK]` ou `[ASSERT_FAIL]`.
-- **Sortie** : Fichiers `.verse` compiles via `ValkyrieToolset.VerseToolset` (*Build Verse Code*).
-- **Gatekeeper** : Le compilateur Verse doit retourner exactement `0 Error`.
+### Etape 0 : Preflight (hors pipeline, a chaque reprise)
+- `python script/uefn_spatial_cli.py preflight` : ping, niveau courant, pagination remise a 200, etat de session.
+- **Rendre le nom du niveau a l'utilisateur et attendre sa confirmation avant la premiere ecriture.**
+- Gatekeeper : `PASSED`, et niveau reconnu par l'utilisateur.
 
-### Etape 9 : Placement du Device Verse et Cablage `@editable`
-- **Entree** : Device Verse compile et `workspace_map/04_devices.json`.
-- **Action** : Instancier le `creative_device` Verse dans la scene et cabler automatiquement chaque reference `@editable` vers les `actor_label` correspondants via `DeviceToolset` ou l'injection `.t3d` du Bridge (`verse.set_property` avec `is_object_ref=True`).
-- **Sortie** : Appareil Verse cable dans le niveau.
-- **Gatekeeper** : Verifier par inspection que 100% des proprietes `@editable` obligatoires sont assignees (aucune reference a `None`).
+### Etape 1 : Cahier des charges
+- Simuler une partie seconde par seconde (spawn, equipement, action, score, victoire). Lister les devices requis (par `actor_label`), les zones, les fichiers Verse.
+- Sortie : `01_gdd.json`, avec `requested_assets` (cle, `uefn_path`, `category`).
+- Gatekeeper : chaque mecanique a son device et sa fonction Verse.
 
-### Etape 10 : Playtest en Session Fortnite (PIC) et Validation Finale
-- **Entree** : Niveau complet assemble et cable.
-- **Action** : Reafficher le plafond via le Bridge. Lancer la session *Play-in-Client* (ou *Push Verse Changes*) via `ValkyrieToolset.SessionToolset`, lire les logs du client Fortnite, puis executer `validate_folder` via le Bridge Python.
-- **Sortie** : Rapport de validation finale UEFN.
-- **Gatekeeper** : Les logs client doivent contenir `[ASSERT_OK]` sans aucun `[ASSERT_FAIL]`, et `validate_folder` doit confirmer `0 Asset Error`.
+### Etape 2 : Recherche et mesure des assets
+- Chemins : `Asset.find_assets` pour les decors, `Device.ListDeviceAssets` pour les devices. Un chemin invente est une erreur ; un resultat vide ne prouve pas l'absence.
+- `measure-palette --dry-run` puis `measure-palette` : chaque asset est pose a `(0, -20000, 5000)`, ses bounds et son `pivot_offset_cm` sont relus, puis il est supprime. Le refus d'un yaw relu non nul evite les mesures faussees.
+- Sortie : `02_palette.json` avec `measured` rempli.
+- Gatekeeper : 100 % des assets de la palette ont des dimensions strictement positives et `measured`.
 
-## Exemples Concrets (Few-Shot Input / Output)
+### Etape 3 : Plan 2D
+- Matrice par etage, `1 case = 512 x 512 x 384 cm`. Legende : `#` sol + murs de perimetre, `.` sol libre, `W` mur interieur, `P` porte, `S1`/`S2` spawns, `O` objectif, `R_*` rampe, `T` tremie, `V` vide.
+- Attention : `build-structure` ne pose que les sols et les murs du **perimetre**. Les `W` et `P` interieurs se declarent dans `05_props.json`.
+- Sortie : `03_grid.json`.
+- Gatekeeper : `validate-grid workspace_map/03_grid.json` a `0 erreur` (bordure fermee, tremie au-dessus de chaque rampe, symetrie, chemin 2D de `S` a `O`).
 
-### Exemple 1 : Traduction d'une demande en Placement par Ancre et Distance Relative
-**Entree (Extrait du GDD) :**
-> Dans la tuile `[2, 1, 0]`, placer le spawner de l'Equipe 1 colle au mur Nord. Placer une grande caisse militaire au centre de la tuile `[2, 2, 0]`, puis poser une boite de munitions par terre a exactement 35 cm devant cette caisse.
+### Etape 4 : Squelette 3D
+- `build-structure --dry-run` (le CLI annonce le nombre d'operations), puis `build-structure` : lots de 10 spawns poses par `execute_tool_script`, chaque transform relue.
+- `visual-snapshot --output workspace_map/topdown.png` : camera au-dessus de l'arene, puis lecture de l'image.
+- Gatekeeper : `PASSED`, `verified` egal au nombre demande, et capture inspectee.
+- Limite honnete : la capture n'a pas de grille `A1/B2` dessinee (reperer par X = ligne x 512, Y = colonne x 512) ; le cadrage a pitch -90 n'a jamais ete teste en editeur.
 
-**Sortie JSON attendue dans `04_devices.json` et `05_props.json` :**
+### Etape 5 : Devices de gameplay
+- `04_devices.json` : `asset_key` (obligatoire, vers la palette), `actor_label` unique, `tile`, `slot` parmi les 9 ancres, `face_towards`, `on_floor`.
+- Regles de game design dans `references/level-design-patterns.md`, fiches de devices dans `references/devices-catalog-and-wiring.md`.
+- Gatekeeper : chaque device a un chemin issu de `ListDeviceAssets` et une entree mesuree dans la palette.
+
+### Etape 6 : Placement et reglages
+- `compile-transforms` (calcul, refuse un asset non mesure), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform relue.
+- Reglages (`teamIndex`, phases, textes) : `Object.list_properties` puis `set_properties` (`values` en **chaine JSON**), toujours suivis de `get_properties`. Le champ `properties` de `04_devices.json` est une liste de travail, pas une application automatique.
+- Cablage : `GetBindingOptions`, `AddEventBinding`, relecture par `ListEventBindings` sur la **cible**.
+- Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm, gravite <= 2 cm, rien d'absent).
+
+### Etape 7 : Decors et circulation
+- `05_props.json` par `TILE_ANCHOR` ou `RELATIVE_TO_ACTOR` (`reference_actor`, `direction`, `gap_cm`), puis `compile-transforms` et `place-scene` a nouveau.
+- `check-navigation`, puis `visual-snapshot`.
+- Gatekeeper : `navigation_errors` vide. **Dire a l'utilisateur ce que le controle ne couvre pas** : deux props d'une meme tuile uniquement, sans capsule, sans murs, sans hauteur libre, sans sauts. Les seuils 200 cm / 190 cm / 550 cm restent des constantes de conception, pas des mesures.
+
+### Etape 8 : Verse
+- Verifier chaque signature d'API dans les digests (`Verse.ListFiles`, `Verse.Grep`, `Verse.ReadFile`) avant d'ecrire.
+- Ecrire les fichiers avec les `@editable` nommes comme les `actor_label`. `VerseToolset.WriteFile` est dangerous et non teste : proposer le code, ou demander l'accord, puis relire avec `ReadFile`.
+- Compiler : `Session.GetSessionStatus` doit etre `Disconnected`, puis `Verse.BuildAll` et recoupement dans `Logs.GetLogEntries {"category": "VerseBuild", ...}`.
+- Gatekeeper : liste de diagnostics vide **et** ligne de succes recente dans le log.
+
+### Etape 9 : Device Verse et references `@editable`
+- Poser le `creative_device` (device Verse : `bIsVerseDevice` dans `ListDeviceAssets`).
+- Le cablage automatique des references d'acteurs est **unknown** : l'hypothese `savedActor` n'a jamais pu etre testee (aucun device Verse dans le projet de test).
+- Gatekeeper : soit la methode est prouvee sur ce projet avec l'accord de l'utilisateur, soit produire la liste `@editable` -> `actor_label` pour un cablage a la main, et le dire.
+
+### Etape 10 : Playtest
+- Ne rien lancer sans accord explicite : `StartSession`, `PushChanges`, `StopSession` sont dangerous et n'ont jamais ete executes ; `GetClientLogEntries` a toujours echoue hors session ; aucune validation d'assets n'est accessible par MCP.
+- Avec accord : `StartSession` **une fois**, puis `GetSessionStatus` toutes les 10 s jusqu'a un etat stable. Procedura detaillee dans `references/finitions-and-atmosphere.md`.
+- Gatekeeper : un log client reel contenant les lignes de l'auto-test. Sans lui, ecrire « comportement en jeu non verifie ».
+
+## Exemple : d'une phrase a deux JSON
+
+> Dans la tuile `[2, 1, 0]`, placer le spawner de l'Equipe 1 colle au mur Nord. Au centre de la tuile `[2, 2, 0]`, une grande caisse militaire, puis une caisse de munitions a exactement 35 cm devant.
+
 ```json
-{
-  "devices": [
-    {
-      "actor_label": "Spawner_Team1_01",
-      "device_class": "player_spawner_device",
-      "tile": [2, 1, 0],
-      "slot": "NORTH_EDGE",
-      "face_towards": "SOUTH",
-      "on_floor": true
-    }
-  ],
-  "props": [
-    {
-      "actor_label": "Cover_Crate_Main",
-      "asset_key": "prop_military_crate_large",
-      "placement_mode": "TILE_ANCHOR",
-      "tile": [2, 2, 0],
-      "slot": "CENTER",
-      "face_towards": "SOUTH",
-      "snap_to_floor": true
-    },
-    {
-      "actor_label": "Ammo_Box_Front",
-      "asset_key": "prop_ammo_box_small",
-      "placement_mode": "RELATIVE_TO_ACTOR",
-      "reference_actor": "Cover_Crate_Main",
-      "direction": "IN_FRONT_OF",
-      "gap_cm": 35.0,
-      "face_towards": "SOUTH",
-      "snap_to_floor": true
-    }
-  ]
-}
+{"devices": [{"actor_label": "Spawner_Team1_01", "asset_key": "player_spawner",
+  "tile": [2, 1, 0], "slot": "NORTH_EDGE", "face_towards": "SOUTH", "on_floor": true,
+  "properties": {"playerTeam": {"teamType": "TeamIndex", "teamIndex": 1}}}]}
+```
+```json
+{"props": [
+  {"actor_label": "Cover_Crate_Main", "asset_key": "prop_military_crate_large",
+   "placement_mode": "TILE_ANCHOR", "tile": [2, 2, 0], "slot": "CENTER",
+   "face_towards": "SOUTH", "snap_to_floor": true},
+  {"actor_label": "Ammo_Box_Front", "asset_key": "prop_ammo_box_small",
+   "placement_mode": "RELATIVE_TO_ACTOR", "reference_actor": "Cover_Crate_Main",
+   "direction": "IN_FRONT_OF", "gap_cm": 35.0, "face_towards": "SOUTH", "snap_to_floor": true}]}
+```
 
-{
-  "status": "FAILED",
-  "error_count": 2,
-  "errors": [
-    {
-      "type": "OVERLAP_ERROR",
-      "actor_a": "Cover_Crate_Main",
-      "actor_b": "Pillar_Decor_01",
-      "penetration_cm": 28.4,
-      "tile": [2, 2, 0]
-    },
-    {
-      "type": "NAV_BLOCKED",
-      "from": "Spawner_Team1_01",
-      "to": "Arena_Center",
-      "free_width_cm": 68.0,
-      "required_width_cm": 100.0,
-      "blocking_actor": "Pillar_Decor_01"
-    }
-  ]
-}
+Un rapport d'audit en echec a cette forme (champs reels du CLI) :
+```json
+{"status": "FAILED", "error_count": 1,
+ "overlap_errors": [{"type": "OVERLAP_ERROR", "actor_a": "Cover_Crate_Main",
+   "actor_b": "Pillar_Decor_01", "penetration_cm": 28.4, "tile": [2, 2, 0],
+   "suggestion": "Placer Pillar_Decor_01 en RELATIVE_TO_ACTOR avec gap_cm >= 15."}],
+ "gravity_errors": [], "scene_errors": [], "navigation_errors": []}
+```
+Correction : deplacer ou supprimer `Pillar_Decor_01` dans `05_props.json`, puis relancer `compile-transforms`, `place-scene`, `audit-scene --live`, `check-navigation`.
 
-Sortie (Action corrective immediate de l'Agent) :
+## Proprete du poste de travail
 
-Dans workspace_map/05_props.json, deplacer Pillar_Decor_01 sur l'ancre "slot": "CORNER_NW" de la tuile [2, 2, 0] (ou le supprimer s'il est purement decoratif) afin d'eliminer le chevauchement de 28.4 cm et de liberer plus de 100 cm de passage pour le joueur.
+- Tag de la map : `UEFN_MAP_TAG` (defaut `UEFNMAP`). Tous les acteurs poses le portent.
+- `cleanup` supprime **tous** les acteurs de ce tag. Le lancer seulement apres avoir demande a l'utilisateur si le niveau courant ne contient pas deja des acteurs a ce tag.
+- Rien n'est sauvegarde : fermer le niveau sans enregistrer annule la construction. Le dire a l'utilisateur a la fin.
 
-Re-executer python ./scripts/uefn_spatial_cli.py compile-transforms puis audit-scene et check-navigation jusqu'a obtenir "error_count": 0.
+## Checklist avant d'annoncer la carte terminee
 
-Verification Checklist Finale
-Avant d'annoncer a l'utilisateur que la carte est terminee, verifie que chaque point est valide :
-
-[ ] Les 6 fichiers JSON dans workspace_map/ sont crees et a jour.
-
-[ ] Aucune coordonnee brute (X, Y, Z) n'a ete ecrite manuellement par le LLM.
-
-[ ] audit-scene confirme 0 OVERLAP_ERROR et 0 GRAVITY_ERROR.
-
-[ ] check-navigation confirme un couloir libre >= 100 cm depuis chaque spawner.
-
-[ ] Le code Verse compile avec 0 Error et toutes les proprietes @editable sont cablees.
-
-[ ] Les logs de la session Play-in-Client affichent [ASSERT_OK] et validate_folder retourne 0 Asset Error.
+- [ ] `preflight` PASSED et niveau confirme par l'utilisateur.
+- [ ] Les 6 fichiers de `workspace_map/` existent et sont a jour.
+- [ ] 100 % des assets de la palette sont mesures (`measured`, dimensions > 0).
+- [ ] Aucune coordonnee brute inventee : tout vient de `compile-transforms`.
+- [ ] `audit-scene --live` : 0 `OVERLAP_ERROR`, 0 `GRAVITY_ERROR`, 0 `scene_errors`.
+- [ ] `check-navigation` : 0 `CORRIDOR_TOO_NARROW`, avec son perimetre annonce.
+- [ ] Chaque valeur ecrite par `set_properties` a ete relue par `get_properties`.
+- [ ] `BuildAll` sans diagnostic d'erreur, recoupe dans les logs `VerseBuild`.
+- [ ] Cablage verifie par `ListEventBindings` sur la device cible.
+- [ ] Rapport final qui separe ce qui est prouve, ce qui est inconnu, et ce qui n'a pas ete lance (session, sauvegarde, publication).

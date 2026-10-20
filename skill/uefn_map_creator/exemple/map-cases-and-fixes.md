@@ -1,5 +1,9 @@
 # Catalogue des Cas de Figure et Corrections Automatiques UEFN
 
+Chaque device est reference par une `asset_key` vers `02_palette.json` (`device_class` ne sert que de mention lisible).
+Le champ `properties` n'est pas applique par le CLI : il sert de liste a regler avec `Object.set_properties` puis a relire.
+Un asset de la palette doit avoir ete mesure (`measure-palette`) : `compile-transforms` refuse toute entree sans `measured`.
+
 ## Cas 1 : Petite Carte Competitive Symetrique (Box Fight 2v2 / 1v1 Build Fight)
 
 ### Contexte
@@ -33,68 +37,75 @@ Carte de `4 x 6` tuiles sur 1 etage (`Z = 0`). La symetrie doit etre parfaite su
   "devices": [
     {
       "actor_label": "Spawner_Team1_01",
+      "asset_key": "player_spawner",
       "device_class": "player_spawner_device",
       "tile": [1, 1, 0],
       "slot": "NORTH_EDGE",
       "face_towards": "SOUTH",
       "on_floor": true,
-      "properties": {"TeamIndex": 1}
+      "properties": {"playerTeam": {"teamType": "TeamIndex", "teamIndex": 1}}
     },
     {
       "actor_label": "Spawner_Team1_02",
+      "asset_key": "player_spawner",
       "device_class": "player_spawner_device",
       "tile": [1, 2, 0],
       "slot": "NORTH_EDGE",
       "face_towards": "SOUTH",
       "on_floor": true,
-      "properties": {"TeamIndex": 1}
+      "properties": {"playerTeam": {"teamType": "TeamIndex", "teamIndex": 1}}
     },
     {
       "actor_label": "Spawner_Team2_01",
+      "asset_key": "player_spawner",
       "device_class": "player_spawner_device",
       "tile": [4, 1, 0],
       "slot": "SOUTH_EDGE",
       "face_towards": "NORTH",
       "on_floor": true,
-      "properties": {"TeamIndex": 2}
+      "properties": {"playerTeam": {"teamType": "TeamIndex", "teamIndex": 2}}
     },
     {
       "actor_label": "Spawner_Team2_02",
+      "asset_key": "player_spawner",
       "device_class": "player_spawner_device",
       "tile": [4, 2, 0],
       "slot": "SOUTH_EDGE",
       "face_towards": "NORTH",
       "on_floor": true,
-      "properties": {"TeamIndex": 2}
+      "properties": {"playerTeam": {"teamType": "TeamIndex", "teamIndex": 2}}
     },
     {
       "actor_label": "Barrier_Team1",
+      "asset_key": "barrier",
       "device_class": "barrier_device",
       "tile": [1, 1, 0],
       "slot": "SOUTH_EDGE",
       "face_towards": "SOUTH",
-      "on_floor": true,
-      "properties": {"BarrierWidth": 2, "BarrierHeight": 1}
+      "on_floor": true
     },
     {
       "actor_label": "Barrier_Team2",
+      "asset_key": "barrier",
       "device_class": "barrier_device",
       "tile": [4, 1, 0],
       "slot": "NORTH_EDGE",
       "face_towards": "NORTH",
-      "on_floor": true,
-      "properties": {"BarrierWidth": 2, "BarrierHeight": 1}
+      "on_floor": true
     }
   ]
 }
 ```
+- `playerTeam` et `BarrierWidth` / `BarrierHeight` sont des noms notes, non verifies : relancer `Object.list_properties` sur le device pose pour trouver les vrais noms (certains contiennent des espaces).
+- Deux devices partagent la meme tuile `[1, 1, 0]` avec des ancres differentes : verifier `audit-scene` (chevauchement) apres placement.
 
 ---
 
 ## Cas 2 : Carte Moyenne Modulaire avec Prefabriques (Zone Wars / Mini-Ville)
 
 ### Contexte
-Au lieu de poser 200 murs pour creer des maisons, on mesure un Prefabrique Fortnite entier dans `02_palette.json` (qui mesure `1536 x 1024 x 768 cm`, soit exactement `3 x 2 x 2` tuiles) et on le pose sur l'ancre `CORNER_SW` de la tuile de depart.
+Au lieu de poser 200 murs pour creer des maisons, on mesure un Prefabrique Fortnite entier dans `02_palette.json` et on le pose sur l'ancre `CORNER_SW` de la tuile de depart.
+L'encombrement au sol est calcule par `compile-transforms` a partir des **bounds relus**, pas d'une taille supposee : le bloc `measured` est rempli par `measure-palette`, et une emprise multi-tuiles est acceptee tant qu'elle ne chevauche pas une autre prop.
 
 ### Entree dans `workspace_map/02_palette.json`
 ```json
@@ -143,7 +154,8 @@ Au lieu de poser 200 murs pour creer des maisons, on mesure un Prefabrique Fortn
 ## Cas 3 : Gros Projet par Decoupage en Zones (Tycoon / RPG / Donjon)
 
 ### Contexte
-La carte totale fait `18 x 12` tuiles. Comme elle depasse `8 x 8` tuiles, l'agent a l'interdiction de tout generer en une seule fois. Il divise la carte en 3 zones connectees par des portes `P` et valide chaque zone de l'Etape 3 a l'Etape 7 avant de passer a la suivante.
+La carte totale fait `18 x 12` tuiles. Comme elle depasse `8 x 8` tuiles, l'agent a l'interdiction de tout generer en une seule fois. Il divise la carte en 3 zones connectees par des portes `P` et valide chaque zone (grille, structure, placement, audit) avant de passer a la suivante.
+Rappel : il n'existe pas de PCG ni d'outil de duplication dans le MCP teste. Une grande carte = beaucoup d'acteurs poses un par un, par lots de 10 dans `execute_tool_script` ; les listes `find_actors` demandent la pagination a 200 (`preflight`).
 
 ### Structure de Decoupage dans `workspace_map/01_gdd.json`
 ```json
@@ -215,6 +227,8 @@ La carte totale fait `18 x 12` tuiles. Comme elle depasse `8 x 8` tuiles, l'agen
   "snap_to_floor": true
 }
 ```
+Attention : une entree de `05_props.json` est posee par `Scene.add_to_scene_from_asset`. Un device creatif doit rester dans `04_devices.json` (pose par `Device.PlaceDevice`), sinon il perd son comportement. Le deplacement d'un device se fait donc en repositionnant l'entree de `04_devices.json`, puis `compile-transforms` et `place-scene`.
+Un acteur deja place est saute par `place-scene` (il est dans `_placed.json`) : pour le deplacer, soit corriger la transform avec `Actor.set_actor_transform`, soit le supprimer (`Scene.remove_from_scene`) et retirer sa ligne de `_placed.json` avant de relancer.
 
 ---
 
@@ -233,12 +247,14 @@ La carte totale fait `18 x 12` tuiles. Comme elle depasse `8 x 8` tuiles, l'agen
       "distance_to_floor_cm": 58.5,
       "state": "FLOATING",
       "tile": [3, 3, 0],
-      "suggestion": "Enable snap_to_floor: true and apply pivot_offset_cm Z correction from 02_palette.json"
+      "floor_reference": "bounds du sol",
+      "suggestion": "Remesurer pivot_offset_cm (measure-palette --force) ou corriger snap_to_floor."
     }
   ],
   "navigation_errors": []
 }
 ```
+Un ecart constant sur tous les objets d'un meme asset designe un mauvais `pivot_offset_cm`, pas une erreur de grille : relancer `measure-palette --force` puis `compile-transforms`.
 
 ### Correction Appliquee par l'Agent dans `05_props.json`
 ```json
@@ -286,5 +302,10 @@ La carte totale fait `18 x 12` tuiles. Comme elle depasse `8 x 8` tuiles, l'agen
 ```
 
 ### Corrections Appliquees par l'Agent
-1. **Dans `05_props.json`** : Supprimer `Generator_Prop_02` et deplacer `Generator_Prop_01` sur l'ancre `"slot": "WEST_EDGE"` pour degager `390 cm` de passage au centre de la tuile `[2, 1, 0]`.
+1. **Dans `05_props.json`** : Supprimer `Generator_Prop_02` et deplacer `Generator_Prop_01` sur l'ancre `"slot": "WEST_EDGE"` pour degager le passage au centre de la tuile `[2, 1, 0]`.
 2. **Dans `03_grid.json`** : Remplacer la cellule `[3, 2]` de l'etage `z_index: 1` par `"T"` (`OPEN_STAIRWELL`) pour supprimer la dalle de plafond qui bloquait la sortie de l'escalier.
+
+### Ou trouves tu ces erreurs
+- `CORRIDOR_TOO_NARROW` vient de `check-navigation`, dans `navigation_errors`. Le rapport ne nomme pas les extremites du trajet (`from` / `to` n'existent pas) : il donne `tile`, `free_width_cm`, `required_width_cm` et les deux `blocking_actors`.
+- `HEADROOM_BLOCKED_ON_STAIRS` vient de `validate-grid` (sortie propre, code retour 1), pas du rapport d'audit.
+- apres un deplacement, relancer la chaine complete : `compile-transforms`, `place-scene` (ou repositionnement a la main), `audit-scene --live`, `check-navigation`.

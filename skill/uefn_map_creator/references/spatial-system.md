@@ -15,7 +15,9 @@
 
 ## 2. Repere Cartesien XYZ vs Scene Graph LUF
 
-- **API Python `unreal.*` (XYZ)** :
+Les transforms MCP sont en XYZ, sous forme d'objet : `{"location": {"x", "y", "z"}, "rotation": {"pitch", "yaw", "roll"}, "scale": {"x", "y", "z"}}`.
+
+- **XYZ (MCP, transforms d'acteurs)** :
   - `+X` = Nord (`NORTH` / `FORWARD`)
   - `-X` = Sud (`SOUTH` / `BACKWARD`)
   - `+Y` = Est (`EAST` / `RIGHT`)
@@ -28,19 +30,29 @@
   - Axe 3 = `Forward` (`+X` en XYZ)
 - **Regle stricte** : Dans les fichiers JSON (`03_grid.json`, `04_devices.json`, `05_props.json`), utiliser uniquement les directions cardinales (`NORTH`, `SOUTH`, `EAST`, `WEST`) et les relations (`IN_FRONT_OF`, `BEHIND`, `LEFT_OF`, `RIGHT_OF`, `ON_TOP_OF`). Le script `uefn_spatial_cli.py` effectue la conversion mathematique.
 
+## 2 bis. Mesure, pivot et rotation (obligatoire)
+
+- `pivot_offset_cm` = centre des bounds moins la position de l'acteur, **mesure a yaw 0** (`Actor.get_actor_bounds` apres `Actor.get_actor_transform`). Pour un Cube moteur, le pivot est le centre des bounds (decalage nul) ; pour un autre asset, ne rien supposer.
+- Aucun outil ne donne le pivot d'un asset : il faut le poser, lire, supprimer. C'est le role de `measure-palette`, qui ecrit aussi `measured: true`. `compile-transforms` refuse un asset non mesure.
+- Une pose est toujours `position = centre_voulu - rotation(pivot_offset_cm, yaw)`. Oublier la rotation du pivot decale l'objet des qu'il tourne.
+- La taille utilisee dans les controles est la boite alignee aux axes apres rotation en yaw : `size_x' = |size_x*cos| + |size_y*sin|`, etc. Un objet tourne occupe plus d'espace en X et Y.
+- `measure-palette` verifie le yaw relu : si `PlaceDevice` a ignore le yaw demande, la mesure est rejetee au lieu d'etre fausse.
+
 ## 3. Les 9 Ancres de Tuile (`slot`)
 
-Pour une tuile d'indice `[tx, ty, tz]` dont l'origine Sud-Ouest est `(Bx = tx * 512.0, By = ty * 512.0, Bz = tz * 384.0)` et un acteur de demi-taille `(hx = size_x / 2.0, hy = size_y / 2.0)` :
+Pour une tuile d'indice `[tx, ty, tz]` dont l'origine Sud-Ouest est `(Bx = tx * 512.0, By = ty * 512.0, Bz = tz * 384.0)` et un acteur de demi-taille `(hx = size_x / 2.0, hy = size_y / 2.0)` (tailles **apres rotation**), le centre vise est :
 
-- `CENTER` : `(Bx + 256.0, By + 256.0, Bz)`
-- `NORTH_EDGE` : `(Bx + 512.0 - hx, By + 256.0, Bz)`
-- `SOUTH_EDGE` : `(Bx + hx, By + 256.0, Bz)`
-- `EAST_EDGE` : `(Bx + 256.0, By + 512.0 - hy, Bz)`
-- `WEST_EDGE` : `(Bx + 256.0, By + hy, Bz)`
-- `CORNER_NE` : `(Bx + 512.0 - hx, By + 512.0 - hy, Bz)`
-- `CORNER_NW` : `(Bx + 512.0 - hx, By + hy, Bz)`
-- `CORNER_SE` : `(Bx + hx, By + 512.0 - hy, Bz)`
-- `CORNER_SW` : `(Bx + hx, By + hy, Bz)`
+- `CENTER` : `(Bx + 256.0, By + 256.0)`
+- `NORTH_EDGE` : `(Bx + 512.0 - hx, By + 256.0)`
+- `SOUTH_EDGE` : `(Bx + hx, By + 256.0)`
+- `EAST_EDGE` : `(Bx + 256.0, By + 512.0 - hy)`
+- `WEST_EDGE` : `(Bx + 256.0, By + hy)`
+- `CORNER_NE` : `(Bx + 512.0 - hx, By + 512.0 - hy)`
+- `CORNER_NW` : `(Bx + 512.0 - hx, By + hy)`
+- `CORNER_SE` : `(Bx + hx, By + 512.0 - hy)`
+- `CORNER_SW` : `(Bx + hx, By + hy)`
+- Z : `Bz + size_z / 2.0` (l'objet repose sur le sol de l'etage).
+- Un objet ancre sur une `EDGE` ou un `CORNER` touche le bord de la tuile : verifier qu'il ne reduit pas un couloir sous `MIN_CORRIDOR_WIDTH` (`check-navigation`).
 
 ## 4. Orientations Autorisees (`face_towards`)
 
@@ -69,8 +81,17 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 ## 6. Regle des Escaliers et Tremies (`OPEN_STAIRWELL`)
 
 - Un escalier ou une rampe place dans la tuile `[tx, ty, tz]` monte de `tz * 384.0` vers `(tz + 1) * 384.0`.
-- La cellule située exactement au-dessus en `[tx, ty, tz + 1]` dans `03_grid.json` doit obligatoirement porter le code `T` (`OPEN_STAIRWELL`).
-- Le générateur de structure ne pose jamais de dalle de sol sur une case `T`, garantissant `384.0 cm` de hauteur libre pour la tete du joueur.
+- La cellule placee exactement au-dessus en `[tx, ty, tz + 1]` dans `03_grid.json` doit obligatoirement porter le code `T` (`OPEN_STAIRWELL`). `validate-grid` verifie ce point (`HEADROOM_BLOCKED_ON_STAIRS`).
+- Le generateur de structure ne pose jamais de dalle de sol sur une case `T`, garantissant 384 cm de hauteur libre.
+- L'escalier lui-meme est un asset a poser comme une prop (`05_props.json`), pas une cellule de grille : `build-structure` ne sait poser que des sols et des murs de perimetre.
+
+## 6 bis. Ce que `build-structure` fait vraiment
+
+- Il pose un sol sur toute cellule sauf `V` et `T`.
+- Il pose des murs **seulement sur le perimetre de la grille**, pour les cellules `#`. Le mur est place a l'exterieur de la tuile, pour laisser l'interieur 512 x 512 libre.
+- Les codes `W` (mur interieur) et `P` (porte) ne sont **pas construits** par le CLI : les decrire dans `05_props.json`, ou les poser a la main.
+- Un `#` a l'interieur declenche l'avertissement `INTERIOR_WALL_NOT_BUILT`.
+- `validate-grid` exige que toute la bordure externe soit `#` ou `V` (`UNCLOSED_BORDER`).
 
 ## 7. Schemas JSON Officiels (`workspace_map/`)
 
@@ -109,6 +130,7 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 ```
 
 ### Schema `02_palette.json`
+`size_cm`, `pivot_offset_cm` et `measured` sont remplis par `measure-palette`. `compile-transforms` refuse une entree sans `measured`.
 ```json
 {
   "assets": {
@@ -116,13 +138,20 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
       "uefn_path": "/Game/Athena/Environments/Blueprints/Floors/BP_Floor.BP_Floor",
       "category": "STRUCTURE_FLOOR",
       "size_cm": [512.0, 512.0, 16.0],
-      "pivot_offset_cm": [0.0, 0.0, 0.0]
+      "pivot_offset_cm": [0.0, 0.0, -8.0],
+      "measured": {"at": "2026-10-20T00:00:00+00:00", "kind": "actor"}
     },
     "wall_basic": {
       "uefn_path": "/Game/Athena/Environments/Blueprints/Walls/BP_Wall.BP_Wall",
       "category": "STRUCTURE_WALL",
       "size_cm": [16.0, 512.0, 384.0],
-      "pivot_offset_cm": [0.0, 256.0, -192.0]
+      "pivot_offset_cm": [0.0, 0.0, 0.0]
+    },
+    "player_spawner": {
+      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner",
+      "category": "DEVICE_SPAWNER",
+      "size_cm": [512.0, 400.0, 324.0],
+      "pivot_offset_cm": [0.0, 0.0, 0.0]
     },
     "prop_crate_military": {
       "uefn_path": "/Game/Athena/Props/Crates/SM_MilitaryCrate.SM_MilitaryCrate",
@@ -133,6 +162,9 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
   }
 }
 ```
+- Les categories `STRUCTURE_FLOOR` et `STRUCTURE_WALL` sont celles que `build-structure` utilise (la premiere de chaque categorie est retenue).
+- Une categorie qui commence par `DEVICE` est posee par `PlaceDevice` et mesuree comme un device.
+- Les valeurs de taille et de pivot ci-dessus sont des exemples : les remplacer par les mesures reelles.
 
 ### Schema `03_grid.json`
  Legende des cellules :
@@ -169,24 +201,29 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 ```
 
 ### Schema `04_devices.json`
+`asset_key` est la cle obligatoire (elle pointe vers `02_palette.json`) ; `device_class` n'est qu'une mention lisible.
+Le champ `properties` n'est **pas applique** par le CLI : il sert de liste a regler ensuite avec `Object.set_properties`.
 ```json
 {
   "devices": [
     {
       "actor_label": "Spawner_Team1_01",
+      "asset_key": "player_spawner",
       "device_class": "player_spawner_device",
       "tile": [1, 1, 0],
       "slot": "NORTH_EDGE",
       "face_towards": "SOUTH",
       "on_floor": true,
       "properties": {
-        "TeamIndex": 1,
-        "EnabledDuringPhase": "Always"
+        "playerTeam": {"teamType": "TeamIndex", "teamIndex": 1},
+        "enabledDuringPhase": "Always"
       }
     }
   ]
 }
 ```
+- Valeurs de `slot` : les 9 ancres de la section 3. Valeurs de `face_towards` : `NORTH`, `EAST`, `SOUTH`, `WEST`, `CENTER`, ou un `actor_label` deja place avant.
+- Les noms de proprietes sont a confirmer par `Object.list_properties` (voir `devices-catalog-and-wiring.md`).
 
 ### Schema `05_props.json`
 ```json
@@ -216,13 +253,21 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 ```
 
 ### Schema `06_audit_report.json`
+`scene_errors` signale les acteurs absents de la scene ou aux bounds illisibles lors d'un `audit-scene --live`.
+Le rapport porte la source (`compiled` ou `live`) et le perimetre reel de `check-navigation`.
 ```json
 {
-  "timestamp": "2026-10-16T01:00:00Z",
+  "timestamp": "2026-10-20T01:00:00+00:00",
+  "source": "live",
   "status": "PASSED",
   "error_count": 0,
   "overlap_errors": [],
   "gravity_errors": [],
-  "navigation_errors": []
+  "scene_errors": [],
+  "navigation_errors": [],
+  "navigation_scope": "paires de props dans une meme tuile ; pas de capsule ni de murs"
 }
 ```
+Portee reelle des controles, a dire a l'utilisateur sans enjoliver :
+- `check-navigation` ne teste que deux props d'une meme tuile face a face. Il ne tient compte ni de la capsule joueur, ni des murs, ni des rampes, ni des passages entre tuiles. Un `PASSED` ne prouve pas que la carte est jouable.
+- `MIN_CORRIDOR_HEIGHT`, `MAX_JUMP_HEIGHT` et `MAX_SPRINT_JUMP_LENGTH` ne sont pas verifies par le CLI : controler la grille a la lecture.

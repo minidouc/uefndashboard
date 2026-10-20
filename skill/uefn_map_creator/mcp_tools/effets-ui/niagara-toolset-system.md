@@ -1,0 +1,71 @@
+# NiagaraToolsets.NiagaraToolset_System
+
+Famille : `effets-ui` | Alias CLI : aucun | Outils : 46 (verifie 27, echec 0, inconnu 19, dont 18 classes DANGEREUX)
+
+Description reprise du dump `describe_toolset`, en anglais ou en francais selon le toolset, recopiee sans reformulation (accents retires). Tri : decroissant du nombre d'arguments requis, puis nom. Statuts : `verifie` = appele puis relu dans l'editeur, `echec` = appele et refuse, `inconnu` = jamais appele (tout outil `DANGEREUX` est inconnu).
+
+- **AddEmitter**(system*,templateEmitter*,emitterName*) — Ajouter un emetteur a un systeme Niagara. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **ApplyStackIssueFix**(system*,issueId*,fixId*) — Appliquer un correctif de probleme de pile de style Fix identifie par IssueId et FixId. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **CreateNiagaraSystem**(assetName*,assetPath*,templateSystem*) — Creer une nouvelle ressource de systeme Niagara. [DANGEREUX | inconnu]
+  - motif : Cree un asset dans le Content Browser
+- **AddModule**(moduleLocationRef*,moduleAsset*) — Ajouter un module a une pile de scripts. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **AddRenderer**(newRendererLocation*,rendererClass*) — Ajouter un moteur de rendu a un emetteur Creer un nouveau rendu du type specifie et l'ajouter a la liste des rendus de l'emetteur. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **AddSetParameterEntry**(moduleRef*,entry*) — Ajoute un parametre unique a un module SetParameters existant. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **AddSetParametersModule**(moduleLocationRef*,parameters*) — Ajoute un module SetParameters a une pile de scripts. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **AddUserVariables**(system*,variablesToAdd*) — Ajouter ou mettre a jour les variables utilisateur sur un systeme. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **RemoveSetParameterEntry**(moduleRef*,parameterName*) — Supprime un parametre d'un module SetParameters existant par nom. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **RemoveUserVariables**(system*,variablesToRemove*) — Supprimer les variables utilisateur d'un systeme. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **SetEmitterData**(emitter*,emitterData*) — Definir les valeurs de propriete sur un emetteur Niagara. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **SetModuleEnabled**(moduleRef*,bEnabled*) — Definir si un module est active. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **SetRendererData**(renderer*,rendererData*) — Definir les valeurs de propriete sur un outil de rendu Niagara. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **SetStackInputData**(stackInputRef*,inputData*) — Definit la valeur d'une entree de module de pile et renvoie la valeur stockee resultante. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **SetSystemData**(system*,systemData*) — Definit les valeurs de propriete sur un systeme Niagara. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **GetAvailableDynamicInputs**(type*) — Renvoyer toutes les ressources de module d'entree dynamique disponibles compatibles avec le type donne. [lecture | verifie]
+- **GetDataInterfaceSchema**(dataInterfaceClass*) — Renvoyer le schema de propriete pour une classe d'interface de donnees specifique. [lecture | verifie]
+- **GetDynamicInputChain**(stackInputRef*) — Renvoyer la chaine recursive complete pour une entree dynamique : les metadonnees de topologie et les valeurs resolues a chaque niveau L'entree de ... [lecture | verifie]
+- **GetDynamicInputSchema**(dynamicInputReference*) — Renvoyer le schema d'un module d'entree dynamique dans la pile. [lecture | verifie | DANGER:editor_crash]
+- **GetDynamicInputSchemaFromAsset**(dynamicInputAsset*) — Renvoyer le schema pour une ressource d'entree dynamique. [lecture | verifie]
+- **GetEmitterData**(emitterRef*) — Renvoyer les valeurs de propriete d'emetteur sous la forme d'un blob de chaine JSON unique dans PropertyValues. [lecture | verifie]
+- **GetEmitterInputValues**(emitterRef*) — Renvoyer toutes les valeurs d'entree resolues pour chaque module sur les quatre piles de scripts d'emetteurs. [lecture | verifie]
+- **GetEmitterSummary**(emitterRef*) — Renvoyer les metadonnees legeres de l'emetteur : nom, etat active, cible de simulation, classes de rendu. [lecture | verifie]
+- **GetEmitterTopology**(emitterRef*) — Renvoyer la topologie complete de l'emetteur : quatre piles de scripts avec tous les modules et les entrees, references au moteur de rendu. [lecture | verifie]
+- **GetModuleInputValues**(moduleRef*) — Renvoyer les valeurs d'entree resolues pour un seul module. [lecture | verifie]
+- **GetModuleSchema**(moduleReference*) — Renvoyer le schema d'un module et de toutes ses entrees. [lecture | verifie]
+- **GetModuleSchemaFromAsset**(moduleAsset*) — Renvoyer le schema d'une ressource de module. [lecture | verifie]
+- **GetModuleTopology**(moduleRef*) — Renvoyer la topologie du module : les metadonnees et toutes les entrees (nom/type/visibilite uniquement, pas de valeurs). [lecture | verifie]
+- **GetRendererData**(rendererRef*) — Renvoyer les valeurs de propriete du moteur de rendu. [lecture | verifie]
+- **GetRendererSchema**(rendererClass*) — Renvoyer le schema de propriete pour une classe d'outil de rendu specifique. [lecture | verifie]
+- **GetScriptStackInputValues**(scriptRef*) — Renvoyer toutes les valeurs d'entree resolues pour chaque module de la pile de scripts donnee. [lecture | verifie]
+- **GetScriptStackTopology**(scriptRef*) — Renvoyer la topologie de la pile de scripts : tous les modules et leurs entrees dans l'ordre d'execution. [lecture | verifie]
+- **GetStackInputData**(stackInputRef*) — Renvoyer la valeur d'entree d'un module de pile. [lecture | verifie]
+- **GetStackInputSchema**(inputReference*) — Renvoyer le schema pour une seule entree de module dans la pile. [lecture | verifie]
+- **GetStackInputTopology**(stackInputRef*) — Renvoyer la topologie d'entree de pile : nom, type, visibilite, adaptabilite. [lecture | verifie]
+- **GetStackIssues**(system*) — Renvoyer tous les problemes de pile (erreurs, avertissements, informations) de la pile du module Niagara, y compris ceux qui ont ete ignores. [lecture | verifie]
+- **GetSystemCompileState**(system*) — Renvoyer l'etat de compilation actuel d'un systeme Niagara : statut agrege, evenements de compilation par script et indicateurs recapitulatifs. [lecture | verifie]
+- **GetSystemData**(system*) — Renvoyer les valeurs de propriete systeme. [lecture | verifie]
+- **GetSystemDependencies**(system*) — Renvoyer les quatre ensembles Used* (rendus, interfaces de donnees, modules, entrees dynamiques) recueillis aupres de tous les emetteurs et scripts ... [lecture | verifie]
+- **GetSystemSummary**(system*) — Renvoyer des metadonnees systeme legeres : nom, variables utilisateur et une entree recapitulative par emetteur. [lecture | verifie]
+- **GetUserVariables**(system*) — Renvoyer toutes les variables utilisateur definies sur le systeme. [lecture | inconnu]
+  - motif : DefaultSystem n'a aucune variable utilisateur : [] coherent avec GetSystemSummary.userVariables, mais aucune valeur non ...
+- **RemoveEmitter**(emitterToRemove*) — Supprime un emetteur d'un systeme. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **RemoveModule**(moduleToRemove*) — Supprime un module d'une pile de scripts. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **RemoveRenderer**(rendererToRemove*) — Supprime un rendu d'un emetteur. [DANGEREUX | inconnu]
+  - motif : Modifie un asset Niagara
+- **GetEmitterSchema**() — Renvoyer le schema de propriete pour l'emetteur Niagara. [lecture | verifie]
+- **GetSystemSchema**() — Renvoyer le schema de propriete pour le systeme Niagara. [lecture | verifie]
