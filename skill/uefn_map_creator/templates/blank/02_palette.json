@@ -1,0 +1,4 @@
+{
+  "_comment": "Rempli par `measure-palette` a partir de 01_gdd.json (requested_assets). Ne pas ecrire de size_cm ni de pivot_offset_cm a la main : ce sont des mesures, pas des hypotheses. `compile-transforms` refuse toute entree sans `measured`.",
+  "assets": {}
+}

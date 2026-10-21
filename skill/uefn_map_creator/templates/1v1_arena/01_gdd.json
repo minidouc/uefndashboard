@@ -1,0 +1,112 @@
+{
+  "_comment": "1v1 Build Fight 8 x 8 d'apres references/level-design-patterns.md section 2. Les `uefn_path` des devices viennent d'anciennes notes NON VERIFIEES (devices-catalog-and-wiring.md section 7) : `path_status` le dit, et l'etape 2 doit les confirmer par Device.ListDeviceAssets / Asset.find_assets avant measure-palette. Les assets de structure sont des Cubes moteur mis a l'echelle pour que la chaine complete soit testable sans galerie ; a remplacer par de vraies dalles une fois mesurees. Le device Verse (game_manager) n'est PAS ici : il n'existe qu'apres compilation a l'etape 8, on l'ajoute a l'etape 9.",
+  "project_name": "1v1 Build Fight",
+  "game_mode": "1v1",
+  "scale_category": "SMALL",
+  "grid_dimensions_tiles": [8, 8, 1],
+  "zones": [
+    {"zone_id": "Zone_Arena", "bounds_tiles": {"min": [0, 0, 0], "max": [7, 7, 0]},
+     "purpose": "Arene de duel, 4096 x 4096 cm, edge_policy fall_zone"},
+    {"zone_id": "Zone_Logic", "bounds_tiles": {"min": [-12, 2, -6], "max": [-11, 5, -6]},
+     "purpose": "Plateforme de service : devices non spatiaux, 61,44 m a l'Ouest et 23,04 m sous l'arene"}
+  ],
+  "gameplay_timeline_sec": [
+    {"time": 0, "event": "Spawn sur Spawner_P1_01 / Spawner_P2_01, Barrier_Center_01 active"},
+    {"time": 1, "event": "Granter_Loadout_01 donne le pickaxe et les materiaux"},
+    {"time": 3, "event": "Round_Timer_01 expire le compte a rebours, Barrier_Center_01 se desactive"},
+    {"time": 4, "event": "Combat : les joueurs construisent depuis les rampes de duel"},
+    {"time": 90, "event": "Fin de manche : Score_Manager_01 incremente, Reset_Explosive_01..05 detruisent les constructions"},
+    {"time": 95, "event": "Nouvelle manche ou End_Game_01 si un joueur atteint 5 points"}
+  ],
+  "required_devices": [
+    {"actor_label": "Spawner_P1_01", "device_class": "player_spawner_device"},
+    {"actor_label": "Spawner_P2_01", "device_class": "player_spawner_device"},
+    {"actor_label": "Barrier_Center_01", "device_class": "barrier_device"},
+    {"actor_label": "Reset_Explosive_01", "device_class": "explosive_device"},
+    {"actor_label": "Reset_Explosive_02", "device_class": "explosive_device"},
+    {"actor_label": "Reset_Explosive_03", "device_class": "explosive_device"},
+    {"actor_label": "Reset_Explosive_04", "device_class": "explosive_device"},
+    {"actor_label": "Reset_Explosive_05", "device_class": "explosive_device"},
+    {"actor_label": "Granter_Loadout_01", "device_class": "item_granter_device"},
+    {"actor_label": "Round_Timer_01", "device_class": "timer_device"},
+    {"actor_label": "Score_Manager_01", "device_class": "score_manager_device"},
+    {"actor_label": "End_Game_01", "device_class": "end_game_device"},
+    {"actor_label": "Hud_Message_01", "device_class": "hud_message_device"}
+  ],
+  "requested_assets": {
+    "structure_floor": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "STRUCTURE_FLOOR",
+      "scale": [5.12, 5.12, 0.32],
+      "path_status": "moteur",
+      "notes": "Dalle 512 x 512 x 32 cm. A remplacer par une dalle de galerie mesuree (ex. PPID_CR_Legacy_Obstacle_Course_Floor_01, dont le pivot est decale de +256 cm en Y)."
+    },
+    "structure_wall": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "STRUCTURE_WALL",
+      "scale": [0.32, 5.12, 3.84],
+      "path_status": "moteur"
+    },
+    "player_spawner": {
+      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner",
+      "category": "DEVICE_SPAWNER",
+      "path_status": "note_a_verifier"
+    },
+    "item_granter": {
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter",
+      "category": "DEVICE_GRANTER",
+      "path_status": "note_a_verifier"
+    },
+    "explosive_barrel": {
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ExplosiveBarrel",
+      "category": "DEVICE_EXPLOSIVE",
+      "path_status": "note_a_verifier"
+    },
+    "score_manager": {
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager",
+      "category": "DEVICE_SCORE",
+      "path_status": "note_a_verifier"
+    },
+    "end_game": {
+      "uefn_path": "/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2",
+      "category": "DEVICE_ENDGAME",
+      "path_status": "note_a_verifier"
+    },
+    "hud_message": {
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_HUDMessage",
+      "category": "DEVICE_HUD",
+      "path_status": "note_a_verifier"
+    },
+    "barrier": {
+      "uefn_path": null,
+      "category": "DEVICE_BARRIER",
+      "path_status": "a_chercher",
+      "notes": "Chercher avec Device.ListDeviceAssets {\"nameFilter\": \"Barrier\"}. measure-palette refusera tant que le chemin est null."
+    },
+    "round_timer": {
+      "uefn_path": null,
+      "category": "DEVICE_TIMER",
+      "path_status": "a_chercher",
+      "notes": "Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
+    },
+    "prop_ramp": {
+      "uefn_path": null,
+      "category": "PROP_RAMP",
+      "path_status": "a_chercher",
+      "notes": "Asset.find_assets {\"name\": \"Ramp\", \"recursive\": true}. Une rampe se pose comme prop, pas comme cellule de grille."
+    },
+    "prop_crate": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "PROP",
+      "scale": [1.2, 1.2, 1.2],
+      "path_status": "moteur",
+      "notes": "Cube de 120 cm en attendant une vraie caisse mesuree."
+    }
+  },
+  "verse_modules": [
+    {"file_name": "game_manager_device.verse", "class_name": "game_manager_device",
+     "responsibilities": ["Derouler la manche (barriere, compte a rebours, reset)",
+                          "Donner le loadout au spawn",
+                          "Suivre le score et terminer la partie"]}
+  ]
+}

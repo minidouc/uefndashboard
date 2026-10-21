@@ -1,0 +1,24 @@
+{
+  "_comment": "Deux props : une ancree sur la tuile, une placee a 120 cm devant la premiere (RELATIVE_TO_ACTOR). 120 cm et non 35 : sous 100 cm d'ecart libre, `check-navigation` signale CORRIDOR_TOO_NARROW. Les murs interieurs (`W`) et les portes (`P`) de la grille se declarent ici, pas dans 03_grid.json : build-structure ne pose que les sols et les murs du perimetre.",
+  "props": [
+    {
+      "actor_label": "Test_Cube_01",
+      "asset_key": "prop_cube",
+      "placement_mode": "TILE_ANCHOR",
+      "tile": [1, 2, 0],
+      "slot": "CENTER",
+      "face_towards": "SOUTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Test_Cube_02",
+      "asset_key": "prop_cube",
+      "placement_mode": "RELATIVE_TO_ACTOR",
+      "reference_actor": "Test_Cube_01",
+      "direction": "IN_FRONT_OF",
+      "gap_cm": 120.0,
+      "face_towards": "SOUTH",
+      "snap_to_floor": true
+    }
+  ]
+}

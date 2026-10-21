@@ -16,7 +16,7 @@ Chaque outil tient sur une ligne :
   (jamais appele, la ligne suivante donne le motif quand il est connu).
 
 Repartition : 182 verifies, 11 en echec, 195 inconnus ; 191 lectures, 59 ecritures, 138 DANGEREUX.
-**Les 138 DANGEREUX sont tous inconnus : ils n'ont jamais ete appeles, et ne doivent pas letre.**
+**Les 138 DANGEREUX sont tous inconnus : ils n'ont jamais ete appeles, et ne doivent pas l'etre.**
 Un statut `inconnu` ne veut pas dire « ne marche pas », mais « on ne sait pas » : ne le presente
 jamais comme une limite du MCP sans l'avoir teste.
 
@@ -64,10 +64,10 @@ Le generateur recopie les donnees et ne decide rien : toute phrase d'interpretat
 Dossier volontairement vide. Il accueilera une fiche par outil qui n'est pas dans les 388 officiels,
 c'est-a-dire :
 
-- un toolset maison expose par l'editeur (a declarer d'abord par `list_toolsets`, sinon il nexiste
+- un toolset maison expose par l'editeur (a declarer d'abord par `list_toolsets`, sinon il n'existe
   pas pour le MCP) ;
 - un raccourci ajoute a `script/uefn_spatial_cli.py` pour une operation repatee.
 
-Une fiche `perso/<nom>.md` doit porter : la signature reelle, ce quelle ecrit dans le niveau, les
-outils officiels quelle appelle, et son propre statut `verifie` / `echec` / `inconnu` avec la preuve
+Une fiche `perso/<nom>.md` doit porter : la signature reelle, ce qu'elle ecrit dans le niveau, les
+outils officiels qu'elle appelle, et son propre statut `verifie` / `echec` / `inconnu` avec la preuve
 de relecture. Ne pas y consigner un outil qui n'a pas ete relance depuis sa derniere modification.

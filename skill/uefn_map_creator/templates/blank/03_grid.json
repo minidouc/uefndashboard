@@ -1,0 +1,19 @@
+{
+  "_comment": "Grille 4 x 4 : bordure fermee, un spawn, un objectif. 1 case = 512 x 512 x 384 cm. `symmetric: false` donc aucun controle de symetrie n'est execute.",
+  "tile_size_cm": [512.0, 512.0, 384.0],
+  "symmetric": false,
+  "symmetry_axis": null,
+  "origin_tile": [2, 2, 0],
+  "edge_policy": "wall",
+  "floors": [
+    {
+      "z_index": 0,
+      "matrix": [
+        ["#", "#", "#", "#"],
+        ["#", "S1", ".", "#"],
+        ["#", ".", "O", "#"],
+        ["#", "#", "#", "#"]
+      ]
+    }
+  ]
+}

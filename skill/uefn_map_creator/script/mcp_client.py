@@ -8,8 +8,11 @@ CLI :
   python mcp_client.py ping
   python mcp_client.py call <Toolset> <tool> ['{"json": "args"}' | @fichier.json] [--max N]
   python mcp_client.py list
+Options : --max N (troncature, 4000 par defaut), --log FICHIER (journal JSONL).
 Toolset : nom complet ou alias court (Scene, Actor, Device, Prog, EditorApp, ...).
 Code retour : 0 ok, 1 erreur outil, 2 editeur injoignable, 3 timeout (etat inconnu).
+Sans --log ni UEFN_MCP_LOG, un appel direct n'est PAS journalise : passer
+`--log <workspace>/_mcp_calls.jsonl` pour garder la trace (le CLI spatial le fait deja).
 """
 
 import json
@@ -219,14 +222,19 @@ class McpClient:
 
 def _main(argv: list[str]) -> int:
   max_len = 4000
+  log_path = os.environ.get("UEFN_MCP_LOG")
   if "--max" in argv:
     i = argv.index("--max")
     max_len = int(argv[i + 1])
     del argv[i:i + 2]
+  if "--log" in argv:
+    i = argv.index("--log")
+    log_path = argv[i + 1]
+    del argv[i:i + 2]
   if not argv:
     print(__doc__)
     return 2
-  cli = McpClient()
+  cli = McpClient(log_path=log_path)
   try:
     if argv[0] == "ping":
       out = cli.ping()

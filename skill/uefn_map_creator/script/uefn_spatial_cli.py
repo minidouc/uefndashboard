@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """CLI spatial du skill uefn-map-creator (v2, MCP officiel UEFN).
 
-Calculs hors ligne : validate-grid, compile-transforms, audit-scene, check-navigation.
+Calculs hors ligne : init, validate-scene, validate-grid, compile-transforms, audit-scene,
+  check-navigation, list-editables, playtest-plan.
 Actions editeur (MCP http://127.0.0.1:8000/mcp, editeur ouvert) :
   preflight, measure-palette, build-structure, place-scene, audit-scene --live,
+  apply-properties, wire-devices, verse-scan, verse-grep, verse-write, verse-build,
   visual-snapshot, cleanup.
 --dry-run : calcule sans toucher l'editeur, statut DRY_RUN (jamais PASSED).
 Editeur injoignable ou timeout : statut FAILED, code retour 2 ou 3.
+Python 3.10 minimum (annotations `X | None`).
 """
 
 import argparse
@@ -16,10 +19,21 @@ import base64
 import json
 import math
 import os
+import re
+import shutil
 import sys
+
+if sys.version_info < (3, 10):
+  sys.stderr.write("uefn_spatial_cli.py exige Python 3.10 ou plus "
+                   f"(interprete actuel : {sys.version.split()[0]}).\n")
+  sys.exit(2)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mcp_client import McpClient, McpError, McpOffline, McpTimeout  # noqa: E402
+import spec_schema  # noqa: E402
+
+SKILL_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEMPLATES_ROOT = os.path.join(SKILL_ROOT, "templates")
 
 TILE_SIZE_XY = 512.0
 TILE_SIZE_Z = 384.0
@@ -33,13 +47,18 @@ MAX_OVERLAP_CM = 5.0
 MAX_GRAVITY_CM = 2.0
 POS_TOLERANCE_CM = 0.5
 YAW_TOLERANCE_DEG = 0.5
+SCALE_TOLERANCE = 0.001
 BATCH_SIZE = 10
 PAGINATION_CVAR = "ModelContextProtocol.PaginationPageSize"
 MAP_TAG = os.environ.get("UEFN_MAP_TAG", "UEFNMAP")
 MEASURE_AT = [0.0, -20000.0, 5000.0]
+VERSE_BUILD_LOG = "VerseBuild"
 
 SPAWN = "editor_toolset.toolsets.scene.SceneTools.add_to_scene_from_asset"
 ADD_TAG = "editor_toolset.toolsets.actor.ActorTools.add_tag"
+
+SPEC_FILES = ["01_gdd.json", "02_palette.json", "03_grid.json", "04_devices.json",
+              "05_props.json"]
 
 
 def load_json(path: str) -> dict:
@@ -65,17 +84,54 @@ def client_for(workspace: str) -> McpClient:
   return McpClient(log_path=os.path.join(workspace, "_mcp_calls.jsonl"))
 
 
+def resolve_workspace(path: str, command: str) -> str | None:
+  """Chemin absolu du workspace, ou None si l'erreur a deja ete affichee.
+
+  `--workspace workspace_map` lance depuis la racine du skill ecrivait l'etat de la carte DANS
+  le skill : fichiers de carte melanges aux references, et commits accidentels. Le workspace
+  doit donc etre hors de l'arborescence du skill (echappatoire : UEFN_ALLOW_WORKSPACE_IN_SKILL).
+  """
+  ws = os.path.abspath(os.path.expanduser(path))
+  try:
+    inside = os.path.commonpath([ws, SKILL_ROOT]) == SKILL_ROOT
+  except ValueError:
+    inside = False  # lecteur different : forcement hors du skill
+  if inside and not os.environ.get("UEFN_ALLOW_WORKSPACE_IN_SKILL"):
+    emit({"status": "FAILED", "command": command, "error_kind": "WORKSPACE_INSIDE_SKILL",
+          "workspace": ws, "skill_root": SKILL_ROOT,
+          "next": "Pointer --workspace hors du skill (ex. ~/uefn-workspaces/<nom_de_carte>) ; "
+                  "`init` cree le dossier et ses 5 fichiers."})
+    return None
+  return ws
+
+
+def list_templates() -> list[str]:
+  if not os.path.isdir(TEMPLATES_ROOT):
+    return []
+  return sorted(d for d in os.listdir(TEMPLATES_ROOT)
+                if os.path.isdir(os.path.join(TEMPLATES_ROOT, d)))
+
+
+# 1 = FAILED (l'appel a ete traite : l'etat peut etre partiel), 2 = OFFLINE (rien execute),
+# 3 = TIMEOUT (etat inconnu). Confondre 1 et 2 fait relancer a l'aveugle et cree des doublons.
+EXIT_CODES = {"TOOL_ERROR": 1, "OFFLINE": 2, "TIMEOUT_OUTCOME_UNKNOWN": 3}
+NEXT_STEP = {
+    "TOOL_ERROR": "L'appel a ete traite : relire l'etat (_placed.json, find_actors) avant de rejouer.",
+    "TIMEOUT_OUTCOME_UNKNOWN": "Relire l'etat (find_actors, get_actor_transform) avant de rejouer.",
+}
+
+
 def mcp_failure(command: str, exc: Exception, extra: dict | None = None) -> int:
   kind = {McpOffline: "OFFLINE", McpTimeout: "TIMEOUT_OUTCOME_UNKNOWN"}.get(
       type(exc), "TOOL_ERROR")
   out = {"status": "FAILED", "command": command, "error_kind": kind,
          "error": str(exc)}
-  if kind == "TIMEOUT_OUTCOME_UNKNOWN":
-    out["next"] = "Relire l'etat (find_actors, get_actor_transform) avant de rejouer."
+  if kind in NEXT_STEP:
+    out["next"] = NEXT_STEP[kind]
   if extra:
     out.update(extra)
   emit(out)
-  return 3 if kind == "TIMEOUT_OUTCOME_UNKNOWN" else 2
+  return EXIT_CODES[kind]
 
 
 # ---------------------------------------------------------------- geometrie
@@ -90,10 +146,11 @@ def luf_to_xyz(luf: list[float]) -> list[float]:
   return [forward, -left, up]
 
 
-def xform(loc: list[float], yaw: float = 0.0) -> dict:
+def xform(loc: list[float], yaw: float = 0.0, scale: list[float] | None = None) -> dict:
+  s = scale or [1.0, 1.0, 1.0]
   return {"location": {"x": loc[0], "y": loc[1], "z": loc[2]},
           "rotation": {"pitch": 0.0, "yaw": yaw, "roll": 0.0},
-          "scale": {"x": 1.0, "y": 1.0, "z": 1.0}}
+          "scale": {"x": s[0], "y": s[1], "z": s[2]}}
 
 
 def rotate_xy(v: list[float], yaw_deg: float) -> list[float]:
@@ -196,13 +253,34 @@ def bounds_to_center_size(b: dict) -> tuple[list[float], list[float]]:
   return center, size
 
 
-def asset_size_pivot(palette: dict, key: str) -> tuple[list[float], list[float], str]:
+def asset_scale(entry: dict) -> list[float]:
+  """Mise a l'echelle uniforme (nombre) ou par axe ([x, y, z]).
+
+  Indispensable pour batir avec des primitives moteur : un Cube de 100 cm n'a aucune raison
+  de faire 512 x 512 x 32. La taille et le pivot mesures a l'echelle 1 sont multiplies par
+  le meme facteur, la transform posee porte l'echelle.
+  """
+  s = entry.get("scale", 1.0)
+  if isinstance(s, bool):
+    raise ValueError(f"scale invalide : {s!r}")
+  if isinstance(s, (int, float)):
+    return [float(s)] * 3
+  if isinstance(s, list) and len(s) == 3 and all(
+      isinstance(v, (int, float)) and not isinstance(v, bool) for v in s):
+    return [float(v) for v in s]
+  raise ValueError(f"scale doit etre un nombre ou [x, y, z] : {s!r}")
+
+
+def asset_size_pivot(palette: dict, key: str) -> tuple[list[float], list[float], str, list[float]]:
   a = palette.get(key)
   if not a:
     raise KeyError(f"asset_key absent de 02_palette.json : {key}")
   if not a.get("measured"):
     raise KeyError(f"asset non mesure (lancer measure-palette) : {key}")
-  return a["size_cm"], a["pivot_offset_cm"], a["uefn_path"]
+  scale = asset_scale(a)
+  size = [round(a["size_cm"][i] * scale[i], 2) for i in range(3)]
+  pivot = [round(a["pivot_offset_cm"][i] * scale[i], 2) for i in range(3)]
+  return size, pivot, a["uefn_path"], scale
 
 
 # ---------------------------------------------------------------- MCP : placement
@@ -245,9 +323,15 @@ def verify_transform(cli: McpClient, ref: str, op: dict) -> dict | None:
   want = op["xform"]
   dl = max(abs(tf["location"][k] - want["location"][k]) for k in "xyz")
   dyaw = abs(((tf["rotation"]["yaw"] - want["rotation"]["yaw"]) + 180.0) % 360.0 - 180.0)
-  if dl > POS_TOLERANCE_CM or dyaw > YAW_TOLERANCE_DEG:
-    return {"type": "TRANSFORM_MISMATCH", "actor": op["label"],
-            "requested": want, "read_back": tf}
+  got = tf.get("scale") or {}
+  dscale = max(abs(float(got.get(k, 1.0)) - want["scale"][k]) for k in "xyz")
+  if dl > POS_TOLERANCE_CM or dyaw > YAW_TOLERANCE_DEG or dscale > SCALE_TOLERANCE:
+    err = {"type": "TRANSFORM_MISMATCH", "actor": op["label"],
+           "requested": want, "read_back": tf}
+    if dscale > SCALE_TOLERANCE and dl <= POS_TOLERANCE_CM:
+      err["detail"] = ("position juste, echelle non appliquee ou non relue : les controles de "
+                       "collision utilisent une taille fausse")
+    return err
   return None
 
 
@@ -320,6 +404,40 @@ def place_devices(cli: McpClient, workspace: str, ops: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------- commandes
+
+def cmd_init(workspace: str, template: str, force: bool) -> int:
+  src = os.path.join(TEMPLATES_ROOT, template)
+  if not os.path.isdir(src):
+    emit({"status": "FAILED", "command": "init", "error_kind": "TEMPLATE_UNKNOWN",
+          "template": template, "templates": list_templates()})
+    return 1
+  existing = [n for n in os.listdir(workspace)] if os.path.isdir(workspace) else []
+  if existing and not force:
+    emit({"status": "FAILED", "command": "init", "error_kind": "WORKSPACE_NOT_EMPTY",
+          "workspace": workspace, "existing": sorted(existing),
+          "next": "un workspace deja rempli n'est jamais ecrase : choisir un autre chemin, "
+                  "ou --force pour recopier le gabarit par-dessus (les fichiers absents du "
+                  "gabarit sont conserves)."})
+    return 1
+  os.makedirs(workspace, exist_ok=True)
+  copied = []
+  for root, dirs, files in os.walk(src):
+    rel = os.path.relpath(root, src)
+    target_dir = os.path.join(workspace, rel) if rel != "." else workspace
+    os.makedirs(target_dir, exist_ok=True)
+    for name in files:
+      shutil.copyfile(os.path.join(root, name), os.path.join(target_dir, name))
+      copied.append(os.path.relpath(os.path.join(target_dir, name), workspace).replace("\\", "/"))
+  os.makedirs(os.path.join(workspace, "verse"), exist_ok=True)
+  errors, warnings = validate_workspace_files(workspace)
+  emit({"status": "PASSED" if not errors else "FAILED", "command": "init",
+        "template": template, "workspace": workspace, "created": sorted(copied),
+        "error_count": len(errors), "errors": errors, "warnings": warnings,
+        "next": "etape 0 : `preflight`, puis faire confirmer le niveau par l'utilisateur. "
+                "Les chemins d'assets marques note_a_verifier ou a_chercher doivent etre "
+                "confirmes (ListDeviceAssets / find_assets) avant `measure-palette`."})
+  return 0 if not errors else 1
+
 
 def cmd_preflight(workspace: str) -> int:
   cli = client_for(workspace)
@@ -411,6 +529,24 @@ def cmd_validate_grid(grid_file: str) -> int:
   data = load_json(grid_file)
   floors = data.get("floors", [])
   errors = []
+  axis = data.get("symmetry_axis")
+  if data.get("symmetric") and axis not in ("X", "Y"):
+    errors.append({"type": "SYMMETRY_AXIS_UNSUPPORTED", "symmetry_axis": axis,
+                   "detail": "symmetric: true exige symmetry_axis \"X\" ou \"Y\" : "
+                             "aucun controle de symetrie n'a ete fait."})
+  # Miroir sur les lignes (X) : Nord <-> Sud. Sur les colonnes (Y) : Est <-> Ouest.
+  ramp_mirror = {"X": {"R_N": "R_S", "R_S": "R_N"},
+                 "Y": {"R_E": "R_W", "R_W": "R_E"}}.get(axis, {})
+
+  def team_norm(cell: str) -> str:
+    return cell.replace("S1", "S").replace("S2", "S")
+
+  def mirrored(cell: str) -> str:
+    """Ce que devient la cellule apres reflet. Le reflet ne s'applique que d'un cote :
+    deux R_N face a face ne sont PAS symetriques, il faut R_N d'un cote et R_S de l'autre."""
+    c = team_norm(cell)
+    return ramp_mirror.get(c, c)
+
   if not floors:
     errors.append({"type": "EMPTY_GRID", "detail": "Aucun etage defini."})
   else:
@@ -418,9 +554,11 @@ def cmd_validate_grid(grid_file: str) -> int:
     for z_idx, matrix in floor_map.items():
       rows = len(matrix)
       cols = len(matrix[0]) if rows > 0 else 0
+      ragged = False
       for r in range(rows):
         if len(matrix[r]) != cols:
           errors.append({"type": "RAGGED_ROW", "row": r, "z_index": z_idx})
+          ragged = True
           continue
         for c in range(cols):
           cell = matrix[r][c]
@@ -428,19 +566,20 @@ def cmd_validate_grid(grid_file: str) -> int:
             errors.append({"type": "UNCLOSED_BORDER", "tile": [r, c, z_idx], "cell": cell})
           if cell.startswith("R_"):
             upper = floor_map.get(z_idx + 1)
-            if upper and upper[r][c] != "T":
-              errors.append({"type": "HEADROOM_BLOCKED_ON_STAIRS",
-                             "stair_tile": [r, c, z_idx], "upper_tile": [r, c, z_idx + 1],
-                             "current_upper_cell": upper[r][c], "required_upper_cell": "T"})
-      if data.get("symmetric") and data.get("symmetry_axis") == "X":
-        for r in range(rows // 2):
-          mirror_r = rows - 1 - r
-          for c in range(cols):
-            a = matrix[r][c].replace("S1", "S").replace("S2", "S")
-            b = matrix[mirror_r][c].replace("S1", "S").replace("S2", "S")
-            if a != b:
-              errors.append({"type": "SYMMETRY_BROKEN", "tile_a": [r, c, z_idx],
-                             "tile_b": [mirror_r, c, z_idx]})
+            if upper:
+              up_cell = upper[r][c] if r < len(upper) and c < len(upper[r]) else None
+              if up_cell != "T":
+                errors.append({"type": "HEADROOM_BLOCKED_ON_STAIRS",
+                               "stair_tile": [r, c, z_idx], "upper_tile": [r, c, z_idx + 1],
+                               "current_upper_cell": up_cell, "required_upper_cell": "T"})
+      if data.get("symmetric") and axis in ("X", "Y") and not ragged:
+        pairs = ([(r, c, rows - 1 - r, c) for r in range(rows // 2) for c in range(cols)]
+                 if axis == "X" else
+                 [(r, c, r, cols - 1 - c) for r in range(rows) for c in range(cols // 2)])
+        for ra, ca, rb, cb in pairs:
+          if mirrored(matrix[ra][ca]) != team_norm(matrix[rb][cb]):
+            errors.append({"type": "SYMMETRY_BROKEN", "axis": axis,
+                           "tile_a": [ra, ca, z_idx], "tile_b": [rb, cb, z_idx]})
     base = floor_map.get(0, [])
     spawns = [(r, c) for r, row in enumerate(base) for c, v in enumerate(row) if v in ("S1", "S2")]
     targets = [(r, c) for r, row in enumerate(base) for c, v in enumerate(row) if v in ("O", "S2")]
@@ -478,12 +617,24 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
       continue
     try:
       pick[cat] = asset_size_pivot(palette, keys[0])
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
       errors.append({"type": "UNMEASURED_ASSET", "error": str(exc)})
   if errors:
     return ops, errors, warnings
-  fsize, fpivot, fasset = pick["STRUCTURE_FLOOR"]
-  wsize, wpivot, wasset = pick["STRUCTURE_WALL"]
+  fsize, fpivot, fasset, fscale = pick["STRUCTURE_FLOOR"]
+  wsize, wpivot, wasset, wscale = pick["STRUCTURE_WALL"]
+  if abs(fsize[0] - TILE_SIZE_XY) > 1.0 or abs(fsize[1] - TILE_SIZE_XY) > 1.0:
+    warnings.append({
+        "type": "FLOOR_NOT_TILE_SIZED", "measured_size_cm": fsize,
+        "required_size_cm": [TILE_SIZE_XY, TILE_SIZE_XY],
+        "suggested_scale": [round(TILE_SIZE_XY / fsize[i], 4) if fsize[i] else None
+                            for i in (0, 1)],
+        "detail": "la dalle ne couvre pas une tuile : les sols ne se joindront pas. Corriger "
+                  "`scale` dans 02_palette.json, ou choisir une dalle de galerie mesuree."})
+  if abs(wsize[1] - TILE_SIZE_XY) > 1.0:
+    warnings.append({"type": "WALL_NOT_TILE_SIZED", "measured_size_cm": wsize,
+                     "detail": "le mur ne fait pas 512 cm de long : des jours apparaissent "
+                               "sur le perimetre."})
   for floor in grid.get("floors", []):
     z = floor["z_index"]
     matrix = floor["matrix"]
@@ -498,7 +649,8 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
         floor_center = [cx, cy, bz - fsize[2] / 2.0]
         ops.append({"label": f"Floor_{r}_{c}_{z}", "asset": fasset, "category": "FLOOR",
                     "tile": [r, c, z], "center_cm": floor_center, "size_cm": fsize, "yaw": 0.0,
-                    "xform": xform(loc_from_center(floor_center, fpivot, 0.0), 0.0)})
+                    "scale": fscale,
+                    "xform": xform(loc_from_center(floor_center, fpivot, 0.0), 0.0, fscale)})
         if cell != "#":
           continue
         border = r in (0, rows - 1) or c in (0, cols - 1)
@@ -520,8 +672,8 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
           center = [wx, wy, bz + wsize[2] / 2.0]
           ops.append({"label": f"Wall_{side}_{r}_{c}_{z}", "asset": wasset, "category": "WALL",
                       "tile": [r, c, z], "center_cm": center,
-                      "size_cm": rotated_size(wsize, yaw), "yaw": yaw,
-                      "xform": xform(loc_from_center(center, wpivot, yaw), yaw)})
+                      "size_cm": rotated_size(wsize, yaw), "yaw": yaw, "scale": wscale,
+                      "xform": xform(loc_from_center(center, wpivot, yaw), yaw, wscale)})
   return ops, errors, warnings
 
 
@@ -545,7 +697,134 @@ def cmd_build_structure(workspace: str, dry_run: bool) -> int:
   return 0 if ok else 1
 
 
+def validate_workspace_files(workspace: str,
+                             names: list[str] | None = None) -> tuple[list[dict], list[dict]]:
+  """Controle de forme : cles connues, types, enums. Une spec fausse donne un transform faux."""
+  errors, warnings = [], []
+  for name in (names or SPEC_FILES):
+    path = os.path.join(workspace, name)
+    if not os.path.exists(path):
+      if name in ("01_gdd.json", "04_devices.json", "05_props.json"):
+        continue  # une carte sans device ni prop est legale
+      errors.append({"type": "MISSING_FILE", "where": name, "path": path})
+      continue
+    try:
+      data = load_json(path)
+    except ValueError as exc:
+      errors.append({"type": "BAD_JSON", "where": name, "error": str(exc)})
+      continue
+    if name == "01_gdd.json":
+      e, w = spec_schema.validate_gdd(data)
+      errors += e
+      warnings += w
+    else:
+      errors += {"02_palette.json": spec_schema.validate_palette,
+                 "03_grid.json": spec_schema.validate_grid,
+                 "04_devices.json": spec_schema.validate_devices,
+                 "05_props.json": spec_schema.validate_props}[name](data)
+  return errors, warnings
+
+
+def spec_report(workspace: str) -> tuple[list[dict], list[dict]]:
+  """Forme + coherence croisee des 5 fichiers. Utilise par validate-scene et compile-transforms."""
+  errors, warnings = validate_workspace_files(workspace)
+  if errors:
+    return errors, warnings  # inutile de croiser des fichiers dont la forme est fausse
+
+  def read(name: str, key: str, default):
+    path = os.path.join(workspace, name)
+    return load_json(path).get(key, default) if os.path.exists(path) else default
+
+  assets = read("02_palette.json", "assets", {})
+  grid = read("03_grid.json", "floors", None)
+  grid = {"floors": grid} if grid is not None else {"floors": []}
+  devices = read("04_devices.json", "devices", [])
+  props = read("05_props.json", "props", [])
+
+  palette_empty = not isinstance(assets, dict) or not assets
+  if palette_empty and any(e.get("asset_key") for e in devices + props):
+    # Un gabarit neuf a une palette vide : une seule erreur actionnable,
+    # pas une ASSET_KEY_UNKNOWN par entree.
+    errors.append({"type": "PALETTE_EMPTY", "where": "02_palette.json",
+                   "detail": "aucun asset mesure : lancer measure-palette (etape 2) "
+                             "avant validate-scene / compile-transforms"})
+
+  floors = {f.get("z_index"): f.get("matrix", []) for f in grid.get("floors", [])
+            if isinstance(f, dict)}
+  known = {e.get("actor_label") for e in devices + props}
+
+  def check_entry(entry: dict, where: str, seen: set) -> None:
+    key = entry.get("asset_key")
+    if key and not palette_empty and key not in assets:
+      errors.append({"type": "ASSET_KEY_UNKNOWN", "where": where, "asset_key": key,
+                     "detail": "absent de 02_palette.json"})
+    tile = entry.get("tile")
+    if isinstance(tile, list) and len(tile) == 3:
+      matrix = floors.get(tile[2])
+      if matrix is None:
+        errors.append({"type": "TILE_OUT_OF_GRID", "where": where, "tile": tile,
+                       "detail": f"aucun etage z_index {tile[2]} dans 03_grid.json"})
+      elif not (0 <= tile[0] < len(matrix) and 0 <= tile[1] < len(matrix[tile[0]])):
+        errors.append({"type": "TILE_OUT_OF_GRID", "where": where, "tile": tile,
+                       "grid_rows": len(matrix)})
+      elif matrix[tile[0]][tile[1]] in ("V", "T"):
+        errors.append({"type": "TILE_HAS_NO_FLOOR", "where": where, "tile": tile,
+                       "cell": matrix[tile[0]][tile[1]],
+                       "detail": "rien n'est pose sur un vide ou une tremie"})
+    face = entry.get("face_towards")
+    if (isinstance(face, str) and face and face not in spec_schema.CARDINALS
+            and face not in known):
+      errors.append({"type": "FACE_TARGET_UNKNOWN", "where": where, "face_towards": face,
+                     "detail": "ni NORTH/EAST/SOUTH/WEST/CENTER, ni un actor_label declare"})
+    ref = entry.get("reference_actor")
+    if isinstance(ref, str) and ref:
+      if ref == entry.get("actor_label"):
+        errors.append({"type": "REFERENCE_TO_SELF", "where": where, "reference_actor": ref})
+      elif ref not in known:
+        errors.append({"type": "REFERENCE_UNKNOWN", "where": where, "reference_actor": ref})
+      elif ref not in seen:
+        errors.append({"type": "REFERENCE_DECLARED_AFTER", "where": where,
+                       "reference_actor": ref,
+                       "detail": "la cible doit etre declaree AVANT : compile-transforms "
+                                 "calcule dans l'ordre de la liste"})
+    for i, b in enumerate(entry.get("bindings") or []):
+      if isinstance(b, dict) and b.get("to") not in known:
+        errors.append({"type": "BINDING_TARGET_UNKNOWN",
+                       "where": f"{where} bindings[{i}]", "to": b.get("to")})
+
+  seen = set()
+  for i, dev in enumerate(devices):
+    check_entry(dev, f"04_devices.json devices[{i}]", seen)
+    seen.add(dev.get("actor_label"))
+  for i, prop in enumerate(props):
+    check_entry(prop, f"05_props.json props[{i}]", seen)
+    seen.add(prop.get("actor_label"))
+
+  if grid.get("symmetric") and grid.get("symmetry_axis") in spec_schema.AXES:
+    warnings.append({"type": "SYMMETRY_SCOPE", "where": "03_grid.json",
+                     "detail": "validate-grid ne controle que la GRILLE. Les devices et props "
+                               "de 04/05 ne sont pas verifies pour la symetrie : le faire a la "
+                               "lecture (chaque acteur d'une equipe doit avoir son miroir)."})
+  return errors, warnings
+
+
+def cmd_validate_scene(workspace: str) -> int:
+  errors, warnings = spec_report(workspace)
+  emit({"status": "PASSED" if not errors else "FAILED", "command": "validate-scene",
+        "error_count": len(errors), "errors": errors, "warnings": warnings,
+        "checked": [n for n in SPEC_FILES
+                    if os.path.exists(os.path.join(workspace, n))]})
+  return 0 if not errors else 1
+
+
 def cmd_compile_transforms(workspace: str) -> int:
+  errors, warnings = spec_report(workspace)
+  if errors:
+    emit({"status": "FAILED", "command": "compile-transforms", "error_count": len(errors),
+          "errors": errors, "warnings": warnings,
+          "next": "corriger les specs : un calcul sur une spec fausse produit un transform "
+                  "faux mais un statut PASSED."})
+    return 1
   palette = load_json(os.path.join(workspace, "02_palette.json")).get("assets", {})
   grid = load_json(os.path.join(workspace, "03_grid.json"))
   dev_path = os.path.join(workspace, "04_devices.json")
@@ -554,16 +833,18 @@ def cmd_compile_transforms(workspace: str) -> int:
   props = load_json(props_path).get("props", []) if os.path.exists(props_path) else []
   matrix = grid.get("floors", [{"matrix": [["."]]}])[0]["matrix"]
   arena_center = [len(matrix) * TILE_SIZE_XY / 2.0, len(matrix[0]) * TILE_SIZE_XY / 2.0, 0.0]
-  registry, errors = {}, []
+  registry = {}
 
   def add(entry: dict, category: str, size_rot: list[float], pivot: list[float], asset: str,
-          center: list[float], tile: list[int], snap: bool, yaw: float) -> None:
+          center: list[float], tile: list[int], snap: bool, yaw: float,
+          scale: list[float]) -> None:
     floor_z = tile[2] * TILE_SIZE_Z
     loc = loc_from_center(center, pivot, yaw)
     registry[entry["actor_label"]] = {
         "actor_label": entry["actor_label"], "category": category, "asset": asset,
-        "tile": tile, "center_cm": center, "size_cm": size_rot, "yaw": yaw,
+        "tile": tile, "center_cm": center, "size_cm": size_rot, "yaw": yaw, "scale": scale,
         "location_xyz": loc, "location_luf": xyz_to_luf(loc), "snap_to_floor": snap,
+        "placement": entry.get("placement_mode", "TILE_ANCHOR"),
         "distance_to_floor_cm": round(center[2] - size_rot[2] / 2.0 - floor_z, 2),
     }
 
@@ -578,36 +859,51 @@ def cmd_compile_transforms(workspace: str) -> int:
 
   for dev in devices:
     try:
-      size, pivot, asset = asset_size_pivot(palette, dev.get("asset_key", ""))
-      center, size_rot, yaw = anchored(dev, size)
-      add(dev, "DEVICE", size_rot, pivot, asset, center, dev["tile"], dev.get("on_floor", True), yaw)
-    except (KeyError, ValueError) as exc:
+      size, pivot, asset, scale = asset_size_pivot(palette, dev.get("asset_key", ""))
+      if dev.get("placement_mode", "TILE_ANCHOR") == "WORLD":
+        center = [float(v) for v in dev["world_location_cm"]]
+        yaw = resolve_yaw(dev.get("face_towards", "NORTH"), center, registry, arena_center)
+        size_rot = rotated_size(size, yaw)
+        # Tuile derivee pour les rapports (audit, check-navigation) : negative hors grille.
+        tile = [int(center[i] // (TILE_SIZE_XY if i < 2 else TILE_SIZE_Z)) for i in range(3)]
+        add(dev, "DEVICE", size_rot, pivot, asset, center, tile,
+            dev.get("on_floor", False), yaw, scale)
+      else:
+        center, size_rot, yaw = anchored(dev, size)
+        add(dev, "DEVICE", size_rot, pivot, asset, center, dev["tile"],
+            dev.get("on_floor", True), yaw, scale)
+    except (KeyError, ValueError, TypeError) as exc:
       errors.append({"type": "COMPILE_ERROR", "actor": dev.get("actor_label"), "error": str(exc)})
 
   for prop in props:
     try:
-      size, pivot, asset = asset_size_pivot(palette, prop.get("asset_key", ""))
+      size, pivot, asset, scale = asset_size_pivot(palette, prop.get("asset_key", ""))
       snap = prop.get("snap_to_floor", True)
-      if prop.get("placement_mode") == "TILE_ANCHOR":
+      mode = prop.get("placement_mode")
+      if mode == "TILE_ANCHOR":
         center, size_rot, yaw = anchored(prop, size)
         tile = prop["tile"]
-      else:
+      elif mode == "RELATIVE_TO_ACTOR":
         parent = registry.get(prop.get("reference_actor"))
         if not parent:
-          raise KeyError(f"reference_actor introuvable ou place apres : {prop.get('reference_actor')}")
+          raise KeyError(
+              f"reference_actor introuvable ou place apres : {prop.get('reference_actor')}")
         yaw = resolve_yaw(prop.get("face_towards", "NORTH"), parent["center_cm"],
                           registry, arena_center)
         size_rot = rotated_size(size, yaw)
         center = relative_center(parent, size_rot, prop["direction"],
                                  float(prop.get("gap_cm", 20.0)), snap)
         tile = parent["tile"]
-      add(prop, "PROP", size_rot, pivot, asset, center, tile, snap, yaw)
+      else:
+        # Avant ce controle, toute valeur inconnue tombait dans la branche relative.
+        raise ValueError(f"placement_mode doit valoir TILE_ANCHOR ou RELATIVE_TO_ACTOR : {mode!r}")
+      add(prop, "PROP", size_rot, pivot, asset, center, tile, snap, yaw, scale)
     except (KeyError, ValueError) as exc:
       errors.append({"type": "COMPILE_ERROR", "actor": prop.get("actor_label"), "error": str(exc)})
 
   save_json(os.path.join(workspace, "_compiled_scene.json"), registry)
   emit({"status": "PASSED" if not errors else "FAILED", "compiled_actors": len(registry),
-        "error_count": len(errors), "errors": errors})
+        "error_count": len(errors), "errors": errors, "warnings": warnings})
   return 0 if not errors else 1
 
 
@@ -618,7 +914,8 @@ def cmd_place_scene(workspace: str, dry_run: bool) -> int:
     return 1
   registry = load_json(compiled)
   ops = [{"label": k, "asset": v["asset"], "category": v["category"],
-          "xform": xform(v["location_xyz"], v["yaw"])} for k, v in registry.items()]
+          "xform": xform(v["location_xyz"], v["yaw"], v.get("scale"))}
+         for k, v in registry.items()]
   dev_ops = [o for o in ops if o["category"] == "DEVICE"]
   prop_ops = [o for o in ops if o["category"] != "DEVICE"]
   if dry_run:
@@ -636,10 +933,11 @@ def cmd_place_scene(workspace: str, dry_run: bool) -> int:
   return 0 if not errors else 1
 
 
-def live_entries(cli: McpClient, workspace: str, registry: dict) -> tuple[dict, list[dict]]:
+def live_entries(cli: McpClient, workspace: str,
+                 registry: dict) -> tuple[dict, list[dict], int]:
   """Remplace centre et taille theoriques par les bounds reels relus dans l'editeur."""
   placed = load_placed(workspace)
-  missing = []
+  missing, reads = [], 0
   for label, ent in registry.items():
     p = placed.get(label)
     if not p:
@@ -656,7 +954,8 @@ def live_entries(cli: McpClient, workspace: str, registry: dict) -> tuple[dict, 
       missing.append({"type": "INVALID_BOUNDS", "actor": label})
       continue
     ent["center_cm"], ent["size_cm"] = bounds_to_center_size(b)
-  return registry, missing
+    reads += 1
+  return registry, missing, reads
 
 
 def cmd_audit_scene(workspace: str, live: bool) -> int:
@@ -672,16 +971,21 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
   floors = {o["label"]: {"actor_label": o["label"], "category": "FLOOR", "tile": o["tile"],
                          "center_cm": o["center_cm"], "size_cm": o["size_cm"]}
             for o in structure if o["category"] == "FLOOR"}
-  missing = []
+  missing, reads = [], 0
   if live:
     cli = client_for(workspace)
     try:
-      registry, m1 = live_entries(cli, workspace, registry)
-      walls, m2 = live_entries(cli, workspace, walls)
-      floors, m3 = live_entries(cli, workspace, floors)
+      registry, m1, r1 = live_entries(cli, workspace, registry)
+      walls, m2, r2 = live_entries(cli, workspace, walls)
+      floors, m3, r3 = live_entries(cli, workspace, floors)
     except McpError as exc:
       return mcp_failure("audit-scene --live", exc)
     missing = m1 + m2 + m3
+    reads = r1 + r2 + r3
+    if reads == 0:
+      missing.append({"type": "NO_LIVE_DATA",
+                      "detail": "Aucun bounds relu dans l'editeur (_placed.json absent ou "
+                                "vide, aucune structure compilee) : rien n'est verifie."})
   floor_top = {}
   for f in floors.values():
     t = tuple(f["tile"])
@@ -709,10 +1013,16 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
             "penetration_cm": pen, "tile": a["tile"],
             "suggestion": f"Placer {a['actor_label']} en RELATIVE_TO_ACTOR avec gap_cm >= 15."})
   total = len(overlap_errors) + len(gravity_errors) + len(missing)
-  report = {"timestamp": now_iso(), "source": "live" if live else "compiled",
+  source = "compiled" if not live else ("live" if reads else "not_live")
+  report = {"timestamp": now_iso(), "source": source,
             "status": "PASSED" if total == 0 else "FAILED", "error_count": total,
             "overlap_errors": overlap_errors, "gravity_errors": gravity_errors,
-            "scene_errors": missing, "navigation_errors": []}
+            "scene_errors": missing,
+            "other_report": "passages etroits : 06_navigation_report.json (check-navigation)",
+            "gravity_scope": ("bounds relus dans l'editeur" if source == "live" else
+                              "GRAVITY_ERROR non detectable ici : le centre compile est "
+                              "defini pose au sol, la distance au sol vaut donc toujours 0. "
+                              "Seul --live (bounds relus) voit un pivot_offset_cm faux.")}
   save_json(os.path.join(workspace, "06_audit_report.json"), report)
   emit(report)
   return 0 if total == 0 else 1
@@ -720,12 +1030,9 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
 
 def cmd_check_navigation(workspace: str) -> int:
   compiled_path = os.path.join(workspace, "_compiled_scene.json")
-  report_path = os.path.join(workspace, "06_audit_report.json")
   if not os.path.exists(compiled_path) and cmd_compile_transforms(workspace) != 0:
     return 1
   registry = load_json(compiled_path)
-  report = load_json(report_path) if os.path.exists(report_path) else {
-      "overlap_errors": [], "gravity_errors": [], "scene_errors": []}
   nav_errors = []
   by_tile = {}
   for p in (v for v in registry.values() if v.get("category") == "PROP"):
@@ -742,14 +1049,494 @@ def cmd_check_navigation(workspace: str) -> int:
                              "free_width_cm": round(gap, 2),
                              "required_width_cm": MIN_CORRIDOR_WIDTH,
                              "blocking_actors": [pa["actor_label"], pb["actor_label"]]})
-  report["navigation_errors"] = nav_errors
-  report["navigation_scope"] = "paires de props dans une meme tuile ; pas de capsule ni de murs"
-  report["error_count"] = (len(report.get("overlap_errors", [])) + len(report.get("gravity_errors", []))
-                           + len(report.get("scene_errors", [])) + len(nav_errors))
-  report["status"] = "PASSED" if report["error_count"] == 0 else "FAILED"
-  save_json(report_path, report)
+  # Rapport propre : reprendre 06_audit_report.json faisait dependre le statut de cette
+  # commande des erreurs d'un audit precedent (status FAILED avec un code retour 0).
+  report = {"timestamp": now_iso(), "command": "check-navigation",
+            "status": "PASSED" if not nav_errors else "FAILED",
+            "error_count": len(nav_errors), "navigation_errors": nav_errors,
+            "navigation_scope": "paires de props dans une meme tuile ; pas de capsule, pas de "
+                                "murs, pas de devices, pas de passages entre tuiles",
+            "other_report": "chevauchements et gravite : 06_audit_report.json (audit-scene), "
+                            "non recalcule ici"}
+  save_json(os.path.join(workspace, "06_navigation_report.json"), report)
   emit(report)
   return 0 if not nav_errors else 1
+
+
+# ------------------------------------------------- etape 6 : proprietes, cablage
+
+def property_names(listed) -> list[str]:
+  """Noms reels renvoyes par Object.list_properties. Forme non garantie : liste inconnue -> [].
+
+  Une liste vide ne veut pas dire « aucune propriete » mais « forme non reconnue » : dans ce
+  cas on ecrit quand meme, et la relecture par get_properties decide.
+  """
+  if isinstance(listed, str):
+    try:
+      listed = json.loads(listed)
+    except ValueError:
+      return []
+  if isinstance(listed, dict):
+    listed = listed.get("properties", listed.get("returnValue", []))
+  if not isinstance(listed, list):
+    return []
+  names = []
+  for item in listed:
+    if isinstance(item, str):
+      names.append(item)
+    elif isinstance(item, dict):
+      for key in ("name", "propertyName", "Name"):
+        if isinstance(item.get(key), str):
+          names.append(item[key])
+          break
+  return names
+
+
+def close_names(wanted: str, names: list[str]) -> list[str]:
+  import difflib
+  return difflib.get_close_matches(wanted, names, n=3, cutoff=0.5)
+
+
+def as_dict(value):
+  """get_properties renvoie une chaine JSON nom -> valeur (constat du 2026-10-19)."""
+  if isinstance(value, str):
+    try:
+      value = json.loads(value)
+    except ValueError:
+      return {"__raw__": value}
+  return value if isinstance(value, dict) else {"__raw__": value}
+
+
+def value_matches(written, read) -> bool:
+  """Ecrit vs relu. Un dict relu peut porter des cles en plus (`teamIndex` seul relu avec
+  `teamType`) : on exige que chaque cle ecrite soit confirmee, pas l'egalite stricte."""
+  if isinstance(written, dict):
+    if not isinstance(read, dict):
+      return False
+    return all(k in read and value_matches(v, read[k]) for k, v in written.items())
+  if isinstance(written, bool) or isinstance(read, bool):
+    return bool(written) == bool(read)
+  if isinstance(written, (int, float)) and isinstance(read, (int, float)):
+    return abs(float(written) - float(read)) < 1e-6
+  return written == read
+
+
+def cmd_apply_properties(workspace: str, dry_run: bool) -> int:
+  dev_path = os.path.join(workspace, "04_devices.json")
+  devices = load_json(dev_path).get("devices", []) if os.path.exists(dev_path) else []
+  placed = load_placed(workspace)
+  wanted_all = [d for d in devices if d.get("properties")]
+  missing = [{"type": "NOT_PLACED", "actor": d.get("actor_label"),
+              "detail": "place-scene n'a pas pose cet acteur (absent de _placed.json)"}
+             for d in wanted_all if d.get("actor_label") not in placed]
+  todo = [d for d in wanted_all if d.get("actor_label") in placed]
+  if dry_run:
+    emit({"status": "DRY_RUN", "command": "apply-properties", "devices": len(todo),
+          "properties": sum(len(d["properties"]) for d in todo), "not_placed": missing,
+          "next": "list_properties puis set_properties (values en CHAINE JSON) puis "
+                  "get_properties : une erreur peut accompagner une ecriture partielle."})
+    return 0
+  cli = client_for(workspace)
+  applied, errors = [], []
+  try:
+    for dev in todo:
+      label = dev["actor_label"]
+      inst = {"refPath": placed[label]["refPath"]}
+      wanted = dict(dev["properties"])
+      names = property_names(cli.value("Object", "list_properties", {"instance": inst}))
+      if names:
+        unknown = [k for k in wanted if k not in names]
+        if unknown:
+          errors.append({"type": "PROPERTY_NOT_FOUND", "actor": label, "properties": unknown,
+                         "nearest": {k: close_names(k, names) for k in unknown},
+                         "detail": "absentes de list_properties : ne pas inventer un autre nom"})
+          for k in unknown:
+            wanted.pop(k)
+      if not wanted:
+        continue
+      cli.value("Object", "set_properties",
+                {"instance": inst, "values": json.dumps(wanted)})
+      read = as_dict(cli.value("Object", "get_properties",
+                               {"instance": inst, "properties": list(wanted)}))
+      for k, v in wanted.items():
+        if k not in read:
+          errors.append({"type": "PROPERTY_UNREADABLE", "actor": label, "property": k,
+                         "written": v, "read_back": None,
+                         "detail": "get_properties ne renvoie pas la cle : valeur inconnue, "
+                                   "pas valeur absente"})
+        elif not value_matches(v, read[k]):
+          errors.append({"type": "PROPERTY_MISMATCH", "actor": label, "property": k,
+                         "written": v, "read_back": read[k]})
+        else:
+          applied.append({"actor": label, "property": k, "written": v, "read_back": read[k]})
+  except McpError as exc:
+    return mcp_failure("apply-properties", exc, {"applied_before_failure": applied,
+                                                 "errors_before_failure": errors})
+  report = {"timestamp": now_iso(), "status": "PASSED" if not errors else "FAILED",
+            "error_count": len(errors) + len(missing), "applied": applied,
+            "errors": errors, "not_placed": missing,
+            "scope": "chaque valeur ecrite par set_properties est relue par get_properties ; "
+                     "les devices Verse (SetDeviceProperty) ne sont pas couverts : outil "
+                     "inconnu, jamais teste sur un creative_device"}
+  save_json(os.path.join(workspace, "07_properties_report.json"), report)
+  emit(report)
+  return 0 if not errors and not missing else 1
+
+
+def binding_read_back(payload, event: str, function: str) -> tuple[bool, object]:
+  """ListEventBindings sur la CIBLE. Forme non garantie : on cherche les deux chaines."""
+  items = payload
+  if isinstance(items, str):
+    try:
+      items = json.loads(items)
+    except ValueError:
+      return (event in items and function in items), items[:400]
+  if isinstance(items, dict):
+    items = items.get("bindings", items.get("returnValue", [items]))
+  if not isinstance(items, list):
+    return False, items
+  for item in items:
+    text = item if isinstance(item, str) else json.dumps(item, ensure_ascii=False)
+    if event in text and function in text:
+      return True, item
+  return False, json.dumps(items, ensure_ascii=False)[:400]
+
+
+def cmd_wire_devices(workspace: str, dry_run: bool) -> int:
+  dev_path = os.path.join(workspace, "04_devices.json")
+  devices = load_json(dev_path).get("devices", []) if os.path.exists(dev_path) else []
+  placed = load_placed(workspace)
+  bindings = []
+  for dev in devices:
+    for b in dev.get("bindings") or []:
+      bindings.append({"from": dev.get("actor_label"), "event": b.get("event"),
+                       "to": b.get("to"), "function": b.get("function")})
+  if not bindings:
+    emit({"status": "FAILED", "command": "wire-devices", "error_count": 1,
+          "errors": [{"type": "NO_BINDING_DECLARED",
+                      "detail": "aucun `bindings` dans 04_devices.json. Les noms d'evenement "
+                                "et de fonction se lisent avec Device.GetBindingOptions sur la "
+                                "source : ne jamais les deviner."}]})
+    return 1
+  missing = [b for b in bindings if b["from"] not in placed or b["to"] not in placed]
+  todo = [b for b in bindings if b["from"] in placed and b["to"] in placed]
+  if dry_run:
+    emit({"status": "DRY_RUN", "command": "wire-devices", "bindings": len(todo),
+          "not_placed": missing,
+          "next": "GetBindingOptions (source) -> AddEventBinding -> ListEventBindings (CIBLE)"})
+    return 0
+  cli = client_for(workspace)
+  wired, errors = [], []
+  try:
+    for b in todo:
+      src = {"refPath": placed[b["from"]]["refPath"]}
+      dst = {"refPath": placed[b["to"]]["refPath"]}
+      options = as_dict(cli.value("Device", "GetBindingOptions", {"devicePath": src}))
+      events = options.get("sourceEvents") or []
+      functions = options.get("targetFunctions") or []
+      if events and b["event"] not in events:
+        errors.append({"type": "BINDING_EVENT_UNKNOWN", "from": b["from"],
+                       "event": b["event"], "sourceEvents": events})
+        continue
+      if functions and b["function"] not in functions:
+        errors.append({"type": "BINDING_FUNCTION_UNKNOWN", "to": b["to"],
+                       "function": b["function"], "targetFunctions": functions})
+        continue
+      cli.value("Device", "AddEventBinding", {
+          "sourceDevicePath": src, "sourceEvent": b["event"],
+          "targetDevicePath": dst, "targetFunction": b["function"]})
+      ok, proof = binding_read_back(
+          cli.value("Device", "ListEventBindings", {"devicePath": dst}),
+          b["event"], b["function"])
+      if ok:
+        wired.append({**b, "read_back": proof})
+      else:
+        errors.append({"type": "BINDING_NOT_READ_BACK", **b, "target_bindings": proof,
+                       "detail": "le lien apparait sur la CIBLE : s'il n'y est pas, il n'est "
+                                 "pas prouve (AddEventBinding est idempotent, rejouer sans risque)"})
+  except McpError as exc:
+    return mcp_failure("wire-devices", exc, {"wired_before_failure": wired,
+                                             "errors_before_failure": errors})
+  report = {"timestamp": now_iso(), "status": "PASSED" if not errors else "FAILED",
+            "error_count": len(errors) + len(missing), "wired": wired, "errors": errors,
+            "not_placed": missing,
+            "scope": "cablage evenement -> fonction entre devices poses. Le cablage par canal "
+                     "(GameplayTagContainer) et les references @editable ne sont pas couverts."}
+  save_json(os.path.join(workspace, "08_wiring_report.json"), report)
+  emit(report)
+  return 0 if not errors and not missing else 1
+
+
+# ------------------------------------------------- etapes 8 et 9 : Verse
+
+def verse_payload(value):
+  if isinstance(value, str):
+    try:
+      return json.loads(value)
+    except ValueError:
+      return value
+  return value
+
+
+def cmd_verse_scan(workspace: str, root: str, recursive: bool) -> int:
+  cli = client_for(workspace)
+  try:
+    files = verse_payload(cli.value("Verse", "ListFiles",
+                                    {"path": root, "bRecursive": recursive}))
+  except McpError as exc:
+    return mcp_failure("verse-scan", exc)
+  save_json(os.path.join(workspace, "_verse_files.json"),
+            {"root": root, "recursive": recursive, "at": now_iso(), "files": files})
+  empty = not files
+  emit({"status": "PASSED", "command": "verse-scan", "root": root, "recursive": recursive,
+        "count": len(files) if isinstance(files, list) else None,
+        "files": files if not isinstance(files, list) else files[:200],
+        "warning": ("ListFiles vide : cela ne prouve PAS l'absence de fichier .verse "
+                    "(reponse vide = inconnu)" if empty else None)})
+  return 0
+
+
+def cmd_verse_grep(workspace: str, pattern: str, symbols: str | None, path_glob: str,
+                   max_results: int) -> int:
+  cli = client_for(workspace)
+  wanted = [s.strip() for s in symbols.split(",")] if symbols else [pattern]
+  if not any(wanted):
+    emit({"status": "FAILED", "command": "verse-grep",
+          "error": "passer --pattern ou --symbols A,B,C"})
+    return 1
+  found, missing = {}, []
+  try:
+    for symbol in wanted:
+      res = verse_payload(cli.value("Verse", "Grep", {
+          "pattern": symbol, "pathGlob": path_glob, "maxResults": max_results}))
+      hits = res if isinstance(res, list) else []
+      if hits:
+        found[symbol] = hits[:max_results]
+      else:
+        missing.append(symbol)
+  except McpError as exc:
+    return mcp_failure("verse-grep", exc, {"resolved": list(found)})
+  report = {"timestamp": now_iso(), "command": "verse-grep", "pathGlob": path_glob,
+            "status": "PASSED" if not missing else "FAILED",
+            "resolved": found, "not_found": missing,
+            "scope": "un Grep vide ne prouve PAS que l'API n'existe pas : verifier le motif "
+                     "sur un nom connu avant de conclure. Une signature trouvee doit etre lue "
+                     "dans son contexte (verse-scan puis ReadFile)."}
+  save_json(os.path.join(workspace, "_verse_grep.json"), report)
+  emit(report)
+  return 0 if not missing else 1
+
+
+def cmd_verse_write(workspace: str, local_file: str, verse_path: str, agree: bool) -> int:
+  if not os.path.exists(local_file):
+    emit({"status": "FAILED", "command": "verse-write", "error_kind": "FILE_NOT_FOUND",
+          "local_file": os.path.abspath(local_file or "")})
+    return 1
+  with open(local_file, "r", encoding="utf-8") as f:
+    content = f.read()
+  if not agree:
+    emit({"status": "FAILED", "command": "verse-write", "error_kind": "CONSENT_REQUIRED",
+          "local_file": os.path.abspath(local_file), "verse_path": verse_path,
+          "bytes": len(content),
+          "detail": "VerseToolset.WriteFile est classe DANGEREUX et n'a jamais ete execute : "
+                    "il modifie le code source du projet. Montrer le code a l'utilisateur, "
+                    "obtenir son accord explicite, puis rejouer avec "
+                    "--i-agree-to-modify-project. Sans accord : donner le code a coller."})
+    return 1
+  cli = client_for(workspace)
+  try:
+    cli.value("Verse", "WriteFile", {"path": verse_path, "content": content,
+                                     "bCreateIfMissing": True})
+    back = verse_payload(cli.value("Verse", "ReadFile", {"path": verse_path}))
+  except McpError as exc:
+    return mcp_failure("verse-write", exc, {"verse_path": verse_path})
+  text = back if isinstance(back, str) else json.dumps(back, ensure_ascii=False)
+  same = content.strip() in text or text.strip() == content.strip()
+  record = {"timestamp": now_iso(), "verse_path": verse_path,
+            "local_file": os.path.abspath(local_file), "bytes": len(content),
+            "read_back_matches": same,
+            "status": "PASSED" if same else "FAILED"}
+  history_path = os.path.join(workspace, "_verse_written.json")
+  history = load_json(history_path) if os.path.exists(history_path) else {"files": []}
+  history["files"].append(record)
+  save_json(history_path, history)
+  emit({**record,
+        "next": ("verse-build : Session.GetSessionStatus doit etre Disconnected" if same else
+                 "le fichier relu ne contient pas le texte ecrit : ne pas compiler, "
+                 "remontrer le diff a l'utilisateur")})
+  return 0 if same else 1
+
+
+def cmd_verse_build(workspace: str, dry_run: bool, log_entries: int) -> int:
+  if dry_run:
+    emit({"status": "DRY_RUN", "command": "verse-build",
+          "next": "GetSessionStatus -> BuildAll -> Logs.GetLogEntries(VerseBuild)"})
+    return 0
+  cli = client_for(workspace)
+  started = now_iso()
+  try:
+    session = verse_payload(cli.value("Session", "GetSessionStatus", {}))
+    if isinstance(session, dict):
+      session = session.get("status", session.get("returnValue", session))
+    if session != "Disconnected":
+      emit({"status": "FAILED", "command": "verse-build", "error_kind": "SESSION_CONNECTED",
+            "session": session,
+            "detail": "BuildAll n'est prouve qu'avec une session Disconnected. Son "
+                      "comportement session connectee n'a jamais ete teste : ne pas lancer."})
+      return 1
+    diagnostics = verse_payload(cli.value("Verse", "BuildAll", {}))
+    logs = verse_payload(cli.value("Logs", "GetLogEntries", {
+        "category": VERSE_BUILD_LOG, "pattern": "", "maxEntries": log_entries}))
+  except McpError as exc:
+    return mcp_failure("verse-build", exc, {"session": session})
+  diags = diagnostics if isinstance(diagnostics, list) else [diagnostics]
+  errors = [d for d in diags if isinstance(d, dict)
+            and str(d.get("severity", "")).lower() == "error"]
+  lines = logs if isinstance(logs, list) else [logs]
+  texts = [l if isinstance(l, str) else json.dumps(l, ensure_ascii=False) for l in lines]
+  success = [t for t in texts if re.search(r"succ|termin|success|complete", t, re.IGNORECASE)]
+  ok = not errors and bool(success)
+  report = {"timestamp": started, "command": "verse-build", "session": session,
+            "status": "PASSED" if ok else "FAILED",
+            "diagnostics_count": len(diags), "error_diagnostics": errors,
+            "warnings": [d for d in diags if isinstance(d, dict)
+                         and str(d.get("severity", "")).lower() == "warning"],
+            "build_log_lines": texts[:log_entries], "success_lines": success[:5],
+            "scope": "une liste de diagnostics vide ne suffit PAS : il faut aussi une ligne "
+                     "de succes recente dans VerseBuild. Les lignes sont localisees et le log "
+                     "garde les builds precedents : comparer l'horodatage a " + started}
+  save_json(os.path.join(workspace, "09_verse_report.json"), report)
+  emit(report)
+  return 0 if ok else 1
+
+
+EDITABLE_RE = re.compile(r"^([A-Za-z_]\w*)\s*:\s*([^\s=]+)")
+# Un @editable de type primitif est un parametre a regler, pas une reference d'acteur :
+# aucune cible a cabler, donc pas d'erreur s'il n'a pas d'actor_label.
+PARAM_TYPES = {"logic", "bool", "int", "float", "string", "message", "locale", "type"}
+
+
+def editable_kind(vtype: str) -> str:
+  base = str(vtype).strip().lstrip("?").lstrip("[]").strip()
+  base = base.split("[")[0].strip()
+  return "PARAMETRE" if base in PARAM_TYPES else "ACTEUR"
+
+
+def parse_editables(text: str) -> list[dict]:
+  out, pending = [], False
+  for raw in text.splitlines():
+    line = raw.strip()
+    if not line or line.startswith("#"):
+      continue
+    if line.startswith("@editable"):
+      pending = True
+      continue
+    if pending:
+      m = EDITABLE_RE.match(line)
+      if m:
+        out.append({"name": m.group(1), "type": m.group(2).strip()})
+      pending = False
+  return out
+
+
+def cmd_list_editables(workspace: str, device_label: str | None, live: bool) -> int:
+  verse_dir = os.path.join(workspace, "verse")
+  files = sorted(f for f in os.listdir(verse_dir)) if os.path.isdir(verse_dir) else []
+  files = [f for f in files if f.endswith(".verse")]
+  if not files:
+    emit({"status": "FAILED", "command": "list-editables", "error_count": 1,
+          "errors": [{"type": "NO_VERSE_STAGED", "verse_dir": verse_dir,
+                      "detail": "aucun .verse dans workspace/verse/ : le gabarit en fournit un, "
+                                "ou ecrire le fichier d'abord"}]})
+    return 1
+  editables = {}
+  for name in files:
+    with open(os.path.join(verse_dir, name), "r", encoding="utf-8") as f:
+      editables[name] = parse_editables(f.read())
+  placed = load_placed(workspace)
+  dev_path = os.path.join(workspace, "04_devices.json")
+  devices = load_json(dev_path).get("devices", []) if os.path.exists(dev_path) else []
+  labels = {d.get("actor_label"): d.get("asset_key") for d in devices}
+  rows, missing = [], []
+  for name, items in editables.items():
+    for item in items:
+      label = item["name"]
+      kind = editable_kind(item["type"])
+      row = {"file": name, "editable": label, "type": item["type"], "kind": kind,
+             "declared_in_04_devices": label in labels,
+             "asset_key": labels.get(label),
+             "refPath": (placed.get(label) or {}).get("refPath"),
+             "wiring": "MANUEL" if label in labels or label in placed else "AUCUNE_CIBLE"}
+      rows.append(row)
+      if kind == "ACTEUR" and not row["refPath"]:
+        missing.append(row)
+  extra = None
+  if live:
+    if not device_label or device_label not in placed:
+      emit({"status": "FAILED", "command": "list-editables", "error_count": 1,
+            "errors": [{"type": "DEVICE_NOT_PLACED", "device": device_label,
+                        "detail": "--live exige le label du device Verse POSE "
+                                  "(etape 9), present dans _placed.json"}]})
+      return 1
+    cli = client_for(workspace)
+    try:
+      listed = cli.value("Object", "list_properties",
+                         {"instance": {"refPath": placed[device_label]["refPath"]}})
+    except McpError as exc:
+      return mcp_failure("list-editables --live", exc)
+    extra = {"device": device_label, "property_names": property_names(listed),
+             "raw": listed if not isinstance(listed, (list, dict)) else None,
+             "note": "hypothese savedActor (devices-catalog-and-wiring.md section 6) : "
+                     "UNKNOWN, jamais testee faute de device Verse dans le projet de test. "
+                     "Ne rien ecrire ici sans accord explicite de l'utilisateur."}
+  report = {"timestamp": now_iso(), "command": "list-editables",
+            "status": "PASSED" if not missing else "FAILED",
+            "editable_count": len(rows),
+            "actor_references": sum(1 for r in rows if r["kind"] == "ACTEUR"),
+            "parameters": sum(1 for r in rows if r["kind"] == "PARAMETRE"),
+            "without_target": missing, "mapping": rows,
+            "live": extra,
+            "scope": "seules les references d'ACTEUR doivent viser un acteur pose : un "
+                     "@editable de type primitif (logic, int, float...) est un parametre a "
+                     "regler, pas une cible. Le cablage automatique des references d'acteurs "
+                     "est UNKNOWN : cette liste sert a cabler a la main dans l'editeur."}
+  save_json(os.path.join(workspace, "10_editables.json"), report)
+  emit(report)
+  return 0
+
+
+def cmd_playtest_plan(workspace: str) -> int:
+  placed = load_placed(workspace)
+  verse_path = os.path.join(workspace, "09_verse_report.json")
+  verse = load_json(verse_path) if os.path.exists(verse_path) else None
+  audit_path = os.path.join(workspace, "06_audit_report.json")
+  audit = load_json(audit_path) if os.path.exists(audit_path) else None
+  plan = {
+      "status": "PASSED", "command": "playtest-plan",
+      "state": {"actors_places": len(placed),
+                "audit": (audit or {}).get("status"), "audit_source": (audit or {}).get("source"),
+                "verse_build": (verse or {}).get("status")},
+      "consent_to_request": (
+          "Pour lancer un playtest il faut votre accord explicite : StartSession, PushChanges "
+          "et StopSession sont classes DANGEREUX et n'ont jamais ete executes. StartSession a "
+          "deja bloque le pont lors d'un test anterieur. Rien ne sera sauvegarde ni publie."),
+      "sequence_if_agreed": [
+          "Session.StartSession {} UNE SEULE FOIS (jamais deux : un second appel n'est pas teste)",
+          "Session.GetSessionStatus {} toutes les 10 s jusqu'a un etat stable "
+          "(Connecting -> UpdatingContent -> Connected)",
+          "Session.GetGameState {} pour lire l'etat du match",
+          "Session.GetClientLogEntries {\"pattern\": \"[SELF_TEST\", \"maxResults\": 50} : "
+          "a toujours echoue hors session, jamais reteste session ouverte",
+          "Session.StopSession {} puis GetSessionStatus pour confirmer"],
+      "gatekeeper": ("des lignes de log CLIENT reelles contenant l'auto-test. Sans elles, "
+                     "ecrire « comportement en jeu non verifie » dans le rapport final : une "
+                     "ligne [STEP] prouve que le code est arrive jusque la, pas que la "
+                     "barriere ou le timer ont reagi."),
+      "not_provided_by_this_skill": [
+          "aucune validation d'asset (legalite, publication) n'est accessible par MCP",
+          "le fun, l'equilibrage et la publication restent humains"]}
+  emit(plan)
+  return 0
 
 
 def cmd_visual_snapshot(workspace: str, output_image: str, dry_run: bool) -> int:
@@ -805,46 +1592,104 @@ def main() -> int:
   sub = parser.add_subparsers(dest="command", required=True)
 
   def ws(p, dry=False):
-    p.add_argument("--workspace", default="workspace_map")
+    p.add_argument("--workspace", default="workspace_map",
+                   help="dossier d'etat de la carte, HORS du skill (chemin absolu conseille)")
     if dry:
       p.add_argument("--dry-run", action="store_true")
     return p
 
+  p = ws(sub.add_parser("init", help="cree le workspace et ses 5 fichiers depuis un gabarit"))
+  p.add_argument("--template", default="blank")
+  p.add_argument("--force", action="store_true")
+  p.add_argument("--list", action="store_true", help="liste les gabarits disponibles")
   ws(sub.add_parser("preflight"))
   ws(sub.add_parser("measure-palette"), dry=True).add_argument("--force", action="store_true")
-  sub.add_parser("validate-grid").add_argument(
-      "grid_file", nargs="?", default="workspace_map/03_grid.json")
+  ws(sub.add_parser("validate-scene", help="forme et coherence des 5 fichiers de spec"))
+  p = ws(sub.add_parser("validate-grid"))
+  p.add_argument("grid_file", nargs="?", default=None,
+                 help="defaut : <workspace>/03_grid.json")
   ws(sub.add_parser("build-structure"), dry=True)
   ws(sub.add_parser("compile-transforms"))
   ws(sub.add_parser("place-scene"), dry=True)
   ws(sub.add_parser("audit-scene")).add_argument("--live", action="store_true")
   ws(sub.add_parser("check-navigation"))
+  ws(sub.add_parser("apply-properties"), dry=True)
+  ws(sub.add_parser("wire-devices"), dry=True)
+  p = ws(sub.add_parser("verse-scan"))
+  p.add_argument("--root", default="")
+  p.add_argument("--recursive", action="store_true")
+  p = ws(sub.add_parser("verse-grep"))
+  p.add_argument("--pattern", default="")
+  p.add_argument("--symbols", help="liste separee par des virgules, une recherche par symbole")
+  p.add_argument("--glob", dest="path_glob", default="/Fortnite.com (Fortnite)/**")
+  p.add_argument("--max-results", type=int, default=10)
+  p = ws(sub.add_parser("verse-write"))
+  p.add_argument("--file", required=True, help="fichier .verse local (workspace/verse/)")
+  p.add_argument("--path", dest="verse_path", required=True, help="chemin .verse dans le projet")
+  p.add_argument("--i-agree-to-modify-project", action="store_true")
+  ws(sub.add_parser("verse-build"), dry=True).add_argument("--log-entries", type=int, default=15)
+  p = ws(sub.add_parser("list-editables"))
+  p.add_argument("--device", help="label du device Verse pose (requis avec --live)")
+  p.add_argument("--live", action="store_true")
+  ws(sub.add_parser("playtest-plan"))
   ws(sub.add_parser("visual-snapshot"), dry=True).add_argument(
-      "--output", default="workspace_map/topdown.png")
+      "--output", default=None, help="defaut : <workspace>/topdown.png")
   ws(sub.add_parser("cleanup"))
 
   a = parser.parse_args()
   c = a.command
-  if c == "preflight":
-    return cmd_preflight(a.workspace)
-  if c == "measure-palette":
-    return cmd_measure_palette(a.workspace, a.dry_run, a.force)
-  if c == "validate-grid":
+  if c == "init" and a.list:
+    emit({"status": "PASSED", "command": "init", "templates": list_templates(),
+          "templates_root": TEMPLATES_ROOT})
+    return 0
+  if c == "validate-grid" and a.grid_file:
+    # Fichier explicite : aucune raison d'exiger un workspace (ni de le refuser).
     return cmd_validate_grid(a.grid_file)
+  workspace = resolve_workspace(a.workspace, c)
+  if workspace is None:
+    return 1
+  a.workspace = workspace
+  if c == "validate-grid":
+    return cmd_validate_grid(a.grid_file or os.path.join(workspace, "03_grid.json"))
+  if c == "init":
+    return cmd_init(workspace, a.template, a.force)
+  if c == "preflight":
+    return cmd_preflight(workspace)
+  if c == "measure-palette":
+    return cmd_measure_palette(workspace, a.dry_run, a.force)
+  if c == "validate-scene":
+    return cmd_validate_scene(workspace)
   if c == "build-structure":
-    return cmd_build_structure(a.workspace, a.dry_run)
+    return cmd_build_structure(workspace, a.dry_run)
   if c == "compile-transforms":
-    return cmd_compile_transforms(a.workspace)
+    return cmd_compile_transforms(workspace)
   if c == "place-scene":
-    return cmd_place_scene(a.workspace, a.dry_run)
+    return cmd_place_scene(workspace, a.dry_run)
   if c == "audit-scene":
-    return cmd_audit_scene(a.workspace, a.live)
+    return cmd_audit_scene(workspace, a.live)
   if c == "check-navigation":
-    return cmd_check_navigation(a.workspace)
+    return cmd_check_navigation(workspace)
+  if c == "apply-properties":
+    return cmd_apply_properties(workspace, a.dry_run)
+  if c == "wire-devices":
+    return cmd_wire_devices(workspace, a.dry_run)
+  if c == "verse-scan":
+    return cmd_verse_scan(workspace, a.root, a.recursive)
+  if c == "verse-grep":
+    return cmd_verse_grep(workspace, a.pattern, a.symbols, a.path_glob, a.max_results)
+  if c == "verse-write":
+    return cmd_verse_write(workspace, a.file, a.verse_path, a.i_agree_to_modify_project)
+  if c == "verse-build":
+    return cmd_verse_build(workspace, a.dry_run, a.log_entries)
+  if c == "list-editables":
+    return cmd_list_editables(workspace, a.device, a.live)
+  if c == "playtest-plan":
+    return cmd_playtest_plan(workspace)
   if c == "visual-snapshot":
-    return cmd_visual_snapshot(a.workspace, a.output, a.dry_run)
+    return cmd_visual_snapshot(workspace, a.output or os.path.join(workspace, "topdown.png"),
+                               a.dry_run)
   if c == "cleanup":
-    return cmd_cleanup(a.workspace)
+    return cmd_cleanup(workspace)
   return 1
 
 

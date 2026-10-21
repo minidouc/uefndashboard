@@ -1,0 +1,4 @@
+{
+  "_comment": "Rempli par `measure-palette` a partir de 01_gdd.json. Les `path_status: note_a_verifier` doivent etre confirmes par ListDeviceAssets avant la mesure : un chemin faux fait echouer le spawn, et `measure-palette` le signale asset par asset sans arreter les autres.",
+  "assets": {}
+}

@@ -120,6 +120,7 @@ Ne pas la presenter comme un `[ASSERT_OK]`. Avant d'utiliser chaque methode (`Sp
 
 - `VerseToolset.WriteFile` et les autres outils d'edition Verse sont **dangerous et non testes**. Ne les utiliser qu'avec l'accord de l'utilisateur, puis relire avec `Verse.ReadFile`.
 - Sinon : donner le code a l'utilisateur, qui le colle dans le projet.
+- Le CLI applique cette regle : `verse-write --file <workspace/verse/x.verse> --path <chemin projet>` s'arrete sur `CONSENT_REQUIRED` (code retour 1) sans accord, et n'ecrit qu'avec `--i-agree-to-modify-project`, puis relit (`read_back_matches`, historique dans `_verse_written.json`). `verse-scan [--root R] [--recursive]` et `verse-grep --symbols A,B` (ou `--pattern`) servent a verifier l'API avant d'ecrire (section 2).
 
 ## 6. Compiler (proven, session Disconnected seulement)
 
@@ -129,6 +130,8 @@ Ne pas la presenter comme un `[ASSERT_OK]`. Avant d'utiliser chaque methode (`Sp
    Les lignes sont localisees (« Compilation terminée. », « Liaison terminée. », « SUCCÈS -- Version terminée. ») et le log garde les builds precedents : comparer l'horodatage a celui de l'appel.
 4. Ne jamais conclure « 0 erreur » sur une liste vide seule : verifier aussi qu'une ligne de succes recente existe dans `VerseBuild`.
 
+Ces quatre points sont la commande `verse-build [--log-entries N]` : elle refuse une session autre que `Disconnected` (`SESSION_CONNECTED`, aucun appel d'editeur), exige un diagnostic sans erreur **et** une ligne de succes, et ecrit `09_verse_report.json`.
+
 `BuildAll` n'a pas de parametre de push. Pousser le Verse (`PushChanges`) est dangerous et non teste.
 
 ## 7. Cabler les @editable
@@ -136,4 +139,5 @@ Ne pas la presenter comme un `[ASSERT_OK]`. Avant d'utiliser chaque methode (`Sp
 - Valeurs simples (`int`, `float`, `logic`, `string`) : `Device.SetDeviceProperty {"device", "propertyName", "value"}` est **unknown** (jamais teste sur un device Verse).
 - References d'acteurs : **unknown** (hypothese `savedActor`, voir `devices-catalog-and-wiring.md`, section 6).
 - Il n'y a pas de commande `verse.set_property` ni d'injection `.t3d` : elles appartenaient a un Bridge Python qui n'existe pas dans ce montage.
-- En attendant une preuve : lister a l'utilisateur chaque `@editable` et l'`actor_label` cible, pour un cablage a la main.
+- En attendant une preuve : `list-editables` parse `workspace/verse/*.verse` et ecrit `10_editables.json`, la table `@editable` -> `actor_label` -> `refPath` a cabler a la main dans l'editeur. Les `@editable` de type primitif (`logic`, `int`, `float`, `string`, `message`, `locale`, `type`) y sont classes `PARAMETRE` : ce sont des reglages, pas des cibles, donc aucune erreur s'ils n'ont pas d'`actor_label`. Seules les references classees `ACTEUR` sans `refPath` sont signalees dans `without_target`.
+- `list-editables --live --device <label du device Verse pose>` lit `Object.list_properties` sur ce device : c'est une **lecture**, aucune ecriture. Le resultat reste une hypothese tant que le cablage automatique n'a pas ete prouve sur ce projet.

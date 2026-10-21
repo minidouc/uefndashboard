@@ -1,0 +1,34 @@
+{
+  "_comment": "Cahier des charges minimal. `requested_assets` est la seule source de truth des chemins : measure-palette les recopie dans 02_palette.json puis les mesure. Ici, uniquement des assets du moteur (/Engine/BasicShapes/Cube) : aucun chemin Fortnite invente, la chaine complete est testable sans chasse d'assets.",
+  "project_name": "Sans titre",
+  "game_mode": "1v1",
+  "scale_category": "SMALL",
+  "grid_dimensions_tiles": [4, 4, 1],
+  "zones": [],
+  "gameplay_timeline_sec": [
+    {"time": 0, "event": "Le joueur apparait sur Spawner_P1_01"},
+    {"time": 1, "event": "Aucune mecanique : gabarit vide"}
+  ],
+  "required_devices": [],
+  "requested_assets": {
+    "structure_floor": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "STRUCTURE_FLOOR",
+      "scale": [5.12, 5.12, 0.32],
+      "notes": "Cube moteur 100 cm mis a l'echelle : dalle 512 x 512 x 32 cm. Si le spawn echoue, essayer /Engine/BasicShapes/Cube.Cube."
+    },
+    "structure_wall": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "STRUCTURE_WALL",
+      "scale": [0.32, 5.12, 3.84],
+      "notes": "Mur 32 x 512 x 384 cm, pose a l'exterieur de la tuile."
+    },
+    "prop_cube": {
+      "uefn_path": "/Engine/BasicShapes/Cube",
+      "category": "PROP",
+      "scale": [1.2, 1.2, 1.2],
+      "notes": "Prop de test : cube de 120 cm."
+    }
+  },
+  "verse_modules": []
+}

@@ -1,0 +1,42 @@
+{
+  "_comment": "Rampes de duel et couvertures. Les rampes sont des props (asset mesure), pas des cellules `R_*` de la grille : la grille 1v1 n'a pas d'etage, donc aucun escalier de structure. `prop_ramp` n'a pas encore de chemin : l'etape 2 doit le trouver, sinon compile-transforms refuse l'entree.",
+  "props": [
+    {
+      "actor_label": "Ramp_Duel_P1_01",
+      "asset_key": "prop_ramp",
+      "placement_mode": "TILE_ANCHOR",
+      "tile": [3, 2, 0],
+      "slot": "CENTER",
+      "face_towards": "NORTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Ramp_Duel_P2_01",
+      "asset_key": "prop_ramp",
+      "placement_mode": "TILE_ANCHOR",
+      "tile": [4, 5, 0],
+      "slot": "CENTER",
+      "face_towards": "SOUTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Cover_Crate_01",
+      "asset_key": "prop_crate",
+      "placement_mode": "TILE_ANCHOR",
+      "tile": [1, 3, 0],
+      "slot": "CENTER",
+      "face_towards": "SOUTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Cover_Crate_02",
+      "asset_key": "prop_crate",
+      "placement_mode": "RELATIVE_TO_ACTOR",
+      "reference_actor": "Cover_Crate_01",
+      "direction": "RIGHT_OF",
+      "gap_cm": 120.0,
+      "face_towards": "SOUTH",
+      "snap_to_floor": true
+    }
+  ]
+}

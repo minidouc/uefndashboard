@@ -35,6 +35,7 @@ Regles :
 - Toujours lancer `list_properties` d'abord : les noms reels contiennent parfois des espaces (`interaction Text`) et ne suivent pas le libelle de l'interface.
 - Toujours relire avec `get_properties` apres `set_properties`, **meme en cas d'erreur** : une erreur peut accompagner une ecriture partielle.
 - Si une propriete est illisible (« the following properties could not be read: <nom> »), ne pas inventer un autre nom : relire la liste.
+- Le CLI applique ces trois regles : `apply-properties [--dry-run]` lit les `properties` de `04_devices.json`, confronte chaque nom a `list_properties` (`PROPERTY_NOT_FOUND`, avec des suggestions `nearest` reprises de la liste reelle), ecrit, relit, puis ecrit `07_properties_report.json`. Un device absent de `_placed.json` part dans `not_placed` : il n'a recu **aucun** appel editeur.
 
 ## 4. Equipe (CreativeTeamOption)
 
@@ -57,6 +58,8 @@ Prouve sur `activatingTeam` du Button V2 :
 2. `Device.AddEventBinding {"sourceDevicePath", "sourceEvent", "targetDevicePath", "targetFunction"}`. Il est idempotent : un second appel identique ne cree pas de doublon.
 3. `Device.ListEventBindings {"devicePath": <CIBLE>}` : le lien apparait sur le device **cible**, pas sur la source.
 4. `Device.RemoveEventBinding` (memes arguments) renvoie `null` : relire `ListEventBindings` pour confirmer.
+
+Ces points sont la commande `wire-devices [--dry-run]` : elle lit les `bindings` de `04_devices.json`, valide `event` et `function` contre `GetBindingOptions` sur la **source**, pose le lien, puis le recroise par `ListEventBindings` sur la **cible** (`08_wiring_report.json`). Aucun `bindings` declare : `NO_BINDING_DECLARED`, et rien n'est appele. `AddEventBinding` etant idempotent, rejouer apres une erreur partielle est sans risque.
 
 Cablage par canal : non prouve. Un essai anterieur avec un entier a echoue ; le champ attendrait un `GameplayTagContainer`.
 

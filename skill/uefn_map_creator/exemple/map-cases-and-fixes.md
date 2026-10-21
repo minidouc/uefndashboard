@@ -194,10 +194,11 @@ Rappel : il n'existe pas de PCG ni d'outil de duplication dans le MCP teste. Une
 
 ## Cas 4 : Correction Automatique d'une Collision (`OVERLAP_ERROR`)
 
-### Rapport d'Erreur (`06_audit_report.json`)
+### Rapport d'Erreur (`06_audit_report.json`, produit par `audit-scene`)
 ```json
 {
   "status": "FAILED",
+  "source": "live",
   "error_count": 1,
   "overlap_errors": [
     {
@@ -206,11 +207,11 @@ Rappel : il n'existe pas de PCG ni d'outil de duplication dans le MCP teste. Une
       "actor_b": "Wall_North_02",
       "penetration_cm": 42.0,
       "tile": [0, 2, 0],
-      "suggestion": "Place Weapon_Vending_01 using RELATIVE_TO_ACTOR IN_FRONT_OF Wall_North_02 with gap_cm >= 10.0"
+      "suggestion": "Placer Weapon_Vending_01 en RELATIVE_TO_ACTOR avec gap_cm >= 15."
     }
   ],
   "gravity_errors": [],
-  "navigation_errors": []
+  "scene_errors": []
 }
 ```
 
@@ -234,7 +235,8 @@ Un acteur deja place est saute par `place-scene` (il est dans `_placed.json`) : 
 
 ## Cas 5 : Correction Automatique d'un Objet Flottant ou Enterre (`GRAVITY_ERROR`)
 
-### Rapport d'Erreur (`06_audit_report.json`)
+### Rapport d'Erreur (`06_audit_report.json`, produit par `audit-scene --live`)
+Seul `--live` peut sortir cette erreur : il remplace les centres calcules par les bounds relus dans l'editeur. Un `audit-scene` hors ligne ne detecte jamais un objet flottant (`gravity_scope` le rappelle dans le rapport).
 ```json
 {
   "status": "FAILED",
@@ -251,7 +253,7 @@ Un acteur deja place est saute par `place-scene` (il est dans `_placed.json`) : 
       "suggestion": "Remesurer pivot_offset_cm (measure-palette --force) ou corriger snap_to_floor."
     }
   ],
-  "navigation_errors": []
+  "scene_errors": []
 }
 ```
 Un ecart constant sur tous les objets d'un meme asset designe un mauvais `pivot_offset_cm`, pas une erreur de grille : relancer `measure-palette --force` puis `compile-transforms`.
@@ -271,41 +273,35 @@ Un ecart constant sur tous les objets d'un meme asset designe un mauvais `pivot_
 
 ---
 
-## Cas 6 : Correction d'un Couloir Bouche ou d'un Escalier sans Tremie (`NAV_BLOCKED`)
+## Cas 6 : Correction d'un Couloir Bouche ou d'un Escalier sans Tremie (`CORRIDOR_TOO_NARROW`)
 
-### Rapport d'Erreur (`06_audit_report.json`)
+### Rapport d'Erreur (`06_navigation_report.json`, produit par `check-navigation`)
 ```json
 {
+  "timestamp": "2026-10-20T01:05:00+00:00",
+  "command": "check-navigation",
   "status": "FAILED",
-  "error_count": 2,
-  "overlap_errors": [],
-  "gravity_errors": [],
+  "error_count": 1,
   "navigation_errors": [
     {
       "type": "CORRIDOR_TOO_NARROW",
-      "from": "Spawner_Team1_01",
-      "to": "Objective_Main",
       "tile": [2, 1, 0],
       "free_width_cm": 64.0,
       "required_width_cm": 100.0,
       "blocking_actors": ["Generator_Prop_01", "Generator_Prop_02"]
-    },
-    {
-      "type": "HEADROOM_BLOCKED_ON_STAIRS",
-      "stair_tile": [3, 2, 0],
-      "upper_tile": [3, 2, 1],
-      "current_upper_cell": ".",
-      "required_upper_cell": "T"
     }
-  ]
+  ],
+  "navigation_scope": "paires de props dans une meme tuile ; pas de capsule, pas de murs, pas de devices, pas de passages entre tuiles",
+  "other_report": "chevauchements et gravite : 06_audit_report.json (audit-scene), non recalcule ici"
 }
 ```
 
 ### Corrections Appliquees par l'Agent
 1. **Dans `05_props.json`** : Supprimer `Generator_Prop_02` et deplacer `Generator_Prop_01` sur l'ancre `"slot": "WEST_EDGE"` pour degager le passage au centre de la tuile `[2, 1, 0]`.
-2. **Dans `03_grid.json`** : Remplacer la cellule `[3, 2]` de l'etage `z_index: 1` par `"T"` (`OPEN_STAIRWELL`) pour supprimer la dalle de plafond qui bloquait la sortie de l'escalier.
+2. **Dans `03_grid.json`** : Remplacer la cellule `[3, 2]` de l'etage `z_index: 1` par `"T"` (`OPEN_STAIRWELL`) pour supprimer la dalle de plafond qui bloquait la sortie de l'escalier. Cette erreur (`HEADROOM_BLOCKED_ON_STAIRS`) est signalee par `validate-grid`, pas par le rapport de navigation : elle n'apparait qu'en sortie propre, avec le code retour 1.
 
 ### Ou trouves tu ces erreurs
-- `CORRIDOR_TOO_NARROW` vient de `check-navigation`, dans `navigation_errors`. Le rapport ne nomme pas les extremites du trajet (`from` / `to` n'existent pas) : il donne `tile`, `free_width_cm`, `required_width_cm` et les deux `blocking_actors`.
-- `HEADROOM_BLOCKED_ON_STAIRS` vient de `validate-grid` (sortie propre, code retour 1), pas du rapport d'audit.
+- `CORRIDOR_TOO_NARROW` vient de `check-navigation`, dans `navigation_errors` de `06_navigation_report.json`. Le rapport ne nomme pas les extremites du trajet (`from` / `to` n'existent pas) : il donne `tile`, `free_width_cm`, `required_width_cm` et les deux `blocking_actors`.
+- `HEADROOM_BLOCKED_ON_STAIRS` vient de `validate-grid` (sortie propre, code retour 1), pas d'un rapport d'audit.
+- `check-navigation` n'ecrit plus dans `06_audit_report.json` : les deux rapports sont separes, chacun avec son propre `status` coherent avec son code retour.
 - apres un deplacement, relancer la chaine complete : `compile-transforms`, `place-scene` (ou repositionnement a la main), `audit-scene --live`, `check-navigation`.

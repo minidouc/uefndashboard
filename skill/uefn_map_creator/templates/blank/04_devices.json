@@ -1,0 +1,4 @@
+{
+  "_comment": "Aucun device : un Cube moteur n'est pas un device et ne se pose pas par PlaceDevice. `bindings` se remplit avec les chaines exactes renvoyees par Device.GetBindingOptions (jamais un nom devine), puis s'applique par `wire-devices`.",
+  "devices": []
+}

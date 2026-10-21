@@ -1,0 +1,4 @@
+{
+  "_comment": "Aucune prop : un Box Fight doit rester 100 % vide pour que les joueurs puissent poser leurs grilles de construction sur toutes les cases (level-design-patterns.md section 3). Les murs interieurs (`W`) et portes (`P`) eventuels se declareraient ici.",
+  "props": []
+}

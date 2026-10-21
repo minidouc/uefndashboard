@@ -1,0 +1,116 @@
+{
+  "_comment": "Spawns et barrieres symetriques sur l'axe X. `bindings` vide : remplir `event` et `function` avec les chaines exactes de Device.GetBindingOptions, puis lancer `wire-devices`. Les devices de Zone_Logic portent `placement_mode: \"WORLD\"` : ils ne sont sur aucune tuile de 03_grid.json, leurs coordonnees sont absolues (`world_location_cm`, centre de la boite) et `on_floor: false` desactive le controle de gravite. Sans cela validate-scene signale TILE_OUT_OF_GRID.",
+  "devices": [
+    {
+      "actor_label": "Spawner_Team1_01",
+      "asset_key": "player_spawner",
+      "tile": [1, 2, 0],
+      "slot": "CENTER",
+      "device_class": "player_spawner_device",
+      "face_towards": "NORTH",
+      "on_floor": true,
+      "properties": {
+        "playerTeam": {
+          "teamType": "TeamIndex",
+          "teamIndex": 1
+        },
+        "visibleInGame": false
+      },
+      "bindings": []
+    },
+    {
+      "actor_label": "Spawner_Team2_01",
+      "asset_key": "player_spawner",
+      "tile": [4, 2, 0],
+      "slot": "CENTER",
+      "device_class": "player_spawner_device",
+      "face_towards": "SOUTH",
+      "on_floor": true,
+      "properties": {
+        "playerTeam": {
+          "teamType": "TeamIndex",
+          "teamIndex": 2
+        },
+        "visibleInGame": false
+      },
+      "bindings": []
+    },
+    {
+      "actor_label": "Barrier_Team1_01",
+      "asset_key": "barrier",
+      "tile": [2, 2, 0],
+      "slot": "CENTER",
+      "device_class": "barrier_device",
+      "face_towards": "SOUTH",
+      "on_floor": true,
+      "properties": {},
+      "bindings": []
+    },
+    {
+      "actor_label": "Barrier_Team2_01",
+      "asset_key": "barrier",
+      "tile": [3, 2, 0],
+      "slot": "CENTER",
+      "device_class": "barrier_device",
+      "face_towards": "NORTH",
+      "on_floor": true,
+      "properties": {},
+      "bindings": []
+    },
+    {
+      "actor_label": "Granter_Loadout_01",
+      "asset_key": "item_granter",
+      "placement_mode": "WORLD",
+      "world_location_cm": [-5888.0, 1280.0, -2304.0],
+      "zone": "Zone_Logic",
+      "device_class": "item_granter_device",
+      "face_towards": "NORTH",
+      "on_floor": false,
+      "properties": {
+        "onGrantAction": "Clear Inventory",
+        "bEquipGrantedItem": true,
+        "grantCondition": "Always",
+        "bGrantOnGameStart": false
+      },
+      "bindings": []
+    },
+    {
+      "actor_label": "Round_Timer_01",
+      "asset_key": "round_timer",
+      "placement_mode": "WORLD",
+      "world_location_cm": [-5376.0, 1280.0, -2304.0],
+      "zone": "Zone_Logic",
+      "device_class": "timer_device",
+      "face_towards": "NORTH",
+      "on_floor": false,
+      "properties": {},
+      "bindings": []
+    },
+    {
+      "actor_label": "Score_Manager_01",
+      "asset_key": "score_manager",
+      "placement_mode": "WORLD",
+      "world_location_cm": [-5888.0, 1792.0, -2304.0],
+      "zone": "Zone_Logic",
+      "device_class": "score_manager_device",
+      "face_towards": "NORTH",
+      "on_floor": false,
+      "properties": {},
+      "bindings": []
+    },
+    {
+      "actor_label": "End_Game_01",
+      "asset_key": "end_game",
+      "placement_mode": "WORLD",
+      "world_location_cm": [-5888.0, 2304.0, -2304.0],
+      "zone": "Zone_Logic",
+      "device_class": "end_game_device",
+      "face_towards": "NORTH",
+      "on_floor": false,
+      "properties": {
+        "whatToEnd": "EndGame"
+      },
+      "bindings": []
+    }
+  ]
+}

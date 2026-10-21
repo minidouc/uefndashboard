@@ -44,6 +44,8 @@ Etat des tests du 2026-10-19 :
 - `GetClientLogEntries` : **failed** hors session (« No client log was found; start a play-in-client session first. »). Aucun log client n'a jamais ete obtenu.
 - Aucune validation d'assets n'est accessible par MCP (`validate_folder` / `validate_selected` n'existent pas dans ce montage).
 
+`playtest-plan` prepare cette etape sans rien lancer : il relit `_placed.json`, `06_audit_report.json` et `09_verse_report.json`, affiche le texte d'accord a demander, la sequence ci-dessous et le gatekeeper (des lignes de log **client** reelles). Aucun appel de session n'est fait par cette commande.
+
 Procedure si l'utilisateur donne son accord explicite pour une session :
 1. Verifier avant : `Verse.BuildAll` sans erreur, recoupe dans les logs `VerseBuild`.
 2. Demander a l'utilisateur de lancer la validation d'assets dans l'editeur.

@@ -21,9 +21,11 @@ ne garde que la routage utile au constructeur de carte.
 python script/mcp_client.py ping
 python script/mcp_client.py call Scene find_actors '{"name": "Spawner", "collision_channels": []}'
 python script/mcp_client.py call Object list_properties @args.json --max 8000
+python script/mcp_client.py call Device AddEventBinding @binding.json --log workspace_map/_mcp_calls.jsonl
 ```
-Codes retour : `0` ok, `1` erreur outil, `2` editeur injoignable (rien execute), `3` timeout (etat inconnu).
-Variables : `UEFN_MCP_URL`, `UEFN_MCP_TIMEOUT` (60 s par defaut).
+Codes retour : `0` ok, `1` erreur outil (l'appel a ete traite, l'etat peut etre partiel), `2` editeur injoignable (rien execute), `3` timeout (etat inconnu).
+Variables : `UEFN_MCP_URL`, `UEFN_MCP_TIMEOUT` (60 s par defaut), `UEFN_MCP_LOG` (journal JSONL).
+Un appel direct n'est **pas journalise** sans `--log` ni `UEFN_MCP_LOG` : le CLI spatial, lui, ecrit toujours `<workspace>/_mcp_calls.jsonl`.
 
 ## 2. Alias de toolsets (mcp_client.py)
 
@@ -129,6 +131,7 @@ Regles :
 ## 6. Timeout et etat inconnu
 
 Si un appel expire (code 3, `TIMEOUT_OUTCOME_UNKNOWN`), l'action a peut-etre eu lieu.
+Un code 1 (`TOOL_ERROR`) sur une commande d'ecriture a la meme consequence : l'appel a ete traite, l'etat peut etre partiel. Seul le code 2 (`OFFLINE`) garantit que rien n'a ete execute.
 1. **Ne pas relancer a l'aveugle.**
 2. Relire : `find_actors` par label ou par tag, `get_actor_transform`, `GetSessionStatus`.
 3. Relancer seulement ce qui manque. Les commandes du CLI le font : `place_actors` relit chaque label du lot et signale `BATCH_RECOVERED`.
@@ -136,22 +139,40 @@ Si un appel expire (code 3, `TIMEOUT_OUTCOME_UNKNOWN`), l'action a peut-etre eu 
 
 ## 7. Commandes du CLI (`script/uefn_spatial_cli.py`)
 
+Toutes prennent `--workspace <chemin_absolu>` : le dossier d'etat de la carte, **hors du skill**
+(refus `WORKSPACE_INSIDE_SKILL` sinon). `init` le cree depuis un gabarit (`templates/`).
+
 | commande | editeur | role |
 |---|---|---|
+| `init --template blank\|1v1_arena\|boxfight [--force]` | non | cree le workspace et ses 5 specs ; `--list` liste les gabarits ; n'ecrase jamais un workspace rempli sans `--force` |
 | `preflight` | oui | ping, pagination a 200, etat session |
 | `measure-palette [--force] [--dry-run]` | oui | pose chaque asset a (0, -20000, 5000), relit bounds et pivot, supprime ; ecrit `02_palette.json` |
-| `validate-grid [fichier]` | non | bordures fermees, escaliers, symetrie, accessibilite 2D |
+| `validate-grid [fichier]` | non | bordures fermees, escaliers, symetrie (axe `X` ou `Y`), accessibilite 2D |
+| `validate-scene` | non | forme des 5 specs (`spec_schema.py`) + coherence croisee ; `PALETTE_EMPTY` tant que rien n'est mesure |
 | `build-structure [--dry-run]` | oui | sols et murs de perimetre par lots de 10, relecture des transforms |
-| `compile-transforms` | non | calcule `_compiled_scene.json` (devices et props) |
-| `place-scene [--dry-run]` | oui | devices (PlaceDevice puis transform forcee) et props (lots) |
-| `audit-scene [--live]` | non / oui | chevauchements et gravite ; `--live` remplace la theorie par les bounds relus |
-| `check-navigation` | non | couloirs < 100 cm entre props d'une meme tuile (pas de capsule, pas de murs) |
+| `compile-transforms` | non | calcule `_compiled_scene.json` (devices et props), echelle comprise |
+| `place-scene [--dry-run]` | oui | devices (PlaceDevice puis transform forcee) et props (lots), relecture position/yaw/echelle |
+| `audit-scene [--live]` | non / oui | chevauchements et gravite -> `06_audit_report.json` ; `--live` remplace la theorie par les bounds relus |
+| `check-navigation` | non | couloirs < 100 cm entre props d'une meme tuile -> `06_navigation_report.json` (pas de capsule, pas de murs) |
+| `apply-properties [--dry-run]` | oui | `list_properties` -> `set_properties` -> `get_properties` -> `07_properties_report.json` |
+| `wire-devices [--dry-run]` | oui | `GetBindingOptions` -> `AddEventBinding` -> `ListEventBindings` (cible) -> `08_wiring_report.json` |
+| `verse-scan [--root R] [--recursive]` | oui | `Verse.ListFiles` -> `_verse_files.json` (vide = inconnu, pas absent) |
+| `verse-grep --pattern P \| --symbols A,B [--glob G]` | oui | `Verse.Grep` par symbole -> `_verse_grep.json` ; FAILED si un symbole manque |
+| `verse-write --file F --path P [--i-agree-to-modify-project]` | oui | `WriteFile` puis `ReadFile` ; sans le flag : `CONSENT_REQUIRED`, rien n'est ecrit |
+| `verse-build [--dry-run] [--log-entries N]` | oui | session `Disconnected` exigee, `BuildAll` + logs `VerseBuild` -> `09_verse_report.json` |
+| `list-editables [--live --device LABEL]` | non / oui | table `@editable` -> `actor_label` -> `refPath` -> `10_editables.json` (cablage manuel) |
+| `playtest-plan` | non | imprime la demande d'accord et la sequence de session ; **ne lance rien** |
 | `visual-snapshot [--output]` | oui | camera au-dessus de la grille, pitch -90, PNG decode |
 | `cleanup` | oui | **supprime tous les acteurs portant le tag de la map** (`UEFN_MAP_TAG`, defaut `UEFNMAP`) |
 
-Toutes prennent `--workspace` (defaut `workspace_map`). Chaque appel est journalise dans `<workspace>/_mcp_calls.jsonl`.
+Chaque appel est journalise dans `<workspace>/_mcp_calls.jsonl`.
 `--dry-run` renvoie `DRY_RUN`, jamais `PASSED`. Codes retour : `0` PASSED, `1` FAILED, `2` editeur injoignable, `3` timeout.
-Statut `PASSED` = relu dans l'editeur. Aucune commande ne sauvegarde le niveau.
+Statut `PASSED` = relu dans l'editeur (sauf commandes marquees « non », qui ne lisent que le disque).
+Aucune commande ne sauvegarde le niveau, ne publie, ni ne lance de session.
+
+Verification sans editeur : `python script/tests/verify.py` (faux serveur MCP
+`script/tests/mock_mcp.py`, 127.0.0.1 uniquement) -> `86/86 OK`. Procedure complete :
+`references/first-run.md`.
 
 ## 8. Interdits sans accord explicite de l'utilisateur
 

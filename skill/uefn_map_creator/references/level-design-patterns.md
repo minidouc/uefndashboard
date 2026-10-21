@@ -27,7 +27,7 @@ Un vrai **1v1 Build Fight** competitif ne se contente pas d'un plateau plat : il
   - Placer une `barrier_device` centrale entre les deux rampes qui bloque le passage pendant les 3 secondes de `Countdown` et se desactive au signal `COMBAT !`.
 - **Disposition en Quinte des Barils de Reset (`5 explosive_device`)** :
   - `Reset_Explosive_01..04` sur les 4 coins (`[0,0,0]`, `[7,0,0]`, `[0,7,0]`, `[7,7,0]`).
-  - `Reset_Explosive_05` au **centre exact de l'arene (`[3, 3, 0]` ou `[4, 4, 0]`)** pour detruire immediatement les deux premières rampes posées par les joueurs et provoquer l'effondrement par gravite de toute la tour de build.
+  - `Reset_Explosive_05` au **centre exact de l'arene (`[3, 3, 0]` ou `[4, 4, 0]`)** pour detruire immediatement les deux premieres rampes posees par les joueurs et provoquer l'effondrement par gravite de toute la tour de build.
 
 ---
 
@@ -46,5 +46,5 @@ Un vrai **1v1 Build Fight** competitif ne se contente pas d'un plateau plat : il
 - Diviser obligatoirement le niveau en **3 Zones** dans `01_gdd.json` :
   - `Zone_A_BaseTeam1` (`6 x 6` tuiles)
   - `Zone_B_Midground` (`8 x 8` tuiles avec couvertures symetriques)
-  - `Zone_C_BaseTeam2` (`6 x 6` tuiles, image miroir à 180° de `Zone_A`)
+  - `Zone_C_BaseTeam2` (`6 x 6` tuiles, image miroir a 180° de `Zone_A`)
 - **Regle des Lignes de Vue (Sightline Blocking)** : Ne jamais laisser une ligne de tir directe et degagee entre un `Player Spawner` de la `Zone_A` et un `Player Spawner` de la `Zone_C` (Anti-Spawn Kill). Toujours interposer un mur d'ecran ou un obstacle central sur la ligne mediane de `Zone_B`.
