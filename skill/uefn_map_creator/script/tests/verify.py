@@ -594,6 +594,167 @@ check("L3 check-navigation hors ligne -> PASSED, rapport propre",
       and os.path.exists(os.path.join(ws_off, "06_navigation_report.json")), str(d)[:200])
 check("L3b check-navigation n'herite PAS des erreurs d'un audit precedent",
       d and "scene_errors" not in d and d.get("other_report"), json.dumps(d)[:200])
+# =========================================================== M. symetrie reelle
+
+print("== M. check-symmetry : la symetrie posee, pas seulement la matrice ==")
+SYM_GRID = [["#", "#", "#", "#"], ["#", "S1", ".", "#"], ["#", ".", "S2", "#"],
+            ["#", "#", "#", "#"]]
+G5 = [["#", "#", "#", "#", "#"], ["#", "S1", ".", ".", "#"], ["#", ".", "R_N", ".", "#"],
+      ["#", ".", ".", "S2", "#"], ["#", "#", "#", "#", "#"]]
+R180_RAMPS = {"symmetric": True, "symmetry_axis": "R180", "floors": [
+    {"z_index": 0, "matrix": [["#", "#", "#", "#"], ["#", "R_N", "S1", "#"],
+                              ["#", "S2", "R_S", "#"], ["#", "#", "#", "#"]]}]}
+SYM_PAL = {"assets": {"prop_ramp": {
+    "uefn_path": "/Fortnite/Game/Props/Ramp", "category": "PROP", "scale": 1.0,
+    "size_cm": [200.0, 100.0, 150.0], "pivot_offset_cm": [0.0, 0.0, 0.0],
+    "measured": {"at": "2026-10-22T00:00:00+00:00", "kind": "actor"}}}}
+
+
+def ramp(label, tile, slot, face, extra=None):
+  p = {"actor_label": label, "asset_key": "prop_ramp", "placement_mode": "TILE_ANCHOR",
+       "tile": tile, "slot": slot, "face_towards": face}
+  p.update(extra or {})
+  return p
+
+
+PAIRED = [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH"),
+          ramp("Ramp_B", [2, 2, 0], "SOUTH_EDGE", "NORTH")]
+DECENTRE = [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH"),
+            ramp("Ramp_B", [2, 2, 0], "CENTER", "NORTH")]
+
+
+def sym_ws(name, axis, props_list, matrix=None):
+  ws = os.path.join(ROOT, "sym", name)
+  shutil.rmtree(ws, ignore_errors=True)
+  write(os.path.join(ws, "01_gdd.json"), {"project_name": "sym", "game_mode": "1v1"})
+  write(os.path.join(ws, "02_palette.json"), SYM_PAL)
+  write(os.path.join(ws, "03_grid.json"), grid(matrix or SYM_GRID, axis, axis is not None))
+  write(os.path.join(ws, "04_devices.json"), {"devices": []})
+  write(os.path.join(ws, "05_props.json"), {"props": props_list})
+  return ws
+
+
+ws = sym_ws("ok", "R180", PAIRED)
+rc, d, raw = cli(["check-symmetry"], ws, env)
+check("M1 R180 : deux rampes miroirs -> PASSED, 1 paire verifiee, un seul JSON emis",
+      rc == 0 and d and d["status"] == "PASSED" and d["axis"] == "R180"
+      and d["checked_pairs"] == 1 and d["source"] == "compiled"
+      and raw.count('"status"') == 1, f"rc={rc} raw={raw[:200]}")
+ws_bad = sym_ws("decalee", "R180", DECENTRE)
+rc, d, _ = cli(["check-symmetry"], ws_bad, env)
+e0 = ((d or {}).get("spec_errors") or [{}])[0]
+check("M2 rampe decalee -> SPEC_ASYMMETRY avec position attendue (le defaut de la capture)",
+      rc == 1 and d and d["status"] == "FAILED" and e0.get("type") == "SPEC_ASYMMETRY"
+      and e0.get("max_delta_cm", 0) > 100 and e0.get("expected_center_b_cm")
+      and e0.get("actor_b") == "Ramp_B", json.dumps(e0)[:260])
+ws = sym_ws("absente", "R180", [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH"),
+                                ramp("Ramp_B", [2, 1, 0], "SOUTH_EDGE", "NORTH")])
+rc, d, _ = cli(["check-symmetry"], ws, env)
+check("M3 partenaire hors de la tuile miroir -> MIRROR_PARTNER_MISSING",
+      rc == 1 and "MIRROR_PARTNER_MISSING" in types(d, "spec_errors"), json.dumps(d)[:220])
+ws = sym_ws("optout", "R180", [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH",
+                                    {"mirror": False}),
+                               ramp("Ramp_B", [2, 2, 0], "CENTER", "NORTH", {"mirror": False})])
+rc, d, _ = cli(["check-symmetry"], ws, env)
+check("M4 `mirror: false` des deux cotes -> PASSED, exclusion annoncee dans le scope",
+      rc == 0 and d and d["status"] == "PASSED" and d["checked_pairs"] == 0
+      and any("mirror: false" in s for s in d["scope"]), json.dumps(d)[:260])
+ws = sym_ws("sansaxe", None, DECENTRE)
+rc, d, _ = cli(["check-symmetry"], ws, env)
+check("M5 aucun symmetry_axis -> PASSED mais le scope dit que RIEN n'est verifie",
+      rc == 0 and d and d["status"] == "PASSED" and d["axis"] is None
+      and d["scope"][0].startswith("AUCUN AXE"), json.dumps(d)[:240])
+ws = sym_ws("yaw", "R180", [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH"),
+                            ramp("Ramp_B", [2, 2, 0], "SOUTH_EDGE", "SOUTH")])
+rc, d, _ = cli(["check-symmetry"], ws, env)
+e0 = ((d or {}).get("spec_errors") or [{}])[0]
+check("M6 position juste mais yaw non miroite -> fault yaw",
+      rc == 1 and e0.get("fault") == "yaw" and e0.get("expected_yaw_b") == 0.0
+      and e0.get("yaw_b") == 180.0, json.dumps(e0)[:240])
+ws = sym_ws("schema", "R180", [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH",
+                                    {"mirror": False})])
+rc, d, _ = cli(["validate-scene"], ws, env)
+check("M7 `mirror` est une cle de schema -> pas de UNKNOWN_KEY",
+      rc == 0 and d and d["status"] == "PASSED", json.dumps(d)[:200])
+
+validate_grid(grid(SYM_GRID, "R180", True), "M8 validate-grid R180 correct -> PASSED", "PASSED")
+broken_r180 = [r[:] for r in SYM_GRID]
+broken_r180[2][2] = "S1"
+validate_grid(grid(broken_r180, "R180", True),
+              "M9 R180 : S1 au lieu de S2 -> SYMMETRY_BROKEN (avant : non controle)",
+              "FAILED", "SYMMETRY_BROKEN")
+validate_grid(R180_RAMPS, "M10 R180 : R_N/R_S et S1/S2 -> PASSED", "PASSED")
+same_ramp_r180 = json.loads(json.dumps(R180_RAMPS))
+same_ramp_r180["floors"][0]["matrix"][2][2] = "R_N"
+validate_grid(same_ramp_r180, "M11 R180 : deux R_N opposes -> SYMMETRY_BROKEN",
+              "FAILED", "SYMMETRY_BROKEN")
+d = validate_grid(grid(G5, "R180", True),
+                  "M12 rampe sur le plan de symetrie -> SYMMETRY_ON_AXIS seul",
+                  "FAILED", "SYMMETRY_ON_AXIS")
+check("M12b SYMMETRY_ON_AXIS est la seule erreur de M12",
+      d and [e["type"] for e in d["errors"]] == ["SYMMETRY_ON_AXIS"],
+      json.dumps((d or {}).get("errors"))[:220])
+tpl = os.path.join(SKILL, "templates", "1v1_arena", "03_grid.json")
+rc, out, err = run([CLI, "validate-grid", tpl])
+check("M13 gabarit 1v1_arena declare en R180 -> validate-grid PASSED",
+      rc == 0 and json.loads(out)["status"] == "PASSED", out[:200] + err[:200])
+MIRROR_X_VERSUS = [["#", "#", "#", "#"], ["#", "S1", "S2", "#"], ["#", "S2", "S1", "#"],
+                   ["#", "#", "#", "#"]]
+validate_grid(grid(MIRROR_X_VERSUS, "X", True),
+              "M13b miroir X versus : S1 <-> S2 de part et d'autre -> PASSED", "PASSED")
+same_side = [r[:] for r in MIRROR_X_VERSUS]
+same_side[2][1] = "S1"
+validate_grid(grid(same_side, "X", True),
+              "M13c miroir X : S1 des deux cotes -> PASSED (portee assumee : l'echange des "
+              "equipes n'est exige qu'en R180, sinon boxfight casse)", "PASSED")
+validate_grid(grid([["#", "#", "#", "#"], ["#", "S1", ".", "#"], ["#", "S1", ".", "#"],
+                    ["#", "#", "#", "#"]], "X", True),
+              "M13d une seule equipe (co-op) : rien a echanger -> PASSED", "PASSED")
+
+ws_live = sym_ws("live", "R180", PAIRED)
+cli(["compile-transforms"], ws_live, env)
+rc, d, _ = cli(["place-scene"], ws_live, env)
+rc, d, raw = cli(["check-symmetry", "--live"], ws_live, env)
+check("M14 --live sans derive : source=live, PASSED",
+      rc == 0 and d and d["source"] == "live" and d["status"] == "PASSED"
+      and d["checked_pairs"] == 1, f"rc={rc} raw={raw[:220]}")
+m.state(drift={"Ramp_B": [40.0, 0.0, 0.0]})
+rc, d, _ = cli(["check-symmetry", "--live"], ws_live, env)
+check("M15 acteur pousse de 40 cm dans l'editeur -> TRANSFORM_DRIFT + SCENE_ASYMMETRY",
+      rc == 1 and d and "TRANSFORM_DRIFT" in types(d, "drift_errors")
+      and "SCENE_ASYMMETRY" in types(d, "scene_errors"), json.dumps(d)[:300])
+m.state(drift={})
+ws_np = sym_ws("nonplace", "R180", PAIRED)
+cli(["compile-transforms"], ws_np, env)
+rc, d, _ = cli(["check-symmetry", "--live"], ws_np, env)
+check("M16 --live sans _placed.json -> not_live + NO_LIVE_DATA + NOT_PLACED",
+      rc == 1 and d and d["source"] == "not_live"
+      and "NO_LIVE_DATA" in types(d, "scene_errors")
+      and "NOT_PLACED" in types(d, "drift_errors"), json.dumps(d)[:260])
+rep = os.path.join(ws_live, "11_symmetry_report.json")
+loaded = json.load(open(rep, encoding="utf-8")) if os.path.exists(rep) else {}
+check("M17 11_symmetry_report.json ecrit avec les cles du contrat",
+      {"timestamp", "command", "status", "axis", "symmetric", "source", "error_count",
+       "checked_pairs", "spec_errors", "drift_errors", "scene_errors", "scope"} <= set(loaded),
+      json.dumps(sorted(loaded))[:220])
+ws_ko = sym_ws("specko", "R180", [ramp("Ramp_A", [1, 1, 0], "NORTH_EDGE", "SOUTH"),
+                                  ramp("Ramp_B", [2, 2, 0], "CENTER", "NOPE")])
+rc, d, _ = cli(["check-symmetry"], ws_ko, env)
+check("M18 specs invalides -> COMPILE_FAILED explicite, pas un silence",
+      rc == 1 and d and types(d) == ["COMPILE_FAILED"], json.dumps(d)[:220])
+ws = sym_ws("annonce", "R180", PAIRED)
+rc, d, _ = cli(["validate-scene"], ws, env)
+check("M19 validate-scene annonce check-symmetry (SYMMETRY_SCOPE, avant : jamais emis)",
+      rc == 0 and d and "SYMMETRY_SCOPE" in [w.get("type") for w in d.get("warnings", [])]
+      and "check-symmetry" in json.dumps(d.get("warnings")), json.dumps(d)[:260])
+ws = sym_ws("annonce2", "R180", PAIRED)
+write(os.path.join(ws, "03_grid.json"), grid(SYM_GRID, None, True))
+rc, d, _ = cli(["validate-scene"], ws, env)
+check("M20 symmetric: true sans axe -> SYMMETRY_SCOPE dit que rien n'est controle",
+      rc == 0 and d and any(w.get("type") == "SYMMETRY_SCOPE"
+                            and "aucun controle" in w.get("detail", "")
+                            for w in d.get("warnings", [])), json.dumps(d)[:260])
+
 before = len(json.load(open(os.path.join(WS, "_placed.json"), encoding="utf-8")))
 rc, d, _ = cli(["cleanup"], WS, env)
 check("L4 cleanup supprime les acteurs taggues et efface _placed.json",

@@ -1,5 +1,5 @@
 {
-  "_comment": "Les noms de proprietes ci-dessous viennent d'anciennes notes : `apply-properties` les confronte a Object.list_properties et signale PROPERTY_NOT_FOUND au lieu de deviner. `bindings` est vide volontairement : les chaines `event` et `function` doivent venir de Device.GetBindingOptions sur la source (jamais un nom invente), puis `wire-devices` recroise par ListEventBindings sur la cible. Les devices de Zone_Logic portent `placement_mode: \"WORLD\"` : ils ne sont sur aucune tuile de 03_grid.json, leurs coordonnees sont absolues (`world_location_cm`, centre de la boite) et `on_floor: false` desactive le controle de gravite. Sans cela validate-scene signale TILE_OUT_OF_GRID.",
+  "_comment": "Arene symetrique par ROTATION de 180 degres (03_grid.json, symmetry_axis R180) : chaque device pose sur la grille a un jumeau en [7-r, 7-c] avec le yaw inverse (NORTH <-> SOUTH, EAST <-> WEST). `check-symmetry` le verifie et signale MIRROR_PARTNER_MISSING si le jumeau manque ; un device volontairement unique porte `mirror: false` DES DEUX cotes. Les devices de Zone_Logic sont en `placement_mode: \"WORLD\"` : hors grille, `check-symmetry` les ignore. Les noms de proprietes ci-dessous viennent d'anciennes notes : `apply-properties` les confronte a Object.list_properties et signale PROPERTY_NOT_FOUND au lieu de deviner. `bindings` est vide volontairement : les chaines `event` et `function` doivent venir de Device.GetBindingOptions sur la source (jamais un nom invente), puis `wire-devices` recroise par ListEventBindings sur la cible. `on_floor: false` desactive le controle de gravite sur Zone_Logic, sans cela validate-scene signale TILE_OUT_OF_GRID.",
   "devices": [
     {
       "actor_label": "Spawner_P1_01",
@@ -44,6 +44,17 @@
       "slot": "CENTER",
       "device_class": "barrier_device",
       "face_towards": "SOUTH",
+      "on_floor": true,
+      "properties": {},
+      "bindings": []
+    },
+    {
+      "actor_label": "Barrier_Center_02",
+      "asset_key": "barrier",
+      "tile": [4, 3, 0],
+      "slot": "CENTER",
+      "device_class": "barrier_device",
+      "face_towards": "NORTH",
       "on_floor": true,
       "properties": {},
       "bindings": []
@@ -111,6 +122,20 @@
       "slot": "CENTER",
       "device_class": "explosive_device",
       "face_towards": "SOUTH",
+      "on_floor": true,
+      "properties": {
+        "visible During Game": false,
+        "can be Damaged": false
+      },
+      "bindings": []
+    },
+    {
+      "actor_label": "Reset_Explosive_06",
+      "asset_key": "explosive_barrel",
+      "tile": [4, 4, 0],
+      "slot": "CENTER",
+      "device_class": "explosive_device",
+      "face_towards": "NORTH",
       "on_floor": true,
       "properties": {
         "visible During Game": false,

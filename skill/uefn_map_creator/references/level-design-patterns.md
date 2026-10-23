@@ -14,20 +14,20 @@
 ## 2. Patron Officiel Mode 1 : `1v1 Build Fight` (`8 x 8` tuiles)
 
 ### Pourquoi un plateau 100% vide est insuffisant
-Un vrai **1v1 Build Fight** competitif ne se contente pas d'un plateau plat : il exige un **Pad de Depart Central (`O`)** au milieu de l'arene compose de **2 rampes de depart face-a-face (ou dos-a-dos)** separees par une barriere de depart, ainsi qu'un **maillage de 5 barils explosifs** (4 aux coins + 1 au centre sous le pad de depart) pour garantir que 100% des constructions s'effondrent entre chaque manche.
+Un vrai **1v1 Build Fight** competitif ne se contente pas d'un plateau plat : il exige un **Pad de Depart Central (`O`)** au milieu de l'arene compose de **2 rampes de depart face-a-face (ou dos-a-dos)** separees par une barriere de depart, ainsi qu'un **maillage de 6 barils explosifs** (4 aux coins + 2 au centre sous le pad de depart) pour garantir que 100% des constructions s'effondrent entre chaque manche.
 
 ### Architecture Spatiale Obligatoire (`Zone_Arena` 8x8)
-- **Dimensions** : `8 x 8` tuiles (`4096 x 4096 cm`), `edge_policy: "fall_zone"`, `symmetry: "rotate_180_swap_teams"`.
+- **Dimensions** : `8 x 8` tuiles (`4096 x 4096 cm`), `edge_policy: "fall_zone"`, symetrie par **rotation de 180 degres avec echange des equipes** : dans `03_grid.json`, `"symmetric": true` et `"symmetry_axis": "R180"`. Consequence concrete : **chaque** acteur de `04_devices.json` et `05_props.json` a un jumeau dans la tuile opposee (`[r, c]` <-> `[7-r, 7-c]`), avec le yaw miroir. `validate-grid` controle la matrice, `check-symmetry` controle les acteurs, `check-symmetry --live` controle ce qui est reellement pose. Un acteur volontairement unique (decor, HUD) porte `"mirror": false` **des deux cotes** de sa paire, sinon `MIRROR_PARTNER_MISSING`.
 - **Position des Spawns** :
   - `Spawner_P1_01` en tuile `D2` (`[3, 1, 0]`), `slot: "CENTER"`, `face_towards: "NORTH"`.
   - `Spawner_P2_01` en tuile `E7` (`[4, 6, 0]`), `slot: "CENTER"`, `face_towards: "SOUTH"`.
   - Distance inter-spawns : `2611 cm` (~2.9 secondes de sprint).
 - **Structure de Duel Centrale (Tuiles `D4` et `E5` ou `D4` et `D5`)** :
   - Placer **2 rampes de depart** menant l'une vers l'autre au centre (`O`), orientees exactement dans l'axe des deux joueurs (`NORTH` pour P1, `SOUTH` pour P2).
-  - Placer une `barrier_device` centrale entre les deux rampes qui bloque le passage pendant les 3 secondes de `Countdown` et se desactive au signal `COMBAT !`.
-- **Disposition en Quinte des Barils de Reset (`5 explosive_device`)** :
-  - `Reset_Explosive_01..04` sur les 4 coins (`[0,0,0]`, `[7,0,0]`, `[0,7,0]`, `[7,7,0]`).
-  - `Reset_Explosive_05` au **centre exact de l'arene (`[3, 3, 0]` ou `[4, 4, 0]`)** pour detruire immediatement les deux premieres rampes posees par les joueurs et provoquer l'effondrement par gravite de toute la tour de build.
+  - Placer **deux** `barrier_device` centrales, une de chaque cote du pad (`[3, 4, 0]` face `SOUTH` et son miroir R180 `[4, 3, 0]` face `NORTH`) : une seule barriere au centre n'a pas de jumeau et casse la symetrie. Elles bloquent le passage pendant les 3 secondes de `Countdown` et se desactivent au signal `COMBAT !`.
+- **Disposition des Barils de Reset (`6 explosive_device`, 3 paires R180)** :
+  - `Reset_Explosive_01..04` sur les 4 coins (`[0,0,0]` et `[7,7,0]` forment une paire, `[7,0,0]` et `[0,7,0]` l'autre).
+  - `Reset_Explosive_05` en `[3, 3, 0]` **et** `Reset_Explosive_06` en `[4, 4, 0]`, son miroir R180 : ensemble ils couvrent le centre exact de l'arene pour detruire immediatement les deux premieres rampes posees par les joueurs et provoquer l'effondrement par gravite de toute la tour de build. Un baril **unique** au centre n'est pas sur le plan de symetrie (il n'y en a pas en R180 sur une grille 8 x 8) : il remonte en `MIRROR_PARTNER_MISSING`.
 
 ---
 

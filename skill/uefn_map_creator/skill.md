@@ -40,7 +40,7 @@ Chaque appel du CLI spatial est journalise dans `<workspace>/_mcp_calls.jsonl`. 
 python script/tests/verify.py
 ```
 Demarre un faux serveur MCP local (`script/tests/mock_mcp.py`, 127.0.0.1 uniquement) et rejoue la
-chaine complete, y compris les pieges documentes. Attendu : `86/86 OK`. Cela prouve les
+chaine complete, y compris les pieges documentes. Attendu : `110/110 OK`. Cela prouve les
 **contrats** du skill (codes retour, statuts, refus sans accord, rapports honnetes), pas le
 comportement de l'editeur reel. Procedure de premier test complet : `references/first-run.md`.
 
@@ -49,11 +49,14 @@ comportement de l'editeur reel. Procedure de premier test complet : `references/
 Specs (etapes 1 a 7) :
 - `01_gdd.json` cahier des charges, simulation, `requested_assets`
 - `02_palette.json` assets, chemins MCP, `scale`, tailles et pivots **mesures**
-- `03_grid.json` matrice 2D par etage
+- `03_grid.json` matrice 2D par etage, `symmetric` + `symmetry_axis` (`X`, `Y` miroir, ou
+  `R180` rotation 180 degres avec echange des equipes : le cas des arenes versus)
 - `04_devices.json` devices par ancre (`tile` + `slot`) ou en coordonnees absolues
   (`placement_mode: "WORLD"` + `world_location_cm`, pour les devices non spatiaux de `Zone_Logic`),
   plus `properties` et `bindings`
 - `05_props.json` decors par `TILE_ANCHOR` ou `RELATIVE_TO_ACTOR`
+- `mirror: false` dans une entree de `04`/`05` la sort de `check-symmetry`. A poser **des deux
+  cotes** : un acteur symetrique dont le jumeau est exclu remonte `MIRROR_PARTNER_MISSING`.
 
 Rapports (chacun porte un champ `scope` qui dit ce qu'il ne verifie pas) :
 - `06_audit_report.json` chevauchements, gravite, acteurs absents (`audit-scene`)
@@ -62,6 +65,8 @@ Rapports (chacun porte un champ `scope` qui dit ce qu'il ne verifie pas) :
 - `08_wiring_report.json` cablage relu sur la cible (`wire-devices`)
 - `09_verse_report.json` diagnostics et ligne de succes de build (`verse-build`)
 - `10_editables.json` table `@editable` -> `actor_label` -> `refPath` (`list-editables`)
+- `11_symmetry_report.json` paires miroirs des specs, derive de placement et symetrie de la
+  scene posee (`check-symmetry`, `--live`)
 
 Intermediaires calcules : `_compiled_structure.json`, `_compiled_scene.json`, `_placed.json`,
 `_verse_files.json`, `_verse_grep.json`, `_verse_written.json`, `_mcp_calls.jsonl`.
@@ -75,7 +80,7 @@ Intermediaires calcules : `_compiled_structure.json`, `_compiled_scene.json`, `_
 - Etapes 5 et 9 : `references/devices-catalog-and-wiring.md`.
 - Etapes 6 et 10 : `references/finitions-and-atmosphere.md`.
 - Etape 8 : `references/verse-qa-standard.md`.
-- Erreur de distance, de collision, ou gros projet : `exemple/map-cases-and-fixes.md`.
+- Erreur de distance, de collision, de symetrie, ou gros projet : `exemple/map-cases-and-fixes.md`.
 - Outil absent de la matrice de routage : `mcp_tools/index.md`, puis `grep` dans le sous-dossier de
   la famille. Ne jamais lire un fichier d'inventaire en entier hors `index.md` et `sommaire.md`.
 
@@ -110,7 +115,13 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - Matrice par etage, `1 case = 512 x 512 x 384 cm`. Legende : `#` sol + murs de perimetre, `.` sol libre, `W` mur interieur, `P` porte, `S1`/`S2` spawns, `O` objectif, `R_*` rampe, `T` tremie, `V` vide.
 - Attention : `build-structure` ne pose que les sols et les murs du **perimetre**. Les `W` et `P` interieurs se declarent dans `05_props.json`.
 - Sortie : `03_grid.json`.
-- Gatekeeper : `validate-grid --workspace <...>` (ou `validate-grid <fichier>`) a `0 erreur` (bordure fermee, tremie au-dessus de chaque rampe, symetrie sur l'axe declare `X` ou `Y`, chemin 2D de `S` a `O`). Un `symmetry_axis` absent ou autre que `X`/`Y` avec `symmetric: true` est une erreur (`SYMMETRY_AXIS_UNSUPPORTED`), pas un silence. `validate-grid` ne controle que la **grille** : la symetrie des devices et des props se verifie a la lecture (`SYMMETRY_SCOPE`).
+- Choisir le mode de symetrie : `X` (miroir Nord/Sud), `Y` (miroir Est/Ouest) ou `R180` (rotation
+  de 180 degres, les deux moities de la carte s'echangent, avec `S1` <-> `S2`). Le mode doit
+  correspondre au plan reel : le gabarit `1v1_arena` (spawns en `[3,1]` et `[4,6]`) n'est
+  symetrique qu'en `R180`, le gabarit `boxfight` (S1 au Nord, S2 au Sud) l'est en `X`. En `X`/`Y`,
+  `S1` et `S2` sont tenus pour equivalents (une carte peut separer ses equipes sur l'autre axe) :
+  verifier a l'oeil que les deux camps sont bien de part et d'autre.
+- Gatekeeper : `validate-grid --workspace <...>` (ou `validate-grid <fichier>`) a `0 erreur` (bordure fermee, tremie au-dessus de chaque rampe, symetrie sur le mode declare `X`, `Y` ou `R180`, chemin 2D de `S` a `O`). Un `symmetry_axis` absent ou inconnu avec `symmetric: true` est une erreur (`SYMMETRY_AXIS_UNSUPPORTED`), pas un silence ; une case posee **sur** le plan de symetrie doit etre son propre miroir (`SYMMETRY_ON_AXIS`). `validate-grid` ne controle que la **grille** : la symetrie des devices et des props est verifiee par `check-symmetry` (etape 7), annoncee des cette etape par l'avertissement `SYMMETRY_SCOPE`.
 
 ### Etape 4 : Squelette 3D
 - `build-structure --dry-run` (le CLI annonce le nombre d'operations), puis `build-structure` : lots de 10 spawns poses par `execute_tool_script`, chaque transform relue.
@@ -127,12 +138,14 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - `compile-transforms` (calcul, refuse un asset non mesure et une spec malformee), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform **relue** (position, yaw et echelle).
 - `apply-properties` : `Object.list_properties` -> `set_properties` (`values` en **chaine JSON**) -> `get_properties`. Un nom absent de `list_properties` donne `PROPERTY_NOT_FOUND` avec les noms les plus proches, jamais un nom invente ; une valeur relue differente donne `PROPERTY_MISMATCH`. Rapport : `07_properties_report.json`.
 - `wire-devices` : `GetBindingOptions` sur la **source** valide `event` et `function`, `AddEventBinding`, puis relecture par `ListEventBindings` sur la **cible**. Rapport : `08_wiring_report.json`. Sans `bindings` declares : `NO_BINDING_DECLARED`.
-- Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm, gravite <= 2 cm, rien d'absent), `07_properties_report.json` et `08_wiring_report.json` a `PASSED`. Sans `--live`, le rapport porte `gravity_scope` qui dit que la gravite n'est pas controlee : un `PASSED` hors ligne ne prouve ni le pivot ni la hauteur reellement posee.
+- `check-symmetry` : verifie que chaque device a son jumeau dans `03_grid.json` (axe `X`, `Y` ou `R180`), a la meme place dans sa tuile et avec le yaw miroir. Rapport : `11_symmetry_report.json`.
+- **Rendu / atmosphere : plafond dur.** Aucun outil d'eclairage dans les 388, aucun materiau par instance posee (`set_material` agit sur l'**asset** : tous ses exemplaires changent), ni feuillage, ni landscape. La seule voie vers de la lumiere est un systeme Niagara emissif, a moitie prouve seulement : pose verifiee, creation jamais appelee. Avant de promettre une ambiance, lire `references/mcp-routing.md` §9 et annoncer ce qui n'est pas atteignable plutot que de le laisser decouvrir a l'utilisateur.
+- Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm, gravite <= 2 cm, rien d'absent), `check-symmetry` PASSED, `07_properties_report.json` et `08_wiring_report.json` a `PASSED`. Sans `--live`, le rapport porte `gravity_scope` qui dit que la gravite n'est pas controlee : un `PASSED` hors ligne ne prouve ni le pivot ni la hauteur reellement posee.
 
 ### Etape 7 : Decors et circulation
 - `05_props.json` par `TILE_ANCHOR` ou `RELATIVE_TO_ACTOR` (`reference_actor`, `direction`, `gap_cm`), puis `compile-transforms` et `place-scene` a nouveau.
-- `check-navigation` (rapport `06_navigation_report.json`), puis `visual-snapshot`.
-- Gatekeeper : `navigation_errors` vide. **Dire a l'utilisateur ce que le controle ne couvre pas** : deux props d'une meme tuile uniquement, sans capsule, sans murs, sans hauteur libre, sans sauts. Les seuils 200 cm / 190 cm / 550 cm restent des constantes de conception, pas des mesures.
+- `check-navigation` (rapport `06_navigation_report.json`), puis `check-symmetry --live` (rapport `11_symmetry_report.json`, `source: "live"`), puis `visual-snapshot`.
+- Gatekeeper : `navigation_errors` vide **et** `check-symmetry --live` a `error_count: 0` avec `source: "live"`. **Dire a l'utilisateur ce que le controle ne couvre pas** : pour la navigation, deux props d'une meme tuile uniquement, sans capsule, sans murs, sans hauteur libre, sans sauts (les seuils 200 cm / 190 cm / 550 cm restent des constantes de conception, pas des mesures). Pour la symetrie, les devices `WORLD` (non spatiaux) ne sont pas compares, et `--live` ne prouve que les transforms relus, pas les materials ni les collisions.
 
 ### Etape 8 : Verse
 - `verse-scan` (`Verse.ListFiles`) puis `verse-grep --symbols <nom1,nom2>` (`Verse.Grep`) pour chaque signature d'API utilisee, avant d'ecrire. Un resultat vide est un **inconnu**, pas une absence : le rapport le dit.
@@ -192,11 +205,12 @@ Correction : deplacer ou supprimer `Pillar_Decor_01` dans `05_props.json`, puis 
 
 - [ ] `preflight` PASSED et niveau confirme par l'utilisateur.
 - [ ] `validate-scene` PASSED (forme et coherence croisee des 5 specs).
-- [ ] Les 5 specs et les rapports `06` a `10` existent dans le workspace et sont a jour.
+- [ ] Les 5 specs et les rapports `06` a `11` existent dans le workspace et sont a jour.
 - [ ] 100 % des assets de la palette sont mesures (`measured`, dimensions > 0).
 - [ ] Aucune coordonnee brute inventee : tout vient de `compile-transforms`.
 - [ ] `audit-scene --live` : 0 `OVERLAP_ERROR`, 0 `GRAVITY_ERROR`, 0 `scene_errors`, et `source: "live"` dans le rapport (`not_live` veut dire qu'aucun bounds n'a ete relu).
 - [ ] `check-navigation` : 0 `CORRIDOR_TOO_NARROW`, avec son perimetre annonce.
+- [ ] `check-symmetry --live` : 0 `SPEC_ASYMMETRY`, 0 `MIRROR_PARTNER_MISSING`, 0 `TRANSFORM_DRIFT`, 0 `SCENE_ASYMMETRY`, et `source: "live"` (`11_symmetry_report.json`) ; chaque `mirror: false` assume et annonce.
 - [ ] `apply-properties` : chaque valeur ecrite relue (`07_properties_report.json` PASSED).
 - [ ] `wire-devices` : cablage relu par `ListEventBindings` sur la cible (`08_wiring_report.json` PASSED).
 - [ ] `verse-build` : aucun diagnostic d'erreur **et** ligne de succes recente (`09_verse_report.json`).

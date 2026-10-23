@@ -41,7 +41,7 @@ CLI="python script/uefn_spatial_cli.py"
 python script/tests/verify.py
 ```
 
-Attendu : `86/86 OK`, code retour 0. Le harness demarre un faux serveur MCP
+Attendu : `110/110 OK`, code retour 0. Le harness demarre un faux serveur MCP
 (`script/tests/mock_mcp.py`, 127.0.0.1 seulement, detruit a la fin) et rejoue la chaine
 complete, y compris les pieges documentes : `PlaceDevice` qui ignore le yaw, `teamIndex` relu
 avec `teamType`, echelle perdue, session connectee, absence de ligne de succes de build.
@@ -70,8 +70,9 @@ l'echelle) : aucune chasse d'asset, la chaine est testable telle quelle.
 | 10 | `$CLI place-scene --workspace "$WS"` | `PASSED`, `props.verified: 2` |
 | 11 | `$CLI audit-scene --workspace "$WS" --live` | `PASSED`, `source: "live"`, `gravity_scope: "bounds relus dans l'editeur"` |
 | 12 | `$CLI check-navigation --workspace "$WS"` | `PASSED`, `06_navigation_report.json` |
-| 13 | `$CLI visual-snapshot --workspace "$WS"` | `PASSED`, PNG ecrit (cadrage pitch -90 jamais teste en editeur : regarder l'image) |
-| 14 | `$CLI cleanup --workspace "$WS"` | `PASSED`, `left: 0` — **apres accord de l'utilisateur** |
+| 13 | `$CLI check-symmetry --workspace "$WS" --live` | `PASSED`, `source: "live"`, `axis: null` + un `scope` « AUCUN AXE » (le gabarit `blank` declare `symmetric: false`) |
+| 14 | `$CLI visual-snapshot --workspace "$WS"` | `PASSED`, PNG ecrit (cadrage pitch -90 jamais teste en editeur : regarder l'image) |
+| 15 | `$CLI cleanup --workspace "$WS"` | `PASSED`, `left: 0` — **apres accord de l'utilisateur** |
 
 Points de controle visuels : apres l'etape 9, une dalle 4 x 4 avec ses murs de bord ; apres
 l'etape 10, deux cubes de 120 cm, le second a 120 cm devant le premier.
@@ -88,8 +89,10 @@ $CLI validate-grid --workspace "$WS2"
 ```
 
 Le gabarit suit `references/level-design-patterns.md` section 2 (8 x 8, spawns en `D2`/`E7`,
-5 barils de reset, `Zone_Logic` sous l'arene). Trois choses ne sont **pas** automatisables
-sans verification humaine :
+6 barils de reset en 3 paires, `Zone_Logic` sous l'arene). Il est declare `symmetric: true` avec
+`symmetry_axis: "R180"` : chaque acteur de `04`/`05` a son jumeau dans la tuile opposee, ce que
+`check-symmetry` verifie (puis `check-symmetry --live` sur la scene posee). Trois choses ne sont
+**pas** automatisables sans verification humaine :
 
 1. **Chemins d'assets manquants.** `barrier`, `round_timer` et `prop_ramp` ont `uefn_path: null`
    volontairement : un chemin invente est une erreur. Les trouver avec
@@ -139,6 +142,7 @@ construction : le dire a l'utilisateur a la fin.
 | `08_wiring_report.json` | `wire-devices` |
 | `09_verse_report.json` | `verse-build` |
 | `10_editables.json` | `list-editables` |
+| `11_symmetry_report.json` | `check-symmetry` (`source` : `live`, `compiled` ou `not_live`) |
 | `_compiled_structure.json`, `_compiled_scene.json`, `_placed.json` | calculs et poses |
 | `_verse_files.json`, `_verse_grep.json`, `_verse_written.json` | etape 8 |
 | `_mcp_calls.jsonl` | journal de chaque appel MCP du CLI |

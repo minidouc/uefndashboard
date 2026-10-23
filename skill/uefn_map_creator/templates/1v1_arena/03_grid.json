@@ -1,8 +1,8 @@
 {
-  "_comment": "Arene 8 x 8 (4096 x 4096 cm). Spawns en [3,1] et [4,6], objectif de duel en [3,3] et [4,4] : la carte est symetrique par ROTATION de 180 degres avec echange des equipes, pas par miroir. `validate-grid` ne sait controler qu'un miroir sur X ou Y, donc `symmetric: false` ici : la symetrie 180 degres est a verifier a la lecture (chaque case [r,c] doit etre l'opposee de [7-r,7-c]).",
+  "_comment": "Arene 8 x 8 (4096 x 4096 cm). Spawns en [3,1] et [4,6], objectif de duel en [3,3] et [4,4] : la carte est symetrique par ROTATION de 180 degres avec echange des equipes, pas par miroir. `symmetry_axis: \"R180\"` : chaque case [r,c] doit etre l'opposee de [7-r,7-c] (R_N <-> R_S, R_E <-> R_W, S1 <-> S2). Controle par validate-grid (matrice) puis par check-symmetry (devices, props, scene posee).",
   "tile_size_cm": [512.0, 512.0, 384.0],
-  "symmetric": false,
-  "symmetry_axis": null,
+  "symmetric": true,
+  "symmetry_axis": "R180",
   "origin_tile": [2, 2, 0],
   "edge_policy": "fall_zone",
   "floors": [

@@ -1,5 +1,5 @@
 {
-  "_comment": "Rampes de duel et couvertures. Les rampes sont des props (asset mesure), pas des cellules `R_*` de la grille : la grille 1v1 n'a pas d'etage, donc aucun escalier de structure. `prop_ramp` n'a pas encore de chemin : l'etape 2 doit le trouver, sinon compile-transforms refuse l'entree.",
+  "_comment": "Rampes de duel et couvertures, en paires miroirs (symmetry_axis R180 : le jumeau de [r,c] est [7-r,7-c], face inverse). `check-symmetry` verifie ces paires sur les specs puis, avec --live, sur la scene posee ; un prop volontairement unique porte `mirror: false` DES DEUX cotes. Un prop en RELATIVE_TO_ACTOR herite de la tuile de son `reference_actor` : son jumeau doit donc pointer vers le jumeau de ce parent, et etre declare APRES lui. Les rampes sont des props (asset mesure), pas des cellules `R_*` de la grille : la grille 1v1 n'a pas d'etage, donc aucun escalier de structure. `prop_ramp` n'a pas encore de chemin : l'etape 2 doit le trouver, sinon compile-transforms refuse l'entree.",
   "props": [
     {
       "actor_label": "Ramp_Duel_P1_01",
@@ -36,6 +36,25 @@
       "direction": "RIGHT_OF",
       "gap_cm": 120.0,
       "face_towards": "SOUTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Cover_Crate_03",
+      "asset_key": "prop_crate",
+      "placement_mode": "TILE_ANCHOR",
+      "tile": [6, 4, 0],
+      "slot": "CENTER",
+      "face_towards": "NORTH",
+      "snap_to_floor": true
+    },
+    {
+      "actor_label": "Cover_Crate_04",
+      "asset_key": "prop_crate",
+      "placement_mode": "RELATIVE_TO_ACTOR",
+      "reference_actor": "Cover_Crate_03",
+      "direction": "RIGHT_OF",
+      "gap_cm": 120.0,
+      "face_towards": "NORTH",
       "snap_to_floor": true
     }
   ]

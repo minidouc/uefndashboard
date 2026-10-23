@@ -304,4 +304,83 @@ Un ecart constant sur tous les objets d'un meme asset designe un mauvais `pivot_
 - `CORRIDOR_TOO_NARROW` vient de `check-navigation`, dans `navigation_errors` de `06_navigation_report.json`. Le rapport ne nomme pas les extremites du trajet (`from` / `to` n'existent pas) : il donne `tile`, `free_width_cm`, `required_width_cm` et les deux `blocking_actors`.
 - `HEADROOM_BLOCKED_ON_STAIRS` vient de `validate-grid` (sortie propre, code retour 1), pas d'un rapport d'audit.
 - `check-navigation` n'ecrit plus dans `06_audit_report.json` : les deux rapports sont separes, chacun avec son propre `status` coherent avec son code retour.
-- apres un deplacement, relancer la chaine complete : `compile-transforms`, `place-scene` (ou repositionnement a la main), `audit-scene --live`, `check-navigation`.
+- apres un deplacement, relancer la chaine complete : `compile-transforms`, `place-scene` (ou repositionnement a la main), `audit-scene --live`, `check-navigation`, `check-symmetry --live`.
+
+## Cas 7 : Deux Moities de Carte Desalignees (`SPEC_ASYMMETRY`, `TRANSFORM_DRIFT`)
+
+Le defaut le plus courant sur une carte versus : la capture vue du dessus montre deux rampes (ou
+deux couvertures) qui ne se font pas face. Aucun autre controle ne le voit — `audit-scene` ne
+detecte que les chevauchements et la gravite, `check-navigation` que les couloirs etroits. Une
+carte de 200 acteurs ne se verifie pas a l'oeil : c'est `check-symmetry` qui apparie chaque
+acteur a son miroir, en `O(n)`.
+
+### Rapport d'Erreur (`11_symmetry_report.json`, produit par `check-symmetry`)
+Rapport reel, gabarit `1v1_arena` (axe `R180`) avec la rampe du joueur 2 ancree au bord Nord de
+sa tuile alors que celle du joueur 1 est au centre :
+```json
+{
+  "timestamp": "2026-10-21T23:20:40+00:00",
+  "command": "check-symmetry",
+  "status": "FAILED",
+  "axis": "R180",
+  "symmetric": true,
+  "source": "compiled",
+  "error_count": 1,
+  "checked_pairs": 7,
+  "spec_errors": [
+    {
+      "type": "SPEC_ASYMMETRY",
+      "axis": "R180",
+      "fault": "position",
+      "actor_a": "Ramp_Duel_P1_01",
+      "actor_b": "Ramp_Duel_P2_01",
+      "tile_a": [3, 2, 0],
+      "tile_b": [4, 5, 0],
+      "expected_center_b_cm": [2304.0, 2816.0, 75.0],
+      "center_b_cm": [2360.0, 2816.0, 75.0],
+      "delta_cm": [56.0, 0.0, 0.0],
+      "max_delta_cm": 56.0,
+      "tolerance_cm": [1.0, 1.0, 1.0],
+      "suggestion": "Amener Ramp_Duel_P2_01 en [2304.0, 2816.0, 75.0] (miroir de Ramp_Duel_P1_01 en tuile [3, 2, 0]), puis compile-transforms et place-scene."
+    }
+  ],
+  "drift_errors": [],
+  "scene_errors": [],
+  "scope": [
+    "16 acteurs de 04/05 controles (centre + yaw) ; 5 en placement_mode WORLD ignores (hors grille, aucun miroir possible): Granter_Loadout_01, Round_Timer_01, Score_Manager_01, End_Game_01, Hud_Message_01",
+    "murs et sols de _compiled_structure.json non controles : leur symetrie vient de la matrice, verifiee par validate-grid.",
+    "SPEC seulement : un acteur deplace dans l'editeur apres place-scene n'est pas vu. Relancer avec --live pour controler la scene posee."
+  ]
+}
+```
+
+### Correction Appliquee par l'Agent
+1. **Dans `05_props.json`** : remettre `Ramp_Duel_P2_01` sur le meme `slot` que son jumeau. Sous
+   `R180` un `CENTER` a pour miroir un `CENTER`, un `NORTH_EDGE` un `SOUTH_EDGE`, un `CORNER_NE`
+   un `CORNER_SW`. Ne jamais corriger en ecrivant des coordonnees brutes : `expected_center_b_cm`
+   dit ou le jumeau doit tomber, mais c'est le `slot` qui le produit.
+2. Puis `compile-transforms`, `place-scene`, `check-symmetry --live`.
+
+### Variante : l'acteur a bouge dans l'editeur (`TRANSFORM_DRIFT`)
+Si les specs sont justes mais qu'un acteur a ete pousse a la main apres `place-scene`, seul
+`--live` le voit : il relit chaque transform et le compare au transform compile.
+```json
+{"type": "TRANSFORM_DRIFT", "actor": "Cover_Crate_01",
+ "delta_location_cm": [40.0, 0.0, 0.0], "delta_yaw_deg": 0.0, "delta_scale": 0.0,
+ "suggestion": "L'acteur a bouge depuis place-scene, ou le placement n'a jamais ete corrige. Corriger la spec, puis cleanup + place-scene."}
+```
+Le deplacement casse en general la paire dans la foulee : le meme rapport porte alors aussi un
+`SCENE_ASYMMETRY` calcule sur les bounds relus. `_placed.json` fait foi pour la relecture, mais
+il n'est **pas** mis a jour par un deplacement manuel : apres une correction a la main, relancer
+`place-scene` plutot que de croire le rapport.
+
+### Ou trouves tu ces erreurs
+- `SPEC_ASYMMETRY` et `MIRROR_PARTNER_MISSING` : `spec_errors`, visibles **sans** editeur.
+- `TRANSFORM_DRIFT`, `NOT_PLACED`, `UNREADABLE_TRANSFORM`, `NO_LIVE_DATA` : `drift_errors`, avec `--live`.
+- `SCENE_ASYMMETRY` : `scene_errors`, avec `--live` (symetrie recalculee sur les bounds relus).
+- Une reponse vide de l'editeur donne `UNREADABLE_TRANSFORM`, jamais un `PASSED` : vide veut dire
+  **inconnu**.
+- Un acteur volontairement asymetrique (decor unique, HUD) porte `"mirror": false` **des deux
+  cotes** de sa paire ; le rapport le compte dans `scope` (`N paire(s) exclue(s)`).
+- `source: "not_live"` avec `NO_LIVE_DATA` signifie qu'aucun bounds n'a ete relu : le rapport ne
+  prouve rien sur la scene posee.

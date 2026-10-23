@@ -2,11 +2,11 @@
 """CLI spatial du skill uefn-map-creator (v2, MCP officiel UEFN).
 
 Calculs hors ligne : init, validate-scene, validate-grid, compile-transforms, audit-scene,
-  check-navigation, list-editables, playtest-plan.
+  check-navigation, check-symmetry, list-editables, playtest-plan.
 Actions editeur (MCP http://127.0.0.1:8000/mcp, editeur ouvert) :
   preflight, measure-palette, build-structure, place-scene, audit-scene --live,
-  apply-properties, wire-devices, verse-scan, verse-grep, verse-write, verse-build,
-  visual-snapshot, cleanup.
+  check-symmetry --live, apply-properties, wire-devices, verse-scan, verse-grep, verse-write,
+  verse-build, visual-snapshot, cleanup.
 --dry-run : calcule sans toucher l'editeur, statut DRY_RUN (jamais PASSED).
 Editeur injoignable ou timeout : statut FAILED, code retour 2 ou 3.
 Python 3.10 minimum (annotations `X | None`).
@@ -48,6 +48,11 @@ MAX_GRAVITY_CM = 2.0
 POS_TOLERANCE_CM = 0.5
 YAW_TOLERANCE_DEG = 0.5
 SCALE_TOLERANCE = 0.001
+# Symetrie : les specs sont calculees, un miroir juste tombe a ~0. Au-dela de MIRROR_SEARCH_CM
+# de decalage le partenaire est declare absent plutot que mal place (plus actionnable).
+SYMMETRY_POS_TOLERANCE_CM = 1.0
+SYMMETRY_YAW_TOLERANCE_DEG = 1.0
+MIRROR_SEARCH_CM = 768.0
 BATCH_SIZE = 10
 PAGINATION_CVAR = "ModelContextProtocol.PaginationPageSize"
 MAP_TAG = os.environ.get("UEFN_MAP_TAG", "UEFNMAP")
@@ -144,6 +149,11 @@ def xyz_to_luf(xyz: list[float]) -> list[float]:
 def luf_to_xyz(luf: list[float]) -> list[float]:
   left, up, forward = luf
   return [forward, -left, up]
+
+
+def angle_delta(a: float, b: float) -> float:
+  """Ecart entre deux yaws en degres, sans se faire pieger par le passage 359 -> 0."""
+  return abs(((a - b) + 180.0) % 360.0 - 180.0)
 
 
 def xform(loc: list[float], yaw: float = 0.0, scale: list[float] | None = None) -> dict:
@@ -322,7 +332,7 @@ def verify_transform(cli: McpClient, ref: str, op: dict) -> dict | None:
   tf = cli.value("Actor", "get_actor_transform", {"actor": {"refPath": ref}})
   want = op["xform"]
   dl = max(abs(tf["location"][k] - want["location"][k]) for k in "xyz")
-  dyaw = abs(((tf["rotation"]["yaw"] - want["rotation"]["yaw"]) + 180.0) % 360.0 - 180.0)
+  dyaw = angle_delta(tf["rotation"]["yaw"], want["rotation"]["yaw"])
   got = tf.get("scale") or {}
   dscale = max(abs(float(got.get(k, 1.0)) - want["scale"][k]) for k in "xyz")
   if dl > POS_TOLERANCE_CM or dyaw > YAW_TOLERANCE_DEG or dscale > SCALE_TOLERANCE:
@@ -530,22 +540,31 @@ def cmd_validate_grid(grid_file: str) -> int:
   floors = data.get("floors", [])
   errors = []
   axis = data.get("symmetry_axis")
-  if data.get("symmetric") and axis not in ("X", "Y"):
+  if data.get("symmetric") and axis not in spec_schema.AXES:
     errors.append({"type": "SYMMETRY_AXIS_UNSUPPORTED", "symmetry_axis": axis,
-                   "detail": "symmetric: true exige symmetry_axis \"X\" ou \"Y\" : "
+                   "detail": "symmetric: true exige symmetry_axis \"X\", \"Y\" ou \"R180\" : "
                              "aucun controle de symetrie n'a ete fait."})
-  # Miroir sur les lignes (X) : Nord <-> Sud. Sur les colonnes (Y) : Est <-> Ouest.
-  ramp_mirror = {"X": {"R_N": "R_S", "R_S": "R_N"},
-                 "Y": {"R_E": "R_W", "R_W": "R_E"}}.get(axis, {})
+  # Miroir sur les lignes (X) : Nord <-> Sud. Miroir sur les colonnes (Y) : Est <-> Ouest.
+  # Rotation 180 (R180) : les deux a la fois, et les equipes s'echangent (S1 <-> S2).
+  # En miroir X/Y les equipes ne sont PAS echangees : une carte peut separer ses equipes sur
+  # l'autre axe (gabarit `boxfight` : S1 au Nord, S2 au Sud, miroir X des formes). Exiger
+  # l'echange casserait ces cartes a tort. Seul R180 retourne la carte entierement.
+  swap = {"X": {"R_N": "R_S", "R_S": "R_N"},
+          "Y": {"R_E": "R_W", "R_W": "R_E"},
+          "R180": {"R_N": "R_S", "R_S": "R_N", "R_E": "R_W", "R_W": "R_E",
+                   "S1": "S2", "S2": "S1"}}.get(axis, {})
 
   def team_norm(cell: str) -> str:
-    return cell.replace("S1", "S").replace("S2", "S")
+    if not isinstance(cell, str):
+      return ""  # deja signale par BAD_TYPE/BAD_CELL : ne pas crasher ici
+    # En rotation les spawns doivent changer d'equipe : S1 et S2 restent distincts.
+    return cell if axis == "R180" else cell.replace("S1", "S").replace("S2", "S")
 
   def mirrored(cell: str) -> str:
     """Ce que devient la cellule apres reflet. Le reflet ne s'applique que d'un cote :
     deux R_N face a face ne sont PAS symetriques, il faut R_N d'un cote et R_S de l'autre."""
     c = team_norm(cell)
-    return ramp_mirror.get(c, c)
+    return swap.get(c, c)
 
   if not floors:
     errors.append({"type": "EMPTY_GRID", "detail": "Aucun etage defini."})
@@ -564,7 +583,7 @@ def cmd_validate_grid(grid_file: str) -> int:
           cell = matrix[r][c]
           if (r in (0, rows - 1) or c in (0, cols - 1)) and cell not in ("#", "V"):
             errors.append({"type": "UNCLOSED_BORDER", "tile": [r, c, z_idx], "cell": cell})
-          if cell.startswith("R_"):
+          if isinstance(cell, str) and cell.startswith("R_"):
             upper = floor_map.get(z_idx + 1)
             if upper:
               up_cell = upper[r][c] if r < len(upper) and c < len(upper[r]) else None
@@ -572,14 +591,34 @@ def cmd_validate_grid(grid_file: str) -> int:
                 errors.append({"type": "HEADROOM_BLOCKED_ON_STAIRS",
                                "stair_tile": [r, c, z_idx], "upper_tile": [r, c, z_idx + 1],
                                "current_upper_cell": up_cell, "required_upper_cell": "T"})
-      if data.get("symmetric") and axis in ("X", "Y") and not ragged:
-        pairs = ([(r, c, rows - 1 - r, c) for r in range(rows // 2) for c in range(cols)]
-                 if axis == "X" else
-                 [(r, c, r, cols - 1 - c) for r in range(rows) for c in range(cols // 2)])
+      if data.get("symmetric") and axis in spec_schema.AXES and not ragged:
+        def mirror_rc(r: int, c: int) -> tuple[int, int]:
+          if axis == "X":
+            return rows - 1 - r, c
+          if axis == "Y":
+            return r, cols - 1 - c
+          return rows - 1 - r, cols - 1 - c
+
+        pairs, plane = [], []
+        for r in range(rows):
+          for c in range(cols):
+            m = mirror_rc(r, c)
+            if (r, c) < m:
+              pairs.append((r, c, m[0], m[1]))
+            elif (r, c) == m:
+              plane.append((r, c))
         for ra, ca, rb, cb in pairs:
           if mirrored(matrix[ra][ca]) != team_norm(matrix[rb][cb]):
             errors.append({"type": "SYMMETRY_BROKEN", "axis": axis,
                            "tile_a": [ra, ca, z_idx], "tile_b": [rb, cb, z_idx]})
+        # Une case posee SUR le plan de symetrie n'a pas de partenaire possible : elle doit
+        # etre son propre miroir. Un R_N ou un spawn unique au centre casse la symetrie.
+        for r, c in plane:
+          if mirrored(matrix[r][c]) != team_norm(matrix[r][c]):
+            errors.append({"type": "SYMMETRY_ON_AXIS", "axis": axis, "tile": [r, c, z_idx],
+                           "cell": matrix[r][c],
+                           "detail": "case sur le plan de symetrie : elle doit etre son propre "
+                                     "miroir (#, ., P, O, T, V)."})
     base = floor_map.get(0, [])
     spawns = [(r, c) for r, row in enumerate(base) for c, v in enumerate(row) if v in ("S1", "S2")]
     targets = [(r, c) for r, row in enumerate(base) for c, v in enumerate(row) if v in ("O", "S2")]
@@ -736,8 +775,13 @@ def spec_report(workspace: str) -> tuple[list[dict], list[dict]]:
     return load_json(path).get(key, default) if os.path.exists(path) else default
 
   assets = read("02_palette.json", "assets", {})
-  grid = read("03_grid.json", "floors", None)
-  grid = {"floors": grid} if grid is not None else {"floors": []}
+  # Lire le fichier ENTIER : se limiter a `floors` rendait `grid.get("symmetric")` toujours
+  # faux, donc l'avertissement SYMMETRY_SCOPE n'a jamais ete emis.
+  grid_path = os.path.join(workspace, "03_grid.json")
+  grid = load_json(grid_path) if os.path.exists(grid_path) else {}
+  if not isinstance(grid, dict) or not isinstance(grid.get("floors"), list):
+    grid = dict(grid) if isinstance(grid, dict) else {}
+    grid["floors"] = []
   devices = read("04_devices.json", "devices", [])
   props = read("05_props.json", "props", [])
 
@@ -800,11 +844,21 @@ def spec_report(workspace: str) -> tuple[list[dict], list[dict]]:
     check_entry(prop, f"05_props.json props[{i}]", seen)
     seen.add(prop.get("actor_label"))
 
-  if grid.get("symmetric") and grid.get("symmetry_axis") in spec_schema.AXES:
+  axis = grid.get("symmetry_axis")
+  if grid.get("symmetric") and axis in spec_schema.AXES:
+    teams = (" En miroir X/Y, S1 et S2 sont tenus pour equivalents (l'echange des equipes n'est "
+             "exige qu'en R180) : verifier a l'oeil que les deux camps sont bien de part et "
+             "d'autre de la carte.") if axis != "R180" else ""
     warnings.append({"type": "SYMMETRY_SCOPE", "where": "03_grid.json",
-                     "detail": "validate-grid ne controle que la GRILLE. Les devices et props "
-                               "de 04/05 ne sont pas verifies pour la symetrie : le faire a la "
-                               "lecture (chaque acteur d'une equipe doit avoir son miroir)."})
+                     "detail": "validate-grid ne controle que la GRILLE. La symetrie des devices "
+                               "et des props de 04/05 est verifiee par `check-symmetry` (sur les "
+                               "specs compilees) et `check-symmetry --live` (sur la scene posee), "
+                               f"axe {axis}." + teams})
+  elif grid.get("symmetric"):
+    warnings.append({"type": "SYMMETRY_SCOPE", "where": "03_grid.json",
+                     "detail": "symmetric: true sans symmetry_axis exploitable (X, Y ou R180) : "
+                               "aucun controle de symetrie n'est execute, ni sur la grille ni "
+                               "sur les acteurs."})
   return errors, warnings
 
 
@@ -817,13 +871,15 @@ def cmd_validate_scene(workspace: str) -> int:
   return 0 if not errors else 1
 
 
-def cmd_compile_transforms(workspace: str) -> int:
+def cmd_compile_transforms(workspace: str, quiet: bool = False) -> int:
+  """quiet=True : appelle par une autre commande, qui emettra le seul JSON de son rapport."""
   errors, warnings = spec_report(workspace)
   if errors:
-    emit({"status": "FAILED", "command": "compile-transforms", "error_count": len(errors),
-          "errors": errors, "warnings": warnings,
-          "next": "corriger les specs : un calcul sur une spec fausse produit un transform "
-                  "faux mais un statut PASSED."})
+    if not quiet:
+      emit({"status": "FAILED", "command": "compile-transforms", "error_count": len(errors),
+            "errors": errors, "warnings": warnings,
+            "next": "corriger les specs : un calcul sur une spec fausse produit un transform "
+                    "faux mais un statut PASSED."})
     return 1
   palette = load_json(os.path.join(workspace, "02_palette.json")).get("assets", {})
   grid = load_json(os.path.join(workspace, "03_grid.json"))
@@ -845,6 +901,7 @@ def cmd_compile_transforms(workspace: str) -> int:
         "tile": tile, "center_cm": center, "size_cm": size_rot, "yaw": yaw, "scale": scale,
         "location_xyz": loc, "location_luf": xyz_to_luf(loc), "snap_to_floor": snap,
         "placement": entry.get("placement_mode", "TILE_ANCHOR"),
+        "mirror": entry.get("mirror", True),
         "distance_to_floor_cm": round(center[2] - size_rot[2] / 2.0 - floor_z, 2),
     }
 
@@ -902,8 +959,9 @@ def cmd_compile_transforms(workspace: str) -> int:
       errors.append({"type": "COMPILE_ERROR", "actor": prop.get("actor_label"), "error": str(exc)})
 
   save_json(os.path.join(workspace, "_compiled_scene.json"), registry)
-  emit({"status": "PASSED" if not errors else "FAILED", "compiled_actors": len(registry),
-        "error_count": len(errors), "errors": errors, "warnings": warnings})
+  if not quiet:
+    emit({"status": "PASSED" if not errors else "FAILED", "compiled_actors": len(registry),
+          "error_count": len(errors), "errors": errors, "warnings": warnings})
   return 0 if not errors else 1
 
 
@@ -958,11 +1016,28 @@ def live_entries(cli: McpClient, workspace: str,
   return registry, missing, reads
 
 
+def compiled_registry(workspace: str, command: str) -> dict | None:
+  """Charge _compiled_scene.json, en le compilant au besoin.
+
+  La compilation implicite est silencieuse : sans cela la commande emettrait deux JSON sur
+  stdout et ne serait plus lisible par un script. Renvoie None (et un JSON emis) si les specs
+  ne compilent pas.
+  """
+  path = os.path.join(workspace, "_compiled_scene.json")
+  if not os.path.exists(path) and cmd_compile_transforms(workspace, quiet=True) != 0:
+    emit({"status": "FAILED", "command": command, "error_count": 1,
+          "errors": [{"type": "COMPILE_FAILED",
+                      "detail": "compile-transforms a echoue sur les specs : rien n'est "
+                                "verifiable. Lancer `compile-transforms` seul pour la liste "
+                                "des erreurs."}]})
+    return None
+  return load_json(path) if os.path.exists(path) else None
+
+
 def cmd_audit_scene(workspace: str, live: bool) -> int:
-  compiled_path = os.path.join(workspace, "_compiled_scene.json")
-  if not os.path.exists(compiled_path) and cmd_compile_transforms(workspace) != 0:
+  registry = compiled_registry(workspace, "audit-scene")
+  if registry is None:
     return 1
-  registry = load_json(compiled_path)
   struct_path = os.path.join(workspace, "_compiled_structure.json")
   structure = load_json(struct_path).get("operations", []) if os.path.exists(struct_path) else []
   walls = {o["label"]: {"actor_label": o["label"], "category": "WALL", "tile": o["tile"],
@@ -1029,10 +1104,9 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
 
 
 def cmd_check_navigation(workspace: str) -> int:
-  compiled_path = os.path.join(workspace, "_compiled_scene.json")
-  if not os.path.exists(compiled_path) and cmd_compile_transforms(workspace) != 0:
+  registry = compiled_registry(workspace, "check-navigation")
+  if registry is None:
     return 1
-  registry = load_json(compiled_path)
   nav_errors = []
   by_tile = {}
   for p in (v for v in registry.values() if v.get("category") == "PROP"):
@@ -1061,6 +1135,242 @@ def cmd_check_navigation(workspace: str) -> int:
   save_json(os.path.join(workspace, "06_navigation_report.json"), report)
   emit(report)
   return 0 if not nav_errors else 1
+
+
+# ------------------------------------------------- etape 5 bis : symetrie reelle
+
+def grid_dims_by_z(grid: dict) -> dict:
+  """Dimensions de chaque etage : le miroir d'une tuile depend de la taille de SA grille."""
+  dims = {}
+  for f in grid.get("floors", []):
+    if isinstance(f, dict):
+      m = f.get("matrix") or []
+      dims[f.get("z_index")] = (len(m), len(m[0]) if m and isinstance(m[0], list) else 0)
+  return dims
+
+
+def mirror_tile(tile: list[int], axis: str, dims: tuple[int, int]) -> list[int]:
+  rows, cols = dims
+  r, c, z = tile
+  if axis == "X":
+    return [rows - 1 - r, c, z]
+  if axis == "Y":
+    return [r, cols - 1 - c, z]
+  return [rows - 1 - r, cols - 1 - c, z]
+
+
+def tile_local(entry: dict) -> list[float]:
+  """Offset du centre dans sa propre tuile : comparable d'une tuile a son miroir."""
+  r, c, z = entry["tile"]
+  return [entry["center_cm"][0] - r * TILE_SIZE_XY,
+          entry["center_cm"][1] - c * TILE_SIZE_XY,
+          entry["center_cm"][2] - z * TILE_SIZE_Z]
+
+
+def mirror_local(local: list[float], axis: str) -> list[float]:
+  """L'offset que le partenaire doit avoir dans SA tuile.
+
+  Passe par le repere local plutot que par le centre monde : un NORTH_EDGE vaut 512 - hx et son
+  miroir SOUTH_EDGE vaut hx, la somme fait 512 quelle que soit la taille de l'asset.
+  """
+  lx, ly, lz = local
+  if axis == "X":
+    return [TILE_SIZE_XY - lx, ly, lz]
+  if axis == "Y":
+    return [lx, TILE_SIZE_XY - ly, lz]
+  return [TILE_SIZE_XY - lx, TILE_SIZE_XY - ly, lz]
+
+
+def mirror_yaw_of(yaw: float, axis: str) -> float:
+  if axis == "X":
+    return (180.0 - yaw) % 360.0
+  if axis == "Y":
+    return (-yaw) % 360.0
+  return (yaw + 180.0) % 360.0
+
+
+def symmetry_pair_error(a: dict, b: dict, axis: str, delta_local: list[float],
+                        self_pair: bool, kind: str) -> dict | None:
+  # Meme asset_key des deux cotes : seul le yaw peut changer la boite tournee, d'ou la
+  # tolerance elargie de la moitie de l'ecart de taille sur X et Y.
+  tol = [SYMMETRY_POS_TOLERANCE_CM + abs(a["size_cm"][i] - b["size_cm"][i]) / 2.0
+         for i in range(2)] + [SYMMETRY_POS_TOLERANCE_CM]
+  bad_pos = any(delta_local[i] > tol[i] for i in range(3))
+  expected_yaw = mirror_yaw_of(a["yaw"], axis)
+  dyaw = 0.0 if self_pair else angle_delta(expected_yaw, b["yaw"])
+  bad_yaw = dyaw > SYMMETRY_YAW_TOLERANCE_DEG
+  if not bad_pos and not bad_yaw:
+    return None
+  r, c, z = b["tile"]
+  exp_local = mirror_local(tile_local(a), axis)
+  expected = [round(r * TILE_SIZE_XY + exp_local[0], 2),
+              round(c * TILE_SIZE_XY + exp_local[1], 2),
+              round(z * TILE_SIZE_Z + exp_local[2], 2)]
+  delta = [round(b["center_cm"][i] - expected[i], 2) for i in range(3)]
+  fault = "+".join(f for f, on in (("position", bad_pos), ("yaw", bad_yaw)) if on)
+  err = {"type": kind, "axis": axis, "fault": fault,
+         "actor_a": a["actor_label"], "actor_b": b["actor_label"],
+         "tile_a": a["tile"], "tile_b": b["tile"],
+         "expected_center_b_cm": expected,
+         "center_b_cm": [round(v, 2) for v in b["center_cm"]],
+         "delta_cm": delta, "max_delta_cm": round(max(abs(v) for v in delta), 2),
+         "tolerance_cm": [round(t, 2) for t in tol],
+         "suggestion": f"Amener {b['actor_label']} en {expected} (miroir de {a['actor_label']} "
+                       f"en tuile {a['tile']}), puis compile-transforms et place-scene."}
+  if bad_yaw:
+    err.update({"expected_yaw_b": round(expected_yaw, 2), "yaw_b": b["yaw"],
+                "yaw_delta_deg": round(dyaw, 2)})
+    err["suggestion"] = (f"Orienter {b['actor_label']} a yaw {round(expected_yaw, 2)} "
+                         f"(miroir du yaw {a['yaw']} de {a['actor_label']}). " + err["suggestion"])
+  if self_pair:
+    err["detail"] = ("acteur seul sur le plan de symetrie : il doit etre centre sur l'axe, "
+                     "sinon il n'a aucun partenaire possible")
+  return err
+
+
+def symmetry_pairs(entries: list[dict], axis: str, dims_by_z: dict,
+                   kind: str) -> tuple[list[dict], int, int, list[str]]:
+  """Apparie chaque acteur a son miroir. O(n) : groupes par (paire de tuiles, asset_key).
+
+  Renvoie (erreurs, paires conformes, paires exclues par `mirror: false`, acteurs hors grille).
+  """
+  groups, off_grid = {}, []
+  for e in entries:
+    dims = dims_by_z.get(e["tile"][2])
+    r, c = e["tile"][0], e["tile"][1]
+    if not dims or not dims[0] or not dims[1] or not (0 <= r < dims[0] and 0 <= c < dims[1]):
+      off_grid.append(e["actor_label"])
+      continue
+    mt = tuple(mirror_tile(e["tile"], axis, dims))
+    groups.setdefault((tuple(sorted([tuple(e["tile"]), mt])), e.get("asset_key")), []).append(
+        (e, mt))
+  errors, ok, excluded = [], 0, 0
+  for members in groups.values():
+    cands = []
+    for i, (a, mt) in enumerate(members):
+      want = mirror_local(tile_local(a), axis)
+      for j, (b, _) in enumerate(members):
+        if tuple(b["tile"]) != mt or (i == j and tuple(a["tile"]) != mt):
+          continue  # partenaire dans la tuile miroir ; auto-partenaire seulement sur le plan
+        d = [abs(tile_local(b)[k] - want[k]) for k in range(3)]
+        if max(d) <= MIRROR_SEARCH_CM:
+          cands.append((round(max(d), 3), i, j, d))
+    cands.sort()
+    used = set()
+    for _, i, j, d in cands:
+      if i in used or (j in used and i != j):
+        continue
+      used.update((i, j))
+      a, b = members[i][0], members[j][0]
+      if a.get("mirror") is False or b.get("mirror") is False:
+        excluded += 1
+        continue
+      err = symmetry_pair_error(a, b, axis, d, i == j, kind)
+      if err:
+        errors.append(err)
+      else:
+        ok += 1
+    for i, (a, mt) in enumerate(members):
+      if i in used or a.get("mirror") is False:
+        continue
+      errors.append({
+          "type": "MIRROR_PARTNER_MISSING", "axis": axis, "actor": a["actor_label"],
+          "tile": a["tile"], "asset_key": a.get("asset_key"),
+          "detail": f"aucun acteur de meme asset_key dans la tuile miroir {list(mt)} "
+                    f"(ou aucun a moins de {MIRROR_SEARCH_CM} cm).",
+          "suggestion": "Declarer le partenaire manquant dans 04/05, ou poser `mirror: false` "
+                        "des DEUX cotes si cet acteur est volontairement asymetrique."})
+  return errors, ok, excluded, off_grid
+
+
+def cmd_check_symmetry(workspace: str, live: bool) -> int:
+  registry = compiled_registry(workspace, "check-symmetry")
+  if registry is None:
+    return 1
+  grid_path = os.path.join(workspace, "03_grid.json")
+  grid = load_json(grid_path) if os.path.exists(grid_path) else {}
+  axis = grid.get("symmetry_axis")
+  axis = axis if axis in spec_schema.AXES else None
+  dims_by_z = grid_dims_by_z(grid)
+  entries = [e for e in registry.values() if e.get("placement") != "WORLD"]
+  world = [k for k, e in registry.items() if e.get("placement") == "WORLD"]
+  spec_errors, pairs, excluded, off_grid = [], 0, 0, []
+  if axis:
+    spec_errors, pairs, excluded, off_grid = symmetry_pairs(entries, axis, dims_by_z,
+                                                            "SPEC_ASYMMETRY")
+  drift_errors, scene_errors, source = [], [], "compiled"
+  if live:
+    cli = client_for(workspace)
+    try:
+      placed = load_placed(workspace)
+      for label, ent in registry.items():
+        p = placed.get(label)
+        if not p:
+          drift_errors.append({"type": "NOT_PLACED", "actor": label,
+                               "detail": "absent de _placed.json : jamais pose, ou pose avant "
+                                         "un cleanup."})
+          continue
+        tf = cli.value("Actor", "get_actor_transform", {"actor": {"refPath": p["refPath"]}})
+        if not isinstance(tf, dict) or not isinstance(tf.get("location"), dict):
+          drift_errors.append({"type": "UNREADABLE_TRANSFORM", "actor": label, "read_back": tf,
+                               "detail": "reponse vide ou illisible : une reponse vide veut dire "
+                                         "INCONNU, pas « l'acteur est a la bonne place »."})
+          continue
+        want = xform(ent["location_xyz"], ent["yaw"], ent.get("scale"))
+        dl = [abs(tf["location"][k] - want["location"][k]) for k in "xyz"]
+        dyaw = angle_delta(tf["rotation"]["yaw"], want["rotation"]["yaw"])
+        got = tf.get("scale") or {}
+        dsc = max(abs(float(got.get(k, 1.0)) - want["scale"][k]) for k in "xyz")
+        if max(dl) > POS_TOLERANCE_CM or dyaw > YAW_TOLERANCE_DEG or dsc > SCALE_TOLERANCE:
+          drift_errors.append({
+              "type": "TRANSFORM_DRIFT", "actor": label,
+              "delta_location_cm": [round(v, 2) for v in dl],
+              "delta_yaw_deg": round(dyaw, 2), "delta_scale": round(dsc, 4),
+              "expected": want, "read_back": tf,
+              "suggestion": "L'acteur a bouge depuis place-scene, ou le placement n'a jamais "
+                            "ete corrige. Corriger la spec, puis cleanup + place-scene."})
+      # live_entries ecrase centre et taille par les bounds reels : les entrees d'`entries`
+      # sont les memes objets, la passe scene se fait donc sur des donnees lues.
+      _, missing, reads = live_entries(cli, workspace, registry)
+      scene_errors += [m for m in missing if m["type"] != "NOT_PLACED"]
+    except McpError as exc:
+      return mcp_failure("check-symmetry --live", exc)
+    source = "live" if reads else "not_live"
+    if reads == 0:
+      scene_errors.append({"type": "NO_LIVE_DATA",
+                           "detail": "Aucun bounds relu dans l'editeur (_placed.json absent ou "
+                                     "vide) : la scene posee n'est pas verifiee."})
+    elif axis:
+      scene_errors += symmetry_pairs(entries, axis, dims_by_z, "SCENE_ASYMMETRY")[0]
+
+  scope = []
+  if axis is None:
+    scope.append("AUCUN AXE : 03_grid.json ne declare pas symmetry_axis (X, Y ou R180). La "
+                 "symetrie des devices et des props n'est PAS verifiee. Poser `symmetric: true` "
+                 "et un `symmetry_axis` pour activer ce controle.")
+  scope.append(f"{len(entries)} acteurs de 04/05 controles (centre + yaw) ; {len(world)} en "
+               f"placement_mode WORLD ignores (hors grille, aucun miroir possible)"
+               f"{': ' + ', '.join(world) if world else '.'}")
+  scope.append("murs et sols de _compiled_structure.json non controles : leur symetrie vient de "
+               "la matrice, verifiee par validate-grid.")
+  if off_grid:
+    scope.append(f"hors grille, ignores : {', '.join(off_grid)} (voir validate-scene, "
+                 "TILE_OUT_OF_GRID).")
+  if excluded:
+    scope.append(f"{excluded} paire(s) exclue(s) par `mirror: false`.")
+  if not live:
+    scope.append("SPEC seulement : un acteur deplace dans l'editeur apres place-scene n'est pas "
+                 "vu. Relancer avec --live pour controler la scene posee.")
+  total = len(spec_errors) + len(drift_errors) + len(scene_errors)
+  report = {"timestamp": now_iso(), "command": "check-symmetry",
+            "status": "PASSED" if total == 0 else "FAILED",
+            "axis": axis, "symmetric": bool(grid.get("symmetric")), "source": source,
+            "error_count": total, "checked_pairs": pairs,
+            "spec_errors": spec_errors, "drift_errors": drift_errors,
+            "scene_errors": scene_errors, "scope": scope}
+  save_json(os.path.join(workspace, "11_symmetry_report.json"), report)
+  emit(report)
+  return 0 if total == 0 else 1
 
 
 # ------------------------------------------------- etape 6 : proprietes, cablage
@@ -1613,6 +1923,9 @@ def main() -> int:
   ws(sub.add_parser("place-scene"), dry=True)
   ws(sub.add_parser("audit-scene")).add_argument("--live", action="store_true")
   ws(sub.add_parser("check-navigation"))
+  p = ws(sub.add_parser("check-symmetry", help="symetrie des specs et, avec --live, de la "
+                                               "scene posee (axes X, Y, R180)"))
+  p.add_argument("--live", action="store_true")
   ws(sub.add_parser("apply-properties"), dry=True)
   ws(sub.add_parser("wire-devices"), dry=True)
   p = ws(sub.add_parser("verse-scan"))
@@ -1669,6 +1982,8 @@ def main() -> int:
     return cmd_audit_scene(workspace, a.live)
   if c == "check-navigation":
     return cmd_check_navigation(workspace)
+  if c == "check-symmetry":
+    return cmd_check_symmetry(workspace, a.live)
   if c == "apply-properties":
     return cmd_apply_properties(workspace, a.dry_run)
   if c == "wire-devices":

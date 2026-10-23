@@ -147,13 +147,14 @@ Toutes prennent `--workspace <chemin_absolu>` : le dossier d'etat de la carte, *
 | `init --template blank\|1v1_arena\|boxfight [--force]` | non | cree le workspace et ses 5 specs ; `--list` liste les gabarits ; n'ecrase jamais un workspace rempli sans `--force` |
 | `preflight` | oui | ping, pagination a 200, etat session |
 | `measure-palette [--force] [--dry-run]` | oui | pose chaque asset a (0, -20000, 5000), relit bounds et pivot, supprime ; ecrit `02_palette.json` |
-| `validate-grid [fichier]` | non | bordures fermees, escaliers, symetrie (axe `X` ou `Y`), accessibilite 2D |
+| `validate-grid [fichier]` | non | bordures fermees, escaliers, symetrie (`X`, `Y` ou `R180`), accessibilite 2D |
 | `validate-scene` | non | forme des 5 specs (`spec_schema.py`) + coherence croisee ; `PALETTE_EMPTY` tant que rien n'est mesure |
 | `build-structure [--dry-run]` | oui | sols et murs de perimetre par lots de 10, relecture des transforms |
 | `compile-transforms` | non | calcule `_compiled_scene.json` (devices et props), echelle comprise |
 | `place-scene [--dry-run]` | oui | devices (PlaceDevice puis transform forcee) et props (lots), relecture position/yaw/echelle |
 | `audit-scene [--live]` | non / oui | chevauchements et gravite -> `06_audit_report.json` ; `--live` remplace la theorie par les bounds relus |
 | `check-navigation` | non | couloirs < 100 cm entre props d'une meme tuile -> `06_navigation_report.json` (pas de capsule, pas de murs) |
+| `check-symmetry [--live]` | non / oui | paires miroirs des specs (`SPEC_ASYMMETRY`, `MIRROR_PARTNER_MISSING`) -> `11_symmetry_report.json` ; `--live` ajoute le derive de placement (`TRANSFORM_DRIFT`) et la symetrie des bounds relus (`SCENE_ASYMMETRY`) |
 | `apply-properties [--dry-run]` | oui | `list_properties` -> `set_properties` -> `get_properties` -> `07_properties_report.json` |
 | `wire-devices [--dry-run]` | oui | `GetBindingOptions` -> `AddEventBinding` -> `ListEventBindings` (cible) -> `08_wiring_report.json` |
 | `verse-scan [--root R] [--recursive]` | oui | `Verse.ListFiles` -> `_verse_files.json` (vide = inconnu, pas absent) |
@@ -171,10 +172,59 @@ Statut `PASSED` = relu dans l'editeur (sauf commandes marquees « non », qui ne
 Aucune commande ne sauvegarde le niveau, ne publie, ni ne lance de session.
 
 Verification sans editeur : `python script/tests/verify.py` (faux serveur MCP
-`script/tests/mock_mcp.py`, 127.0.0.1 uniquement) -> `86/86 OK`. Procedure complete :
+`script/tests/mock_mcp.py`, 127.0.0.1 uniquement) -> `110/110 OK`. Procedure complete :
 `references/first-run.md`.
 
 ## 8. Interdits sans accord explicite de l'utilisateur
 
 `Save` / `SaveAll`, `StartSession`, `PushChanges`, publication, `EnablePythonInUEFN`, tout outil qui modifie un asset du projet (`set_material`, `add_socket`, `set_nanite_enabled`, `import_file`, `create_level`, `load_level`, `create_data_layer_asset`...), `VerseToolset.WriteFile`.
 `StartSession` a deja bloque le pont pendant un test anterieur.
+
+## 9. Contournements du plafond MCP (ce qui marche, ce qui ne marche pas)
+
+### Python ne donne aucune capacite nouvelle
+
+`Prog.execute_tool_script` execute du Python **dans** l'editeur, mais le bac a sable n'expose que
+`json`, `math`, `datetime`, `copy`, `re`, `time` et la fonction `execute_tool(nom, chaine_json)`.
+Teste le 2026-10-19 : `import unreal` -> « Import of 'unreal' is not permitted » ;
+`import toolset_registry` -> refuse aussi. **Python est un driver de boucle au-dessus des 388 memes
+outils, pas une surface supplementaire.** Ne jamais presenter un script Python comme un contournement
+du plafond (lumiere, materiaux par instance, feuillage, landscape).
+
+### Ce que Python change vraiment : le debit et le calcul sur place
+
+- 100 spawns + 100 tags en 3,7 s dans **un seul** appel, contre ~66 s en appels unitaires (§4).
+  Le CLI reste a 10 par lot pour limiter la perte en cas de timeout ; hors CLI, le lot de 100 est prouve.
+- `math` est disponible dans le script : les positions peuvent etre **calculees sur place**
+  (repetition, grille, facade, skyline). C'est le substitut a l'absence de PCG et d'outil de duplication.
+- `Primitive.add_cube` / `add_cone` / `add_cylinder` / `add_sphere` sont **[ecriture | verifie]** et
+  n'ont **aucune commande du CLI** : ils ajoutent un composant a un acteur existant, donc une piece
+ composee = 1 acteur au lieu de N. Jamais exerce par le skill : le composer reste a prouver.
+
+### Lumiere : la seule voie est Niagara, et elle est a moitie prouvee
+
+Aucun outil d'eclairage dans les 388 (recherche `LightToolset|add_light|Lightmass|set_light|LightComponent`
+-> 0 resultat). Un systeme Niagara emissif (rendu sprite + couleur HDR) pose comme composant est
+donc la seule source de lumiere atteignable.
+
+| volet | outils | statut |
+|---|---|---|
+| poser | `NiagaraToolset_Component.SetSystem`, `SetVariable` | **[ecriture | verifie]** |
+| lire | `GetEmitterTopology`, `GetModuleSchema`, `GetRendererSchema`, `GetAvailableDynamicInputs`, `GetSystemCompileState`, `GetStackIssues`, `GetSystemSummary` | **[lecture | verifie]** |
+| creer | `CreateNiagaraSystem`, `AddEmitter`, `AddRenderer`, `SetRendererData`, `AddSetParametersModule`, `AddUserVariables`, `SetEmitterData`, `SetSystemData` | **[DANGEREUX | jamais appele]** |
+
+Regles : un seul appel a la fois, `Save` avant le premier appel de chaque outil jamais teste, resultat
+brut consigne. **`GetDynamicInputSchema` est interdit** (crashe l'editeur) : utiliser
+`GetDynamicInputSchemaFromAsset`.
+
+Seconde voie, complementaire : `MaterialInstanceTools.create` + `StaticMeshTools.set_material`.
+Ces outils agissent au niveau de l'**asset** : tous les exemplaires du mesh changent ensemble.
+Pour varier les apparences il faut plusieurs assets, pas plusieurs instances. Jamais testes.
+
+### Derniere porte, non testee
+
+`IsPythonEnabledInUEFN` renvoie deja `true`, donc l'interpreteur du projet est initialise, mais le bac
+a sable MCP en est separe. Si le Python du projet est actif, la console Python de l'editeur a, elle, le
+module `unreal` — hors d'atteinte du MCP : c'est de l'humain-dans-la-boucle (l'agent ecrit le script sur
+le disque, l'utilisateur le colle dans l'editeur). `EnablePythonInUEFN` reste interdit sans accord (§8).
+A traiter comme une hypothese, jamais comme un acquis.

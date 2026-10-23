@@ -20,6 +20,9 @@ relu a chaque requete et fusionne dans la configuration. Cles reconnues :
   build_diags    diagnostics renvoyes par BuildAll          (defaut [])
   build_log      lignes renvoyes par GetLogEntries(VerseBuild)
   drop_scale     get_actor_transform renvoie scale 1 (pour tester TRANSFORM_MISMATCH)
+  drift          {label: [dx, dy, dz]} ajoute a la position RELUE par get_actor_transform et
+                 get_actor_bounds : simule un acteur deplace dans l'editeur apres place-scene
+                 (pour tester TRANSFORM_DRIFT et SCENE_ASYMMETRY)
   prop_overrides {nom: valeur} forces a la relecture (pour tester PROPERTY_MISMATCH)
   ignore_yaw     PlaceDevice ignore le yaw demande (defaut true : quirk reel documente)
   fail_tools     noms d'outils qui repondent isError=true
@@ -50,7 +53,7 @@ BUILD_OK_LOG = [{"severity": "Info",
 CFG = {"session": "Disconnected", "props": DEFAULT_PROPS, "symbols": ["GetGameState"],
        "files": DEFAULT_FILES, "bounds_size": [100.0, 100.0, 100.0], "build_diags": [],
        "build_log": BUILD_OK_LOG, "drop_scale": False, "ignore_yaw": True,
-       "prop_overrides": {}, "fail_tools": []}
+       "prop_overrides": {}, "fail_tools": [], "drift": {}}
 
 # etat simule de l'editeur
 ACTORS = {}      # refPath -> {label, asset, xform, tags, kind}
@@ -87,6 +90,13 @@ def make_xform(loc=None, yaw=0.0, scale=None):
 
 def actor(ref: str) -> dict | None:
   return ACTORS.get(ref)
+
+
+def read_location(a: dict, c: dict) -> list[float]:
+  """Position relue : `drift` simule un acteur deplace dans l'editeur apres place-scene."""
+  loc = [a["xform"]["location"][k] for k in "xyz"]
+  d = (c.get("drift") or {}).get(a["label"])
+  return [loc[i] + float(d[i]) for i in range(3)] if d else loc
 
 
 def ref_of(args: dict, key: str = "actor"):
@@ -144,6 +154,8 @@ def tool(tool_name: str, args: dict):
     xf = json.loads(json.dumps(a["xform"]))
     if c.get("drop_scale"):
       xf["scale"] = {"x": 1.0, "y": 1.0, "z": 1.0}
+    for i, k in enumerate("xyz"):
+      xf["location"][k] = read_location(a, c)[i]
     return xf
   if t == "get_actor_bounds":
     a = actor(ref_of(args))
@@ -151,7 +163,7 @@ def tool(tool_name: str, args: dict):
       return None
     size = [float(c["bounds_size"][i]) * a["xform"]["scale"][k]
             for i, k in enumerate("xyz")]
-    loc = [a["xform"]["location"][k] for k in "xyz"]
+    loc = read_location(a, c)
     return {"min": {k: loc[i] - size[i] / 2.0 for i, k in enumerate("xyz")},
             "max": {k: loc[i] + size[i] / 2.0 for i, k in enumerate("xyz")},
             "isValid": True}

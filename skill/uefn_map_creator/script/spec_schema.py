@@ -15,7 +15,9 @@ PLACEMENT_MODES = ["TILE_ANCHOR", "RELATIVE_TO_ACTOR"]
 # hors de la grille : `WORLD` le place en coordonnees absolues au lieu d'une tuile.
 DEVICE_PLACEMENT_MODES = ["TILE_ANCHOR", "WORLD"]
 GRID_CELLS = ["#", ".", "W", "P", "S1", "S2", "O", "R_N", "R_S", "R_E", "R_W", "T", "V"]
-AXES = ["X", "Y"]
+# `symmetry_axis` accepte aussi une rotation : beaucoup d'arenes versus (1v1, box fight) sont
+# symetriques a 180 degres avec echange des equipes, pas par miroir.
+AXES = ["X", "Y", "R180"]
 
 # cle -> (obligatoire, type, enum ou None)
 DEVICE_KEYS = {
@@ -31,6 +33,9 @@ DEVICE_KEYS = {
     "on_floor": (False, "bool", None),
     "properties": (False, "dict", None),
     "bindings": (False, "list", None),
+    # `mirror: false` sort l'acteur de check-symmetry. A poser des DEUX cotes : un acteur
+    # symetrique dont le partenaire est exclu remonte MIRROR_PARTNER_MISSING.
+    "mirror": (False, "bool", None),
 }
 PROP_KEYS = {
     "actor_label": (True, "str", None),
@@ -43,6 +48,7 @@ PROP_KEYS = {
     "gap_cm": (False, "num", None),
     "face_towards": (False, "str", None),
     "snap_to_floor": (False, "bool", None),
+    "mirror": (False, "bool", None),
 }
 ASSET_KEYS = {
     # uefn_path reste optionnel ici : un gabarit neuf contient des chemins a trouver a l'etape 2.

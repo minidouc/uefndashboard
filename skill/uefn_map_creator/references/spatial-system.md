@@ -79,6 +79,29 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 3. Calculer la position finale en soustrayant le decalage du point de pivot `PivotOffset_B` :
    - `SpawnLocation_B = Center_A + (Distance * U) - PivotOffset_B`
 
+## 5 bis. Miroir d'un acteur (`check-symmetry`)
+
+Trois formules, une par mode (`symmetry_axis` de `03_grid.json`). `rows` et `cols` sont les
+dimensions de la matrice de l'etage concerne.
+
+| mode | tuile `[r, c, z]` | position locale `(lx, ly, lz)` dans la tuile | yaw |
+|---|---|---|---|
+| `X` | `[rows-1-r, c, z]` | `(512 - lx, ly, lz)` | `(180 - yaw) % 360` |
+| `Y` | `[r, cols-1-c, z]` | `(lx, 512 - ly, lz)` | `(-yaw) % 360` |
+| `R180` | `[rows-1-r, cols-1-c, z]` | `(512 - lx, 512 - ly, lz)` | `(yaw + 180) % 360` |
+
+La comparaison porte sur les **coordonnees locales** (`lx = centre_x - tx * 512`, etc.), pas sur
+les coordonnees absolues : deux acteurs de tailles differentes restent comparables, et le
+controle ne depend pas de la place de la tuile dans la carte. Invariant a retenir : deux
+positions miroirs somment a 512 sur chaque axe retourne.
+
+L'appariement est en `O(n)` : les acteurs sont groupes par `(paire de tuiles triee, asset_key)`,
+puis apparies au plus proche a l'interieur de chaque groupe (les groupes restent petits, donc le
+cout ne depend pas de la taille de la carte). Au-dela de `MIRROR_SEARCH_CM` (768 cm) d'ecart
+local, le partenaire est declare **absent** (`MIRROR_PARTNER_MISSING`) plutot que mal place.
+`RELATIVE_TO_ACTOR` n'a pas besoin de cas particulier : l'enfant herite de la tuile de son
+parent, et sous `R180` un enfant `RIGHT_OF` a pour miroir un enfant `RIGHT_OF` du parent miroir.
+
 ## 6. Regle des Escaliers et Tremies (`OPEN_STAIRWELL`)
 
 - Un escalier ou une rampe place dans la tuile `[tx, ty, tz]` monte de `tz * 384.0` vers `(tz + 1) * 384.0`.
@@ -210,6 +233,20 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 }
 ```
 
+`symmetric: true` exige un `symmetry_axis` parmi **`X`**, **`Y`** et **`R180`** (`validate-grid`
+renvoie `SYMMETRY_AXIS_UNSUPPORTED` sinon, pas un silence) :
+- `X` : miroir sur les lignes, `[r, c]` <-> `[rows-1-r, c]` (Nord <-> Sud). `R_N` <-> `R_S`.
+- `Y` : miroir sur les colonnes, `[r, c]` <-> `[r, cols-1-c]` (Est <-> Ouest). `R_E` <-> `R_W`.
+- `R180` : rotation de 180 degres, `[r, c]` <-> `[rows-1-r, cols-1-c]`. Les deux echanges a la
+  fois **et** `S1` <-> `S2` : c'est le mode des arenes versus en diagonale (gabarit
+  `1v1_arena`).
+En `X`/`Y`, `S1` et `S2` sont tenus pour equivalents : une carte peut separer ses equipes sur
+l'autre axe (gabarit `boxfight`, S1 au Nord et S2 au Sud, est declare en `X`). L'echange des
+equipes n'est donc **pas** verifie en miroir ; l'avertissement `SYMMETRY_SCOPE` de
+`validate-scene` le rappelle.
+Une case posee **sur** le plan de symetrie n'a pas de partenaire possible : elle doit etre son
+propre miroir (`#`, `.`, `P`, `O`, `T`, `V`), sinon `SYMMETRY_ON_AXIS`.
+
 ### Schema `04_devices.json`
 `asset_key` est la cle obligatoire (elle pointe vers `02_palette.json`) ; `device_class` n'est qu'une mention lisible.
 `properties` est applique par `apply-properties` (etape 6), qui confronte chaque nom a `Object.list_properties` et chaque valeur a `get_properties` : un nom invente donne `PROPERTY_NOT_FOUND`, une valeur relue differente donne `PROPERTY_MISMATCH`.
@@ -248,6 +285,7 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
 - Valeurs de `slot` : les 9 ancres de la section 3. Valeurs de `face_towards` : `NORTH`, `EAST`, `SOUTH`, `WEST`, `CENTER`, ou un `actor_label` deja place avant.
 - Placement par defaut : `TILE_ANCHOR` (`tile` + `slot` obligatoires). `placement_mode: "WORLD"` pose le device en coordonnees absolues (`world_location_cm` = centre de la boite) : c'est le cas des devices **non spatiaux** de `Zone_Logic`, qui ne sont sur aucune tuile de `03_grid.json`. `on_floor: false` desactive alors le controle de gravite, et la tuile du rapport est derivee des coordonnees (negative hors grille).
 - Les noms de proprietes sont a confirmer par `Object.list_properties` (voir `devices-catalog-and-wiring.md`).
+- `"mirror": false` (optionnel, defaut `true`) sort l'acteur de `check-symmetry`. A poser **des deux cotes** d'une paire : un acteur symetrique dont le jumeau est exclu remonte `MIRROR_PARTNER_MISSING`. Les devices en `placement_mode: "WORLD"` sont ignores d'office (hors grille, aucun miroir possible) et listes dans le `scope` du rapport.
 
 ### Schema `05_props.json`
 ```json
@@ -275,6 +313,10 @@ Lorsqu'un acteur enfant `B` (demi-taille `Half_B`) est place par rapport a un ac
   ]
 }
 ```
+`mirror: false` s'applique ici comme dans `04_devices.json`. Un prop `RELATIVE_TO_ACTOR` herite de
+la tuile de son `reference_actor` : son jumeau doit pointer vers le jumeau du parent et etre
+declare **apres** lui (`validate-scene` refuse une reference non declaree). Sous `R180` la
+relation est conservee : un enfant `RIGHT_OF` a pour miroir un enfant `RIGHT_OF` du parent miroir.
 
 ### Schema `06_audit_report.json` (ecrit par `audit-scene`)
 Chevauchements, gravite, acteurs introuvables. `source` vaut `compiled` (aucun appel editeur),
@@ -405,8 +447,76 @@ ici : il journalise dans `_verse_written.json` (`read_back_matches`).
 (hypothese `savedActor` jamais testee), donc cette liste sert a cabler a la main.
 `live` n'est rempli qu'avec `--live --device <label du device Verse pose>`.
 
+### Schema `11_symmetry_report.json` (ecrit par `check-symmetry`)
+Symetrie reelle des acteurs : chaque entree de `04`/`05` est appariee a son miroir dans la tuile
+opposee, puis compares **en coordonnees locales de tuile** (donc independant de la taille de
+l'asset) et en yaw. `source` vaut `compiled` (specs seules), `live` (transforms et bounds relus)
+ou `not_live` (`--live` demande mais aucun bounds relu).
+```json
+{
+  "timestamp": "2026-10-21T23:20:40+00:00",
+  "command": "check-symmetry",
+  "status": "FAILED",
+  "axis": "R180",
+  "symmetric": true,
+  "source": "compiled",
+  "error_count": 1,
+  "checked_pairs": 7,
+  "spec_errors": [
+    {"type": "SPEC_ASYMMETRY", "axis": "R180", "fault": "position",
+     "actor_a": "Ramp_Duel_P1_01", "actor_b": "Ramp_Duel_P2_01",
+     "tile_a": [3, 2, 0], "tile_b": [4, 5, 0],
+     "expected_center_b_cm": [2304.0, 2816.0, 75.0],
+     "center_b_cm": [2360.0, 2816.0, 75.0],
+     "delta_cm": [56.0, 0.0, 0.0], "max_delta_cm": 56.0,
+     "tolerance_cm": [1.0, 1.0, 1.0],
+     "suggestion": "Amener Ramp_Duel_P2_01 en [2304.0, 2816.0, 75.0] (miroir de Ramp_Duel_P1_01 en tuile [3, 2, 0]), puis compile-transforms et place-scene."}
+  ],
+  "drift_errors": [
+    {"type": "TRANSFORM_DRIFT", "actor": "Cover_Crate_01",
+     "delta_location_cm": [40.0, 0.0, 0.0], "delta_yaw_deg": 0.0, "delta_scale": 0.0,
+     "expected": {"location": {"x": 768.0, "y": 1792.0, "z": 78.0},
+                  "rotation": {"yaw": 180.0}, "scale": {"x": 1.2, "y": 1.2, "z": 1.2}},
+     "read_back": {"location": {"x": 808.0, "y": 1792.0, "z": 78.0},
+                   "rotation": {"yaw": 180.0}, "scale": {"x": 1.2, "y": 1.2, "z": 1.2}},
+     "suggestion": "L'acteur a bouge depuis place-scene, ou le placement n'a jamais ete corrige. Corriger la spec, puis cleanup + place-scene."}
+  ],
+  "scene_errors": [],
+  "scope": [
+    "16 acteurs de 04/05 controles (centre + yaw) ; 5 en placement_mode WORLD ignores (hors grille, aucun miroir possible): Granter_Loadout_01, Round_Timer_01, Score_Manager_01, End_Game_01, Hud_Message_01",
+    "murs et sols de _compiled_structure.json non controles : leur symetrie vient de la matrice, verifiee par validate-grid.",
+    "SPEC seulement : un acteur deplace dans l'editeur apres place-scene n'est pas vu. Relancer avec --live pour controler la scene posee."
+  ]
+}
+```
+(`spec_errors` et `drift_errors` ci-dessus ne sont pas issus du meme lancement : le premier est un
+rapport reel, le second montre la forme d'un `TRANSFORM_DRIFT` obtenu avec `--live`.)
+
+Types d'erreur :
+- `SPEC_ASYMMETRY` / `SCENE_ASYMMETRY` : la paire existe mais le centre local ou le yaw n'est pas
+  le miroir. `fault` vaut `position`, `yaw` ou `position+yaw` ; `expected_center_b_cm` est la
+  correction a appliquer. Le meme controle sur les bounds relus donne `SCENE_ASYMMETRY`.
+- `MIRROR_PARTNER_MISSING` : aucun acteur de meme `asset_key` dans la tuile miroir (ou aucun a
+  moins de `MIRROR_SEARCH_CM` = 768 cm). Au-dela de cette distance le partenaire est declare
+  **absent** plutot que mal place, ce qui est plus actionnable.
+- `TRANSFORM_DRIFT` (`--live`) : le transform relu s'ecarte du transform compile au-dela de
+  `POS_TOLERANCE_CM` / `YAW_TOLERANCE_DEG` / `SCALE_TOLERANCE`. C'est le seul controle qui voit un
+  acteur deplace a la main dans l'editeur.
+- `NOT_PLACED` (`--live`) : absent de `_placed.json`. `UNREADABLE_TRANSFORM` : reponse vide ou
+  illisible, donc **inconnu** (jamais « l'acteur est a la bonne place »). `NO_LIVE_DATA` : aucun
+  bounds relu, la scene posee n'est pas verifiee.
+- `COMPILE_FAILED` : les specs ne compilent pas, rien n'est verifiable. Lancer
+  `compile-transforms` seul pour la liste des erreurs.
+
+Tolerances : `SYMMETRY_POS_TOLERANCE_CM` = 1.0 et `SYMMETRY_YAW_TOLERANCE_DEG` = 1.0 (les specs
+sont calculees, un miroir juste tombe a ~0). Sur X et Y la tolerance est elargie de
+`abs(taille_a - taille_b) / 2` pour absorber la difference de `rotated_size` a un yaw non cardinal.
+Un acteur seul **sur** le plan de symetrie est son propre partenaire : le yaw n'est pas exige,
+mais il doit etre centre sur l'axe.
+
 Portee reelle des controles, a dire a l'utilisateur sans enjoliver :
 - `check-navigation` ne teste que deux props d'une meme tuile face a face. Il ne tient compte ni de la capsule joueur, ni des murs, ni des devices, ni des rampes, ni des passages entre tuiles. Un `PASSED` ne prouve pas que la carte est jouable.
+- `check-symmetry` ne compare que les acteurs de `04`/`05` : ni les sols et murs de `build-structure` (leur symetrie vient de la matrice, controlee par `validate-grid`), ni les devices en `placement_mode: "WORLD"`, ni les materials, les collisions ou les proprietes. Sans `--live` un acteur deplace a la main dans l'editeur n'est **pas** vu. En miroir `X`/`Y` l'echange des equipes (`S1` <-> `S2`) n'est pas verifie : seule la rotation `R180` l'exige.
 - `GRAVITY_ERROR` n'est detectable **qu'avec `audit-scene --live`**. Hors ligne, le centre compile d'un `TILE_ANCHOR` est par construction pose au sol : la distance au sol vaut toujours 0, donc un `pivot_offset_cm` faux passe en `PASSED`. Le rapport le dit via `gravity_scope`. Un device en `placement_mode: "WORLD"` avec `on_floor: false` n'est pas controle du tout (il n'est pas cense reposer sur un sol de tuile).
 - `source: "not_live"` avec `NO_LIVE_DATA` signifie qu'`audit-scene --live` n'a relu **aucun** bounds (pas de `_placed.json`) : rien n'est verifie, il ne faut pas lire ce rapport comme un controle.
 - `apply-properties` et `wire-devices` ne touchent que les acteurs deja dans `_placed.json` : ce qui est dans `not_placed` n'a recu **aucun** appel editeur.
