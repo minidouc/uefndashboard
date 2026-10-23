@@ -63,19 +63,16 @@ Ces points sont la commande `wire-devices [--dry-run]` : elle lit les `bindings`
 
 Cablage par canal : non prouve. Un essai anterieur avec un entier a echoue ; le champ attendrait un `GameplayTagContainer`.
 
-## 6. References @editable d'un device Verse (savedActor) : UNKNOWN
+## 6. References @editable d'un device Verse (`DeviceToolset`)
 
-Hypothese non verifiee : chaque `@editable` d'un `creative_device` Verse aurait un sous-objet `__verse_0x<HASH>` portant une propriete `savedActor`.
-Le projet de test ne contenait aucun device Verse : l'hypothese n'a pas pu etre testee.
-
-Si l'utilisateur accepte de la tester (il faut alors ecrire et compiler du Verse) :
-1. `Object.list_properties` sur le composant script du device Verse pose ; relever les vrais noms. Ne jamais deviner un hash.
-2. `Object.set_properties {"instance": {"refPath": "<sous-objet>"}, "values": "{\"savedActor\": \"<refPath cible>\"}"}`.
-3. `Object.get_properties {"instance", "properties": ["savedActor"]}` doit renvoyer la cible.
-4. Essayer aussi `Device.SetDeviceProperty` (unknown) et noter lequel marche.
-5. `Verse.BuildAll` doit finir sans erreur.
-
-Tant que ce n'est pas fait, dire a l'utilisateur que les `@editable` se cablent a la main dans l'editeur.
+D'apres la documentation officielle Unreal MCP d'Epic Games, `ValkyrieToolset.DeviceToolset` est concu pour parcourir le catalogue, placer des appareils et **modifier toutes les proprietes `@editable`** d'un `creative_device` Verse :
+1. Compiler d'abord le code Verse (`verse-build`) pour que le `creative_device` apparaisse dans `Device.ListDeviceAssets` (`bIsVerseDevice: true`).
+2. `list-editables --apply` :
+   - Trouve et pose automatiquement le `creative_device` dans `Zone_Logic` (`Game_Manager_01`) s'il n'est pas deja dans `_placed.json`.
+   - Lit le schema via `Device.ListDeviceProperties {"device": {"refPath": "..."}}`.
+   - Assigne chaque `@editable` de type acteur avec `Device.SetDeviceProperty {"device": {"refPath": "..."}, "propertyName": "<NomEditable>", "value": "<refPath cible>"}`.
+   - Relit avec `Device.GetDeviceProperties {"device": {"refPath": "..."}, "propertyNames": ["<NomEditable>"]}` et marque `wiring: "AUTO_VERIFIED"` dans `10_editables.json`.
+3. Si une reference ne peut pas etre relue ou si `SetDeviceProperty` renvoie une erreur sur un type specifique, `list-editables --apply` la laisse en `MANUEL` dans `10_editables.json` et l'annonce honnetement.
 
 ## 7. Fiches de devices : NON VERIFIEES
 

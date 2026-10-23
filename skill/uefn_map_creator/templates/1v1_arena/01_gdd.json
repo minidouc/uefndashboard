@@ -11,22 +11,24 @@
      "purpose": "Plateforme de service : devices non spatiaux, 61,44 m a l'Ouest et 23,04 m sous l'arene"}
   ],
   "gameplay_timeline_sec": [
-    {"time": 0, "event": "Spawn sur Spawner_P1_01 / Spawner_P2_01, Barrier_Center_01 active"},
+    {"time": 0, "event": "Spawn sur Spawner_P1_01 / Spawner_P2_01, Barrier_Center_01 et Barrier_Center_02 actives"},
     {"time": 1, "event": "Granter_Loadout_01 donne le pickaxe et les materiaux"},
-    {"time": 3, "event": "Round_Timer_01 expire le compte a rebours, Barrier_Center_01 se desactive"},
+    {"time": 3, "event": "Round_Timer_01 expire le compte a rebours, Barrier_Center_01 et Barrier_Center_02 se desactivent"},
     {"time": 4, "event": "Combat : les joueurs construisent depuis les rampes de duel"},
-    {"time": 90, "event": "Fin de manche : Score_Manager_01 incremente, Reset_Explosive_01..05 detruisent les constructions"},
+    {"time": 90, "event": "Fin de manche : Score_Manager_01 incremente, Reset_Explosive_01..06 detruisent les constructions"},
     {"time": 95, "event": "Nouvelle manche ou End_Game_01 si un joueur atteint 5 points"}
   ],
   "required_devices": [
     {"actor_label": "Spawner_P1_01", "device_class": "player_spawner_device"},
     {"actor_label": "Spawner_P2_01", "device_class": "player_spawner_device"},
     {"actor_label": "Barrier_Center_01", "device_class": "barrier_device"},
+    {"actor_label": "Barrier_Center_02", "device_class": "barrier_device"},
     {"actor_label": "Reset_Explosive_01", "device_class": "explosive_device"},
     {"actor_label": "Reset_Explosive_02", "device_class": "explosive_device"},
     {"actor_label": "Reset_Explosive_03", "device_class": "explosive_device"},
     {"actor_label": "Reset_Explosive_04", "device_class": "explosive_device"},
     {"actor_label": "Reset_Explosive_05", "device_class": "explosive_device"},
+    {"actor_label": "Reset_Explosive_06", "device_class": "explosive_device"},
     {"actor_label": "Granter_Loadout_01", "device_class": "item_granter_device"},
     {"actor_label": "Round_Timer_01", "device_class": "timer_device"},
     {"actor_label": "Score_Manager_01", "device_class": "score_manager_device"},
@@ -48,53 +50,55 @@
       "path_status": "moteur"
     },
     "player_spawner": {
-      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner",
+      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner",
       "category": "DEVICE_SPAWNER",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "item_granter": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter.PID_Device_ItemGranter",
       "category": "DEVICE_GRANTER",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "explosive_barrel": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ExplosiveBarrel",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ExplosiveBarrel.PID_Device_ExplosiveBarrel",
       "category": "DEVICE_EXPLOSIVE",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "score_manager": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager.PID_Device_ScoreManager",
       "category": "DEVICE_SCORE",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "end_game": {
-      "uefn_path": "/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2",
+      "uefn_path": "/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2.PID_Device_EndGame_V2",
       "category": "DEVICE_ENDGAME",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "hud_message": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_HUDMessage",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_HUDMessage.PID_Device_HUDMessage",
       "category": "DEVICE_HUD",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
+
     "barrier": {
-      "uefn_path": null,
+      "uefn_path": "/CRD_VolumetricRegion/SetupAssets/PID_Device_Barrier.PID_Device_Barrier",
       "category": "DEVICE_BARRIER",
-      "path_status": "a_chercher",
-      "notes": "Chercher avec Device.ListDeviceAssets {\"nameFilter\": \"Barrier\"}. measure-palette refusera tant que le chemin est null."
+      "path_status": "verifie_42_40",
+      "notes": "Verifie via Device.ListDeviceAssets {\"nameFilter\": \"Barrier\"}."
     },
     "round_timer": {
-      "uefn_path": null,
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_Timer.PID_Device_Timer",
       "category": "DEVICE_TIMER",
-      "path_status": "a_chercher",
-      "notes": "Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
+      "path_status": "verifie_42_40",
+      "notes": "Verifie via Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
     },
     "prop_ramp": {
-      "uefn_path": null,
+      "uefn_path": "/Game/Athena/Apollo/Environments/BuildingActors/Fortilla/Stairs/Apollo_Fortilla_Ramp_01.Apollo_Fortilla_Ramp_01_C",
       "category": "PROP_RAMP",
-      "path_status": "a_chercher",
-      "notes": "Asset.find_assets {\"name\": \"Ramp\", \"recursive\": true}. Une rampe se pose comme prop, pas comme cellule de grille."
+      "path_status": "verifie_42_40",
+      "notes": "Rampe de duel Fortilla verifiee dans UEFN 42.40."
     },
+
     "prop_crate": {
       "uefn_path": "/Engine/BasicShapes/Cube",
       "category": "PROP",

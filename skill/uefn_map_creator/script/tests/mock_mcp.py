@@ -232,9 +232,29 @@ def tool(tool_name: str, args: dict):
   if t == "ListEventBindings":
     return BINDINGS.get(ref_of(args, "devicePath"), [])
   if t == "ListDeviceAssets":
-    return [{"displayName": "Player Spawner Device",
-             "assetPath": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner",
-             "category": "Devices", "bIsVerseDevice": False}]
+    flt = (args.get("nameFilter") or "").lower()
+    items = [
+        {"displayName": "Player Spawner Device",
+         "assetPath": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner",
+         "category": "Devices", "bIsVerseDevice": False},
+        {"displayName": "game_manager_device",
+         "assetPath": "/MockProject/VerseDevices/game_manager_device.game_manager_device",
+         "category": "Verse", "bIsVerseDevice": True},
+    ]
+    return [i for i in items if not flt or flt in i["displayName"].lower()]
+  if t == "ListDeviceProperties":
+    ref = ref_of(args, "device")
+    return [{"name": k, "type": "actor"} for k in PROPS.get(ref, {})]
+  if t == "SetDeviceProperty":
+    ref = ref_of(args, "device")
+    store = PROPS.setdefault(ref, {})
+    store[args.get("propertyName", "")] = args.get("value")
+    return True
+  if t == "GetDeviceProperties":
+    ref = ref_of(args, "device")
+    store = PROPS.get(ref, {})
+    names = args.get("propertyNames") or list(store)
+    return {k: store[k] for k in names if k in store}
 
   if t == "ListFiles":
     return list(c["files"])

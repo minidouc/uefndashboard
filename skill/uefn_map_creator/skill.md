@@ -7,16 +7,17 @@ description: Concoit, construit en 3D, cable et verifie une carte UEFN (Unreal E
 
 ## Objectif
 
-Transformer une invite en carte UEFN assemblee dans le niveau courant : structure, devices, decors, code Verse compile, avec un rapport de verification qui distingue ce qui a ete **relu dans l'editeur** de ce qui reste **inconnu**.
+Le skill traduit une vision decrite en langage naturel en une ile UEFN posee, cablee et verifiee dans l'editeur. Il pose le **minimum de questions bloquantes avant de commencer** (a l'etape 1), deroule ensuite la construction de bout en bout sans interrompre l'utilisateur, **dit ce qu'il n'a pas pu faire** au lieu de le laisser decouvrir, et laisse a l'humain le seul role irremplacable : **jouer et juger**.
 
 ## Regles non negociables
 
 1. **Un seul appel MCP a la fois**, jamais en parallele, jamais deux agents sur l'editeur.
 2. Le serveur MCP est sur `http://127.0.0.1:8000/mcp`, sans authentification : ne jamais l'exposer hors de la machine.
-3. **Ne jamais sauvegarder** (`Save`, `SaveAll`), jamais publier, jamais lancer une session, jamais modifier un asset du projet sans demande explicite de l'utilisateur.
-4. Ne tenir pour vrai que ce qui a ete relu par un second appel. Une reponse vide (`[]`, `null`, `false`) vaut « inconnu », pas « absent ».
-5. Tout etat est sur disque dans le workspace (jamais dans le skill, jamais seulement dans la conversation).
-6. Signaler a l'utilisateur, dans le rapport final, ce qui n'a pas ete verifie.
+3. **Ne jamais sauvegarder** (`Save`, `SaveAll`), jamais publier, jamais lancer une session, jamais modifier un asset du projet sans accord explicite de l'utilisateur.
+4. **Regrouper toutes les questions et autorisations a l'etape 1** (confirmation du niveau courant, choix de gameplay si l'invite est ambigue, et accord pour ecrire les fichiers `.verse` du projet). Une fois l'etape 1 validee par l'utilisateur, executer les etapes 2 a 9 d'une seule traite sans redemander d'accord en cours de route.
+5. Ne tenir pour vrai que ce qui a ete relu par un second appel. Une reponse vide (`[]`, `null`, `false`) vaut « inconnu », pas « absent ».
+6. Tout etat est sur disque dans le workspace (jamais dans le skill, jamais seulement dans la conversation).
+7. Signaler a l'utilisateur, dans le rapport final, ce qui n'a pas ete verifie.
 
 ## Pilotage
 
@@ -93,17 +94,23 @@ Intermediaires calcules : `_compiled_structure.json`, `_compiled_scene.json`, `_
 
 Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est pas vert.
 
-### Etape 0 : Preflight (hors pipeline, a chaque reprise)
+### Etape 0 : Preflight (hors pipeline, automatique)
 - `init --workspace <chemin_absolu> --template blank|1v1_arena|boxfight` : cree le workspace et ses 5 fichiers de spec (`blank` = chaine testable avec des assets moteur seulement).
 - `preflight --workspace <...>` : ping, niveau courant, pagination remise a 200, etat de session.
-- **Rendre le nom du niveau a l'utilisateur et attendre sa confirmation avant la premiere ecriture.**
-- Gatekeeper : `PASSED`, et niveau reconnu par l'utilisateur.
+- Ne pas interrompre l'utilisateur a l'etape 0 : presenter le niveau courant directement avec le brief de l'etape 1.
+- Gatekeeper : `PASSED`.
 
-### Etape 1 : Cahier des charges
-- Simuler une partie seconde par seconde (spawn, equipement, action, score, victoire). Lister les devices requis (par `actor_label`), les zones, les fichiers Verse.
-- Sortie : `01_gdd.json`, avec `requested_assets` (cle, `uefn_path`, `category`, `scale` optionnel).
+### Etape 1 : Traduction de la vision, Cahier des charges et Accord unique
+- **Regle du minimum de questions bloquantes** :
+  - Ne jamais poser de questions techniques (dimensions en cm, `origin_tile`, `symmetry_axis`, choix des ancres) : l'agent tranche avec les standards de `references/level-design-patterns.md` (`origin_tile: [2, 2, 0]`, `1v1` = 8x8 `fall_zone` `R180`, `Box Fight` = 6x6 clos `wall` `X`).
+  - Annoncer des l'etape 1 les plafonds MCP si la vision demande une ambiance (pas d'outil de lumiere hors Niagara emissif, pas de materiau par instance, pas de landscape/feuillage).
+  - Presenter un **Brief unique** court a l'utilisateur :
+    1. Le **niveau courant** detecte par `preflight` ;
+    2. Le resume du gameplay et du plan (mode, taille en tuiles, logique Verse prevue) + au maximum **1 ou 2 questions de game design** uniquement si l'invite initiale est contradictoire ou trop floue ;
+    3. La demande d'**accord unique** pour construire dans ce niveau et ecrire le fichier `.verse` (`--i-agree-to-modify-project` a l'etape 8).
+- Une fois cet accord donne, rediger `01_gdd.json` (simulation seconde par seconde, `required_devices`, `requested_assets`, `verse_modules`) et les specs initiales, puis enchainer les etapes 2 a 9 sans nouvelle interruption.
 - `validate-scene` controle la **forme** des 5 fichiers (cles, types, enums, labels uniques, tuiles existantes, references declarees avant usage) : une faute de forme ne doit plus produire un transform faux avec un statut `PASSED`.
-- Gatekeeper : chaque mecanique a son device et sa fonction Verse ; `validate-scene` ne remonte plus d'erreur de forme (seul `PALETTE_EMPTY` reste attendu avant l'etape 2).
+- Gatekeeper : accord de l'utilisateur obtenu sur le niveau et l'ecriture Verse ; chaque mecanique a son device et sa fonction Verse ; `validate-scene` ne remonte plus d'erreur de forme (seul `PALETTE_EMPTY` reste attendu avant l'etape 2).
 
 ### Etape 2 : Recherche et mesure des assets
 - Chemins : `Asset.find_assets` pour les decors, `Device.ListDeviceAssets` pour les devices. Un chemin invente est une erreur ; un resultat vide ne prouve pas l'absence.
@@ -135,9 +142,9 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - Gatekeeper : chaque device a un chemin issu de `ListDeviceAssets` et une entree mesuree dans la palette.
 
 ### Etape 6 : Placement et reglages
-- `compile-transforms` (calcul, refuse un asset non mesure et une spec malformee), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform **relue** (position, yaw et echelle).
+- `compile-transforms` (calcul, refuse un asset non mesure et une spec malformee), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform **relue** (position, yaw et echelle). Si un acteur est deja dans `_placed.json` mais que son transform a change dans la spec, `place-scene` (et `build-structure`) le déplace en place via `Actor.set_actor_transform` sans avoir a detruire toute la scene.
 - `apply-properties` : `Object.list_properties` -> `set_properties` (`values` en **chaine JSON**) -> `get_properties`. Un nom absent de `list_properties` donne `PROPERTY_NOT_FOUND` avec les noms les plus proches, jamais un nom invente ; une valeur relue differente donne `PROPERTY_MISMATCH`. Rapport : `07_properties_report.json`.
-- `wire-devices` : `GetBindingOptions` sur la **source** valide `event` et `function`, `AddEventBinding`, puis relecture par `ListEventBindings` sur la **cible**. Rapport : `08_wiring_report.json`. Sans `bindings` declares : `NO_BINDING_DECLARED`.
+- `wire-devices` : `GetBindingOptions` sur la **source** valide `event` et `function`, `AddEventBinding`, puis relecture par `ListEventBindings` sur la **cible**. Rapport : `08_wiring_report.json`. Sans `bindings` declares : `NO_BINDING_DECLARED` (ou passer `--allow-empty` si toute la logique passe par Verse : ecrit `08_wiring_report.json` a `PASSED`).
 - `check-symmetry` : verifie que chaque device a son jumeau dans `03_grid.json` (axe `X`, `Y` ou `R180`), a la meme place dans sa tuile et avec le yaw miroir. Rapport : `11_symmetry_report.json`.
 - **Rendu / atmosphere : plafond dur.** Aucun outil d'eclairage dans les 388, aucun materiau par instance posee (`set_material` agit sur l'**asset** : tous ses exemplaires changent), ni feuillage, ni landscape. La seule voie vers de la lumiere est un systeme Niagara emissif, a moitie prouve seulement : pose verifiee, creation jamais appelee. Avant de promettre une ambiance, lire `references/mcp-routing.md` §9 et annoncer ce qui n'est pas atteignable plutot que de le laisser decouvrir a l'utilisateur.
 - Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm, gravite <= 2 cm, rien d'absent), `check-symmetry` PASSED, `07_properties_report.json` et `08_wiring_report.json` a `PASSED`. Sans `--live`, le rapport porte `gravity_scope` qui dit que la gravite n'est pas controlee : un `PASSED` hors ligne ne prouve ni le pivot ni la hauteur reellement posee.
@@ -147,17 +154,18 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - `check-navigation` (rapport `06_navigation_report.json`), puis `check-symmetry --live` (rapport `11_symmetry_report.json`, `source: "live"`), puis `visual-snapshot`.
 - Gatekeeper : `navigation_errors` vide **et** `check-symmetry --live` a `error_count: 0` avec `source: "live"`. **Dire a l'utilisateur ce que le controle ne couvre pas** : pour la navigation, deux props d'une meme tuile uniquement, sans capsule, sans murs, sans hauteur libre, sans sauts (les seuils 200 cm / 190 cm / 550 cm restent des constantes de conception, pas des mesures). Pour la symetrie, les devices `WORLD` (non spatiaux) ne sont pas compares, et `--live` ne prouve que les transforms relus, pas les materials ni les collisions.
 
-### Etape 8 : Verse
+### Etape 8 : Verse (Bac a sable Verse du projet)
 - `verse-scan` (`Verse.ListFiles`) puis `verse-grep --symbols <nom1,nom2>` (`Verse.Grep`) pour chaque signature d'API utilisee, avant d'ecrire. Un resultat vide est un **inconnu**, pas une absence : le rapport le dit.
-- Ecrire les fichiers avec les `@editable` nommes comme les `actor_label`. `verse-write` refuse sans `--i-agree-to-modify-project` (`CONSENT_REQUIRED`) : `VerseToolset.WriteFile` est DANGEREUX et n'a jamais ete execute. Avec accord : ecriture puis relecture par `ReadFile` (`read_back_matches`), historique dans `_verse_written.json`.
+- Ecrire les fichiers avec les `@editable` nommes comme les `actor_label`. L'editeur UEFN isole `VerseToolset` dans le bac a sable des fichiers Verse du projet : avec l'accord unique obtenu a l'etape 1, lancer `verse-write --i-agree-to-modify-project` (ecriture puis relecture par `ReadFile`, historique dans `_verse_written.json`).
 - `verse-build` : `Session.GetSessionStatus` doit etre `Disconnected` (sinon `SESSION_CONNECTED`), puis `Verse.BuildAll` et recoupement dans `Logs.GetLogEntries {"category": "VerseBuild", ...}`. Rapport : `09_verse_report.json`.
 - Gatekeeper : liste de diagnostics sans `Error` **et** ligne de succes recente dans le log.
 
-### Etape 9 : Device Verse et references `@editable`
-- Poser le `creative_device` (device Verse : `bIsVerseDevice` dans `ListDeviceAssets`).
-- `list-editables` : parse les `@editable` de `<workspace>/verse/*.verse`, distingue les **references d'acteur** (une cible posee est obligatoire) des **parametres** (`logic`, `int`, `float`... : rien a cabler), et produit la table `@editable` -> `actor_label` -> `refPath` dans `10_editables.json`. `--live --device <label>` liste les proprietes du device Verse pose.
-- Le cablage automatique des references d'acteurs est **unknown** : l'hypothese `savedActor` n'a jamais pu etre testee (aucun device Verse dans le projet de test).
-- Gatekeeper : soit la methode est prouvee sur ce projet avec l'accord de l'utilisateur, soit `10_editables.json` sert au cablage a la main, et le rapport final le dit.
+### Etape 9 : Device Verse et cablage automatique des `@editable`
+- `list-editables --apply` :
+  1. Parse les `@editable` de `<workspace>/verse/*.verse` et distingue les **references d'acteur** (`ACTEUR`) des **parametres** (`PARAMETRE` : `logic`, `int`, `float`...).
+  2. Si le `creative_device` Verse n'est pas encore pose dans `_placed.json`, le cherche automatiquement via `Device.ListDeviceAssets` (`bIsVerseDevice: true`) et le pose en `Zone_Logic` (`Game_Manager_01`).
+  3. Cable chaque reference d'acteur via l'outil officiel `Device.SetDeviceProperty` et relit la valeur via `Device.GetDeviceProperties` (`wiring: "AUTO_VERIFIED"` dans `10_editables.json`). Si une propriete echoue a l'ecriture ou a la relecture, elle reste en `"MANUEL"` et est signalee dans `wiring_errors`.
+- Gatekeeper : `10_editables.json` a `status: "PASSED"` (`AUTO_VERIFIED`), ou les references restant en `MANUEL` sont clairement annoncees a l'utilisateur.
 
 ### Etape 10 : Playtest
 - `playtest-plan` : imprime l'etat courant, la **demande d'accord** et la sequence, sans rien lancer.

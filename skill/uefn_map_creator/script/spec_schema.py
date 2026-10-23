@@ -18,6 +18,7 @@ GRID_CELLS = ["#", ".", "W", "P", "S1", "S2", "O", "R_N", "R_S", "R_E", "R_W", "
 # `symmetry_axis` accepte aussi une rotation : beaucoup d'arenes versus (1v1, box fight) sont
 # symetriques a 180 degres avec echange des equipes, pas par miroir.
 AXES = ["X", "Y", "R180"]
+EDGE_POLICIES = ["wall", "fall_zone"]
 
 # cle -> (obligatoire, type, enum ou None)
 DEVICE_KEYS = {
@@ -57,6 +58,7 @@ ASSET_KEYS = {
     "category": (True, "str", None),
     "size_cm": (False, "float3", None),
     "pivot_offset_cm": (False, "float3", None),
+    "footprint_tiles": (False, "int3", None),
     "measured": (False, "any", None),
     "scale": (False, "scale", None),
     "path_status": (False, "str", None),
@@ -68,7 +70,7 @@ GRID_KEYS = {
     "symmetric": (False, "bool", None),
     "symmetry_axis": (False, "str", AXES),
     "origin_tile": (False, "int3", None),
-    "edge_policy": (False, "str", None),
+    "edge_policy": (False, "str", EDGE_POLICIES),
 }
 GDD_KEYS = {
     "project_name": (False, "str", None),

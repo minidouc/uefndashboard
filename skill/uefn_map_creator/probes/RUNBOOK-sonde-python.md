@@ -29,7 +29,22 @@ produit tiers livré qui s'appuie dessus (voir les deux dernières lignes du tab
 sonde doit encore établir chez nous : que **notre** toolset apparaît bien côté serveur MCP, et
 qu'un outil personnalisé peut être appelé par le CLI.
 
+## Résultats du test réel en direct (UEFN 42.40, projet `testmcp`, 2026-10-23)
+
+- **Exécution de `init_unreal.py`** : `"FIN_ENREGISTRE - 6 etapes reussies sur 6"` (`register() == True`).
+- **Inventaire des capacités (`IslandForgeProbe.sonder_capacites`)** : **19 / 20 capacités `True`** :
+  - `PointLight`, `SpotLight`, `RectLight`, `DirectionalLight` : `True`
+  - `EditorActorSubsystem`, `EditorLevelLibrary`, `EditorAssetLibrary`, `MaterialEditingLibrary`, `EditorValidatorSubsystem` : `True`
+  - `StaticMeshComponent.create_dynamic_material_instance` : `True` (seul `MaterialEditingLibrary.create_material_instance` est `False`)
+  - `LandscapeProxy`, `InstancedFoliageActor`, `FoliageType`, `HierarchicalInstancedStaticMeshComponent`, `NiagaraSystem`, `NiagaraComponent`, `ToolsetDefinition` : `True`
+- **Découverte clé sur `UE::ValkyrieToolset::ToolsetPolicy`** :
+  - En UEFN 42.40, la politique C++ `UE::ValkyrieToolset::ToolsetPolicy` filtre `get_all_toolset_json_schemas()` aux 29 toolsets officiels d'Epic, et `bAutoStartServer` peut être à `False` dans `EditorPerProjectUserSettings.ini`.
+  - Solution intégrée dans `probes/init_unreal.py` et `script/mcp_client.py` :
+    1. `init_unreal.py` active automatiquement les toolsets Python et C++ d'Epic (`valkyrie_toolset.registration.enable()`, `DeviceToolset`, `VerseToolset`, `EntityToolset`, `SessionToolset`), écrit les capacités directement dans `%TEMP%\sonde_islandforge.json`, et démarre un pont HTTP `/mcp` sur `127.0.0.1:8000` (si le port 8000 n'est pas déjà lié) qui expose les 29 toolsets officiels **ainsi que** `IslandForgeProbe` (`Probe.sonder_capacites`, `Probe.compter_acteurs`) sur le *game thread*.
+    2. Si `http://127.0.0.1:8000/mcp` est fermé au premier appel, `McpClient` (`script/mcp_client.py`) lance automatiquement un bootstrap via `remote_execution` (`UDP 239.0.0.1:6766` avec correctif multicast loopback Windows sur `127.0.0.1`) pour exécuter `probes/init_unreal.py` dans l'éditeur UEFN ouvert sans aucune intervention manuelle.
+
 ## Règles du motif, d'après les docstrings d'Epic
+
 
 - docstring de la **classe** = description du toolset vue par l'agent ;
 - docstring de la **méthode** = description de l'outil, args au format Google ;

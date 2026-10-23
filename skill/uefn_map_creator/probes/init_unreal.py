@@ -112,6 +112,14 @@ def _capacites():
     }
 
 
+if unreal is not None:
+    try:
+        _rapport["capacites"] = _capacites()
+    except Exception:
+        pass
+
+
+
 # --- 3. toolset personnalise ------------------------------------------------
 
 IslandForgeProbe = None
@@ -203,17 +211,272 @@ def _fin(message):
     _journaliser(_rapport["resume"] + " - rapport dans " + RAPPORT)
 
 
+def _activer_toolsets_officiels():
+    """Active les toolsets Python et C++ d'Epic si le demarrage les a omis."""
+    try:
+        from valkyrie_toolset import registration as _vreg
+        _vreg.enable()
+    except Exception:
+        pass
+    try:
+        for nom_cls in ("DeviceToolset", "VerseToolset", "EntityToolset", "SessionToolset"):
+            cls = getattr(unreal, nom_cls, None)
+            if cls is not None:
+                unreal.ToolsetRegistry.register_toolset_class(cls)
+    except Exception:
+        pass
+
+
+def _demarrer_pont_mcp_secours():
+    """Si le port 8000 n'est pas ouvert par ModelContextProtocol C++, ouvre un
+    pont HTTP /mcp compatible sur 127.0.0.1:8000 deleguant sur le game thread."""
+    import socket
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    import threading
+    import queue
+
+    ancien = getattr(unreal, "_islandforge_mcp_bridge", None)
+    if ancien is not None:
+        try:
+            ancien[0].shutdown()
+            ancien[0].server_close()
+        except Exception:
+            pass
+        try:
+            unreal.unregister_slate_post_tick_callback(ancien[1])
+        except Exception:
+            pass
+        unreal._islandforge_mcp_bridge = None
+
+    # Verifier si le port 8000 ecoute deja (ex: serveur C++ natif)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.15)
+    try:
+        if s.connect_ex(("127.0.0.1", 8000)) == 0:
+            s.close()
+            return True
+    finally:
+        try:
+            s.close()
+        except Exception:
+            pass
+
+    file_taches = queue.Queue()
+    en_attente = []
+    _cache_schemas = {}
+
+    def _completer_defauts(toolset_name, tool_name, arguments):
+        args = dict(arguments or {})
+        try:
+            if not _cache_schemas:
+                raw_all = unreal.ToolsetRegistry.get_all_toolset_json_schemas()
+                for entry in (json.loads(raw_all) if raw_all else []):
+                    if isinstance(entry, dict) and entry.get("name"):
+                        _cache_schemas[entry["name"]] = entry
+            ts_schema = _cache_schemas.get(toolset_name) or {}
+            for t in ts_schema.get("tools") or []:
+
+                tn = str(t.get("name", ""))
+                if tn in (tool_name, "{}.{}".format(toolset_name, tool_name)) or tn.endswith("." + tool_name):
+                    for cle_s in ("inputSchema", "input_schema", "parameters", "schema"):
+
+                        in_s = t.get(cle_s)
+                        if in_s:
+                            break
+                    else:
+                        in_s = t
+                    if isinstance(in_s, str):
+                        in_s = json.loads(in_s)
+                    props = (in_s.get("properties") if isinstance(in_s, dict) else None) or {}
+                    for k, p in props.items():
+                        if k not in args and isinstance(p, dict):
+                            if "default" in p:
+                                args[k] = p["default"]
+                            elif p.get("type") == "array":
+                                args[k] = []
+                    break
+        except Exception:
+            pass
+        return args
+
+    def _executer_outil(toolset_name, tool_name, arguments):
+        if toolset_name in ("IslandForgeProbe", "PythonTypes.IslandForgeProbe") and IslandForgeProbe is not None:
+            fn = getattr(IslandForgeProbe, tool_name, None)
+            if fn is not None:
+                res_str = fn(**(arguments or {}))
+                return False, {"content": [{"type": "text", "text": res_str}], "isError": False}
+        payload = json.dumps(_completer_defauts(toolset_name, tool_name, arguments))
+        ar = unreal.ToolsetRegistry.execute_tool(
+            unreal.Name(toolset_name), unreal.Name(tool_name), payload)
+
+        if ar.is_complete:
+            err = getattr(ar, "error", "")
+            txt = getattr(ar, "value", "") or err
+            return False, {
+                "content": [{"type": "text", "text": txt}],
+                "isError": bool(err),
+            }
+        return True, ar
+
+    def _tick_pont(_=None):
+        # 1. Verifier les resultats asynchrones en cours (ex: VerseToolset.BuildAll)
+        restants = []
+        for ar, boite, evt in en_attente:
+            try:
+                if ar.is_complete:
+                    err = getattr(ar, "error", "")
+                    txt = getattr(ar, "value", "") or err
+                    boite["res"] = {
+                        "content": [{"type": "text", "text": txt}],
+                        "isError": bool(err),
+                    }
+                    evt.set()
+                else:
+                    restants.append((ar, boite, evt))
+            except Exception as exc:
+                boite["res"] = {
+                    "content": [{"type": "text", "text": str(exc)}],
+                    "isError": True,
+                }
+                evt.set()
+        en_attente[:] = restants
+
+        # 2. Depiler les nouvelles requetes RPC
+        while not file_taches.empty():
+            try:
+                action, params, boite, evt = file_taches.get_nowait()
+            except Exception:
+                break
+            try:
+                if action == "list_toolsets":
+                    raw_str = unreal.ToolsetRegistry.get_all_toolset_json_schemas()
+                    schemas = json.loads(raw_str) if raw_str else []
+                    if IslandForgeProbe is not None:
+                        schemas.append({
+                            "name": "IslandForgeProbe",
+                            "description": "Sonde IslandForge (capacites editeur)",
+                            "tools": ["sonder_capacites", "compter_acteurs"],
+                        })
+                    boite["res"] = {
+                        "content": [{"type": "text", "text": json.dumps({"toolsets": schemas})}],
+                        "isError": False,
+                    }
+                    evt.set()
+
+
+                elif action == "describe_toolset":
+                    ts = params.get("toolset_name", "")
+                    raw = unreal.ToolsetRegistry.get_toolset_json_schema(unreal.Name(ts))
+                    boite["res"] = {
+                        "content": [{"type": "text", "text": raw or "{}"}],
+                        "isError": not bool(raw),
+                    }
+                    evt.set()
+
+                elif action == "call_tool":
+                    est_async, val = _executer_outil(
+                        params.get("toolset_name", ""),
+                        params.get("tool_name", ""),
+                        params.get("arguments", {}),
+                    )
+                    if est_async:
+                        en_attente.append((val, boite, evt))
+                    else:
+                        boite["res"] = val
+                        evt.set()
+                else:
+                    boite["res"] = {
+                        "content": [{"type": "text", "text": "Action inconnue: " + str(action)}],
+                        "isError": True,
+                    }
+                    evt.set()
+            except Exception as exc:
+                boite["res"] = {
+                    "content": [{"type": "text", "text": traceback.format_exc()}],
+                    "isError": True,
+                }
+                evt.set()
+
+    def _appeler_gt(action, params, timeout=55.0):
+        boite = {}
+        evt = threading.Event()
+        file_taches.put((action, params, boite, evt))
+        if not evt.wait(timeout):
+            return {
+                "content": [{"type": "text", "text": "Timeout game thread"}],
+                "isError": True,
+            }
+        return boite.get("res", {"content": [], "isError": True})
+
+    class _Handler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            pass
+
+        def do_POST(self):
+            longueur = int(self.headers.get("Content-Length", "0"))
+            corps = self.rfile.read(longueur).decode("utf-8", errors="replace")
+            try:
+                req = json.loads(corps) if corps else {}
+            except Exception:
+                req = {}
+            methode = req.get("method", "")
+            req_id = req.get("id")
+            params = req.get("params") or {}
+            sid = self.headers.get("Mcp-Session-Id") or "islandforge-mcp-session"
+
+            if methode == "initialize":
+                rep = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "protocolVersion": "2025-03-26",
+                        "capabilities": {"tools": {}},
+                        "serverInfo": {"name": "unreal-mcp-islandforge", "version": "1.0"},
+                    },
+                }
+            elif methode.startswith("notifications/"):
+                rep = {"jsonrpc": "2.0", "result": {}}
+            elif methode == "tools/call":
+                nom = params.get("name", "")
+                args = params.get("arguments") or {}
+                res = _appeler_gt(nom, args)
+                rep = {"jsonrpc": "2.0", "id": req_id, "result": res}
+            else:
+                rep = {"jsonrpc": "2.0", "id": req_id, "result": {}}
+
+            data = json.dumps(rep, ensure_ascii=False).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Mcp-Session-Id", sid)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+    try:
+        serveur = ThreadingHTTPServer(("127.0.0.1", 8000), _Handler)
+        tick_h = unreal.register_slate_post_tick_callback(_tick_pont)
+        th = threading.Thread(target=serveur.serve_forever, daemon=True)
+        th.start()
+        unreal._islandforge_mcp_bridge = (serveur, tick_h, th)
+        return True
+    except Exception:
+        return False
+
+
 def _enregistrer():
     try:
+        _activer_toolsets_officiels()
         from toolset_registry.registration import Registration
         resultat = Registration([IslandForgeProbe]).register()
+        pont_ok = _demarrer_pont_mcp_secours()
         _etape("enregistrement_mcp", resultat,
-               "register() a renvoye {} apres {} ticks".format(
-                   resultat, _ticks[0]))
+               "register() a renvoye {} apres {} ticks (pont_8000={})".format(
+                   resultat, _ticks[0], pont_ok))
         return bool(resultat)
     except Exception:
         _etape("enregistrement_mcp", False, traceback.format_exc())
         return False
+
 
 
 # Rapport provisoire immediat : la preuve que le script s'est execute ne doit
@@ -249,6 +512,8 @@ def _sur_tick(_=None):
 
 if unreal is None:
     _fin("FIN_SANS_UNREAL")
+elif DEFER_TICKS <= 0 and IslandForgeProbe is not None and _enregistrer():
+    _fin("FIN_ENREGISTRE")
 else:
     try:
         _handle[0] = unreal.register_slate_post_tick_callback(_sur_tick)
@@ -257,3 +522,4 @@ else:
     except Exception:
         _etape("callback_tick", False, traceback.format_exc())
         _fin("FIN_CALLBACK_IMPOSSIBLE")
+

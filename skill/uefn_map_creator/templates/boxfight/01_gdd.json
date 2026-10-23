@@ -40,37 +40,39 @@
       "path_status": "moteur"
     },
     "player_spawner": {
-      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner",
+      "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner",
       "category": "DEVICE_SPAWNER",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "item_granter": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter.PID_Device_ItemGranter",
       "category": "DEVICE_GRANTER",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "score_manager": {
-      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager",
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_ScoreManager.PID_Device_ScoreManager",
       "category": "DEVICE_SCORE",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
     "end_game": {
-      "uefn_path": "/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2",
+      "uefn_path": "/CRD_GameEnd/SetupAssets/PID_Device_EndGame_V2.PID_Device_EndGame_V2",
       "category": "DEVICE_ENDGAME",
-      "path_status": "note_a_verifier"
+      "path_status": "verifie_42_40"
     },
+
     "barrier": {
-      "uefn_path": null,
+      "uefn_path": "/CRD_VolumetricRegion/SetupAssets/PID_Device_Barrier.PID_Device_Barrier",
       "category": "DEVICE_BARRIER",
-      "path_status": "a_chercher",
-      "notes": "Device.ListDeviceAssets {\"nameFilter\": \"Barrier\"}."
+      "path_status": "verifie_42_40",
+      "notes": "Verifie via Device.ListDeviceAssets {\"nameFilter\": \"Barrier\"}."
     },
     "round_timer": {
-      "uefn_path": null,
+      "uefn_path": "/CreativeCoreDevices/SetupAssets/PID_Device_Timer.PID_Device_Timer",
       "category": "DEVICE_TIMER",
-      "path_status": "a_chercher",
-      "notes": "Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
+      "path_status": "verifie_42_40",
+      "notes": "Verifie via Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
     }
+
   },
   "verse_modules": [
     {"file_name": "game_manager_device.verse", "class_name": "game_manager_device",

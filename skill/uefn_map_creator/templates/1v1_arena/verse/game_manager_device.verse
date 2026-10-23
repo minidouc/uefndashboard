@@ -30,6 +30,9 @@ game_manager_device := class(creative_device):
     Barrier_Center_01 : barrier_device = barrier_device{}
 
     @editable
+    Barrier_Center_02 : barrier_device = barrier_device{}
+
+    @editable
     Round_Timer_01 : timer_device = timer_device{}
 
     var IsRoundActive : logic = false
@@ -48,9 +51,11 @@ game_manager_device := class(creative_device):
     StartNewRound()<suspends>:void =
         set IsRoundActive = false
         Barrier_Center_01.Enable()
+        Barrier_Center_02.Enable()
         Round_Timer_01.Start()
         Sleep(3.0)
         Barrier_Center_01.Disable()
+        Barrier_Center_02.Disable()
         set IsRoundActive = true
 
     OnRoundTimerFinished(MaybeAgent : ?agent):void =
@@ -59,8 +64,10 @@ game_manager_device := class(creative_device):
     RunSelfTest()<suspends>:void =
         Print("[SELF_TEST_START] game_manager_device")
         Barrier_Center_01.Enable()
+        Barrier_Center_02.Enable()
         Sleep(0.2)
         Barrier_Center_01.Disable()
+        Barrier_Center_02.Disable()
         Print("[STEP] Barrier_Toggle_Cycle")
         Round_Timer_01.Start()
         Sleep(0.2)

@@ -404,6 +404,13 @@ comp = json.load(open(os.path.join(WS1, "_compiled_scene.json"), encoding="utf-8
 world = [k for k, v in comp.items() if v.get("placement") == "WORLD"]
 check("H3 les 5 devices Zone_Logic sont en placement WORLD, hors grille",
       len(world) == 5 and all(comp[k]["tile"][0] < 0 for k in world), str(world))
+check("H3b origin_tile [2, 2, 0] applique aux acteurs sur la grille",
+      comp["Spawner_P1_01"]["center_cm"][0] == (3 + 2) * 512.0 + 256.0
+      and comp["Spawner_P1_01"]["center_cm"][1] == (1 + 2) * 512.0 + 256.0,
+      str(comp["Spawner_P1_01"]["center_cm"]))
+rc, d_struct, _ = cli(["build-structure", "--dry-run"], WS1, env)
+check("H3c edge_policy fall_zone -> 64 dalles de sol, 0 mur de perimetre",
+      rc == 0 and d_struct and d_struct.get("operations") == 64, str(d_struct)[:200])
 rc, d, raw = cli(["place-scene"], WS1, env)
 check("H4 place-scene : devices + props poses et relus", rc == 0 and d
       and d["status"] == "PASSED" and not d["devices"]["errors"] and not d["props"]["errors"],
@@ -446,7 +453,11 @@ write(dev_path, devs)
 print("== I. wire-devices (etape 6) ==")
 rc, d, _ = cli(["wire-devices"], WS1, env)
 check("I1 aucun binding declare -> NO_BINDING_DECLARED rc=1",
-      rc == 1 and "NO_BINDING_DECLARED" in types(d), str(d)[:200])
+      rc == 1 and "NO_BINDING_DECLARED" in types(d)
+      and os.path.exists(os.path.join(WS1, "08_wiring_report.json")), str(d)[:200])
+rc, d, _ = cli(["wire-devices", "--allow-empty"], WS1, env)
+check("I1b --allow-empty sans binding -> PASSED et 08_wiring_report.json ecrit",
+      rc == 0 and d and d["status"] == "PASSED", str(d)[:200])
 devs["devices"][0]["bindings"] = [{"event": "OnTriggered", "to": "Barrier_Center_01",
                                    "function": "Disable"}]
 write(dev_path, devs)
@@ -547,7 +558,7 @@ rc, d, _ = cli(["list-editables"], WS1, env)
 rep = json.load(open(os.path.join(WS1, "10_editables.json"), encoding="utf-8"))
 actors = [r for r in rep["mapping"] if r["kind"] == "ACTEUR"]
 check("K1 list-editables : chaque reference d'ACTEUR a son refPath",
-      rc == 0 and rep["status"] == "PASSED" and len(actors) == 5
+      rc == 0 and rep["status"] == "PASSED" and len(actors) == 6
       and all(r["refPath"] for r in actors) and rep["parameters"] == 1,
       str({k: rep.get(k) for k in ("status", "editable_count", "actor_references",
                                    "parameters")})[:200])
@@ -557,6 +568,13 @@ check("K2 un @editable primitif est un PARAMETRE, pas une cible manquante",
 check("K2b le rapport dit que le cablage automatique est UNKNOWN (manuel)",
       "UNKNOWN" in rep.get("scope", "") and actors
       and actors[0]["wiring"] in ("MANUEL", "AUCUNE_CIBLE"), str(rep.get("scope"))[:160])
+rc, d, _ = cli(["list-editables", "--apply"], WS1, env)
+rep_apply = json.load(open(os.path.join(WS1, "10_editables.json"), encoding="utf-8"))
+actors_apply = [r for r in rep_apply["mapping"] if r["kind"] == "ACTEUR"]
+check("K2c list-editables --apply : pose le creative_device et cable via SetDeviceProperty -> AUTO_VERIFIED",
+      rc == 0 and rep_apply["status"] == "PASSED"
+      and all(r["wiring"] == "AUTO_VERIFIED" for r in actors_apply),
+      str(rep_apply.get("live"))[:200])
 rc, d, _ = cli(["list-editables"], WS, env)
 check("K3 gabarit blank sans .verse -> NO_VERSE_STAGED rc=1",
       rc == 1 and "NO_VERSE_STAGED" in types(d), str(d)[:200])

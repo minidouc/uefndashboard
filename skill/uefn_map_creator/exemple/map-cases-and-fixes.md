@@ -1,7 +1,7 @@
 # Catalogue des Cas de Figure et Corrections Automatiques UEFN
 
 Chaque device est reference par une `asset_key` vers `02_palette.json` (`device_class` ne sert que de mention lisible).
-Le champ `properties` n'est pas applique par le CLI : il sert de liste a regler avec `Object.set_properties` puis a relire.
+Le champ `properties` est applique par `apply-properties` (qui confronte chaque nom a `Object.list_properties`, ecrit avec `Object.set_properties` puis relit avec `Object.get_properties`).
 Un asset de la palette doit avoir ete mesure (`measure-palette`) : `compile-transforms` refuse toute entree sans `measured`.
 
 ## Cas 1 : Petite Carte Competitive Symetrique (Box Fight 2v2 / 1v1 Build Fight)

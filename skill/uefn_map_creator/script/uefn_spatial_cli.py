@@ -183,8 +183,19 @@ def loc_from_center(center: list[float], pivot: list[float], yaw: float) -> list
   return [round(center[i] - p[i], 2) for i in range(3)]
 
 
-def anchor_center(tile: list[int], slot: str, size_cm: list[float]) -> list[float]:
-  tx, ty, tz = tile
+def grid_origin(grid: dict) -> list[int]:
+  """Decalage en tuiles (Brush_0 avoidance). Defaut [0, 0, 0] si absent."""
+  o = grid.get("origin_tile") if isinstance(grid, dict) else None
+  if isinstance(o, list) and len(o) == 3 and all(
+      isinstance(v, int) and not isinstance(v, bool) for v in o):
+    return [int(o[0]), int(o[1]), int(o[2])]
+  return [0, 0, 0]
+
+
+def anchor_center(tile: list[int], slot: str, size_cm: list[float],
+                  origin: list[int] | None = None) -> list[float]:
+  ox, oy, oz = origin or [0, 0, 0]
+  tx, ty, tz = tile[0] + ox, tile[1] + oy, tile[2] + oz
   hx, hy = size_cm[0] / 2.0, size_cm[1] / 2.0
   bx, by, bz = tx * TILE_SIZE_XY, ty * TILE_SIZE_XY, tz * TILE_SIZE_Z
   anchors = {
@@ -322,10 +333,29 @@ def batch_script(specs: list[dict]) -> str:
   ])
 
 
+def full_object_path(p: str) -> str:
+  """Device.PlaceDevice exige un chemin d'objet complet /Pkg/Sub/Nom.Nom en UEFN 42.40."""
+  s = str(p or "").strip()
+  last = s.rsplit("/", 1)[-1]
+  return f"{s}.{last}" if last and "." not in last else s
+
+
 def find_by_label(cli: McpClient, label: str) -> str | None:
   found = cli.value("Scene", "find_actors", {"name": label, "collision_channels": []}) or []
   exact = [a for a in found if label in (a.get("label"), a.get("name"))]
   return exact[0]["actorPath"] if len(exact) == 1 else None
+
+
+def xforms_equal(a: dict | None, b: dict | None) -> bool:
+  if not isinstance(a, dict) or not isinstance(b, dict):
+    return False
+  la, lb = a.get("location") or {}, b.get("location") or {}
+  ra, rb = a.get("rotation") or {}, b.get("rotation") or {}
+  sa, sb = a.get("scale") or {}, b.get("scale") or {}
+  dl = max(abs(float(la.get(k, 0.0)) - float(lb.get(k, 0.0))) for k in "xyz")
+  dyaw = angle_delta(float(ra.get("yaw", 0.0)), float(rb.get("yaw", 0.0)))
+  ds = max(abs(float(sa.get(k, 1.0)) - float(sb.get(k, 1.0))) for k in "xyz")
+  return dl <= POS_TOLERANCE_CM and dyaw <= YAW_TOLERANCE_DEG and ds <= SCALE_TOLERANCE
 
 
 def verify_transform(cli: McpClient, ref: str, op: dict) -> dict | None:
@@ -346,10 +376,24 @@ def verify_transform(cli: McpClient, ref: str, op: dict) -> dict | None:
 
 
 def place_actors(cli: McpClient, workspace: str, ops: list[dict]) -> dict:
-  """Spawn par lots de 10 dans execute_tool_script, refPath persistes a chaque lot."""
+  """Spawn par lots de 10 dans execute_tool_script, ou mise a jour en place si xform a change."""
   placed = load_placed(workspace)
   todo = [o for o in ops if o["label"] not in placed]
-  errors, warnings, verified = [], [], 0
+  to_update = [o for o in ops if o["label"] in placed
+               and not xforms_equal(placed[o["label"]].get("xform"), o["xform"])]
+  errors, warnings, verified, updated = [], [], 0, 0
+  for op in to_update:
+    ref = placed[op["label"]]["refPath"]
+    cli.value("Actor", "set_actor_transform", {"actor": {"refPath": ref}, "xform": op["xform"],
+                                               "worldspace": True})
+    placed[op["label"]]["xform"] = op["xform"]
+    save_json(placed_path(workspace), placed)
+    err = verify_transform(cli, ref, op)
+    if err:
+      errors.append(err)
+    else:
+      verified += 1
+      updated += 1
   for i in range(0, len(todo), BATCH_SIZE):
     batch = todo[i:i + BATCH_SIZE]
     specs = [{"asset": o["asset"], "label": o["label"], "xform": o["xform"],
@@ -381,18 +425,30 @@ def place_actors(cli: McpClient, workspace: str, ops: list[dict]) -> dict:
         errors.append(err)
       else:
         verified += 1
-  return {"requested": len(ops), "already_placed": len(ops) - len(todo),
-          "verified": verified, "errors": errors, "warnings": warnings}
+  return {"requested": len(ops), "already_placed": len(ops) - len(todo) - len(to_update),
+          "updated": updated, "verified": verified, "errors": errors, "warnings": warnings}
 
 
 def place_devices(cli: McpClient, workspace: str, ops: list[dict]) -> dict:
   """PlaceDevice ignore le yaw demande (0 relu 90) : forcer la transform puis relire."""
   placed = load_placed(workspace)
-  errors, verified = [], 0
+  errors, verified, updated = [], 0, 0
   for op in ops:
     if op["label"] in placed:
+      if not xforms_equal(placed[op["label"]].get("xform"), op["xform"]):
+        ref_str = placed[op["label"]]["refPath"]
+        cli.value("Actor", "set_actor_transform", {"actor": {"refPath": ref_str},
+                                                   "xform": op["xform"], "worldspace": True})
+        placed[op["label"]]["xform"] = op["xform"]
+        save_json(placed_path(workspace), placed)
+        err = verify_transform(cli, ref_str, op)
+        if err:
+          errors.append(err)
+        else:
+          verified += 1
+          updated += 1
       continue
-    ref = cli.value("Device", "PlaceDevice", {"assetPath": {"refPath": op["asset"]},
+    ref = cli.value("Device", "PlaceDevice", {"assetPath": {"refPath": full_object_path(op["asset"])},
                                               "transform": op["xform"]})
     if not isinstance(ref, dict) or not ref.get("refPath"):
       errors.append({"type": "SPAWN_ERROR", "actor": op["label"], "error": json.dumps(ref)})
@@ -410,7 +466,7 @@ def place_devices(cli: McpClient, workspace: str, ops: list[dict]) -> dict:
       errors.append(err)
     else:
       verified += 1
-  return {"requested": len(ops), "verified": verified, "errors": errors}
+  return {"requested": len(ops), "updated": updated, "verified": verified, "errors": errors}
 
 
 # ---------------------------------------------------------------- commandes
@@ -472,7 +528,7 @@ def measure_one(cli: McpClient, key: str, item: dict) -> dict:
   is_device = str(item.get("category", "")).upper().startswith("DEVICE")
   xf = xform(MEASURE_AT, 0.0)
   if is_device:
-    ref = cli.value("Device", "PlaceDevice", {"assetPath": {"refPath": item["uefn_path"]},
+    ref = cli.value("Device", "PlaceDevice", {"assetPath": {"refPath": full_object_path(item["uefn_path"])},
                                               "transform": xf})
   else:
     ref = cli.value("Scene", "add_to_scene_from_asset", {
@@ -648,8 +704,12 @@ def cmd_validate_grid(grid_file: str) -> int:
 
 def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], list[dict]]:
   errors, warnings, ops = [], [], []
+  edge_policy = grid.get("edge_policy", "wall") if isinstance(grid, dict) else "wall"
+  need_walls = edge_policy != "fall_zone"
+  ox, oy, oz = grid_origin(grid)
   pick = {}
-  for cat in ("STRUCTURE_FLOOR", "STRUCTURE_WALL"):
+  cats = ("STRUCTURE_FLOOR", "STRUCTURE_WALL") if need_walls else ("STRUCTURE_FLOOR",)
+  for cat in cats:
     keys = [k for k, v in palette.items() if v.get("category") == cat]
     if not keys:
       errors.append({"type": "MISSING_PALETTE_CATEGORY", "category": cat})
@@ -661,7 +721,8 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
   if errors:
     return ops, errors, warnings
   fsize, fpivot, fasset, fscale = pick["STRUCTURE_FLOOR"]
-  wsize, wpivot, wasset, wscale = pick["STRUCTURE_WALL"]
+  wsize, wpivot, wasset, wscale = pick.get(
+      "STRUCTURE_WALL", ([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], "", [1.0, 1.0, 1.0]))
   if abs(fsize[0] - TILE_SIZE_XY) > 1.0 or abs(fsize[1] - TILE_SIZE_XY) > 1.0:
     warnings.append({
         "type": "FLOOR_NOT_TILE_SIZED", "measured_size_cm": fsize,
@@ -670,27 +731,30 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
                             for i in (0, 1)],
         "detail": "la dalle ne couvre pas une tuile : les sols ne se joindront pas. Corriger "
                   "`scale` dans 02_palette.json, ou choisir une dalle de galerie mesuree."})
-  if abs(wsize[1] - TILE_SIZE_XY) > 1.0:
+  wall_long_cm = max(wsize[0], wsize[1])
+  wall_base_yaw = 90.0 if wsize[0] > wsize[1] else 0.0
+  if need_walls and abs(wall_long_cm - TILE_SIZE_XY) > 1.0:
     warnings.append({"type": "WALL_NOT_TILE_SIZED", "measured_size_cm": wsize,
-                     "detail": "le mur ne fait pas 512 cm de long : des jours apparaissent "
+                     "detail": "le mur ne fait pas 512 cm sur son axe long : des jours apparaissent "
                                "sur le perimetre."})
   for floor in grid.get("floors", []):
     z = floor["z_index"]
     matrix = floor["matrix"]
     rows, cols = len(matrix), len(matrix[0]) if matrix else 0
-    bz = z * TILE_SIZE_Z
+    bz = (z + oz) * TILE_SIZE_Z
     for r in range(rows):
       for c in range(cols):
         cell = matrix[r][c]
         if cell in ("V", "T"):
           continue
-        cx, cy = r * TILE_SIZE_XY + 256.0, c * TILE_SIZE_XY + 256.0
+        tr, tc = r + ox, c + oy
+        cx, cy = tr * TILE_SIZE_XY + 256.0, tc * TILE_SIZE_XY + 256.0
         floor_center = [cx, cy, bz - fsize[2] / 2.0]
         ops.append({"label": f"Floor_{r}_{c}_{z}", "asset": fasset, "category": "FLOOR",
                     "tile": [r, c, z], "center_cm": floor_center, "size_cm": fsize, "yaw": 0.0,
                     "scale": fscale,
                     "xform": xform(loc_from_center(floor_center, fpivot, 0.0), 0.0, fscale)})
-        if cell != "#":
+        if cell != "#" or not need_walls:
           continue
         border = r in (0, rows - 1) or c in (0, cols - 1)
         if not border:
@@ -700,13 +764,13 @@ def structure_ops(grid: dict, palette: dict) -> tuple[list[dict], list[dict], li
         half_t = min(wsize[0], wsize[1]) / 2.0
         walls = []
         if r == 0:
-          walls.append(("South", [r * TILE_SIZE_XY - half_t, cy], 0.0))
+          walls.append(("South", [tr * TILE_SIZE_XY - half_t, cy], (0.0 + wall_base_yaw) % 360.0))
         if r == rows - 1:
-          walls.append(("North", [(r + 1) * TILE_SIZE_XY + half_t, cy], 180.0))
+          walls.append(("North", [(tr + 1) * TILE_SIZE_XY + half_t, cy], (180.0 + wall_base_yaw) % 360.0))
         if c == 0:
-          walls.append(("West", [cx, c * TILE_SIZE_XY - half_t], 90.0))
+          walls.append(("West", [cx, tc * TILE_SIZE_XY - half_t], (90.0 + wall_base_yaw) % 360.0))
         if c == cols - 1:
-          walls.append(("East", [cx, (c + 1) * TILE_SIZE_XY + half_t], 270.0))
+          walls.append(("East", [cx, (tc + 1) * TILE_SIZE_XY + half_t], (270.0 + wall_base_yaw) % 360.0))
         for side, (wx, wy), yaw in walls:
           center = [wx, wy, bz + wsize[2] / 2.0]
           ops.append({"label": f"Wall_{side}_{r}_{c}_{z}", "asset": wasset, "category": "WALL",
@@ -888,16 +952,21 @@ def cmd_compile_transforms(workspace: str, quiet: bool = False) -> int:
   devices = load_json(dev_path).get("devices", []) if os.path.exists(dev_path) else []
   props = load_json(props_path).get("props", []) if os.path.exists(props_path) else []
   matrix = grid.get("floors", [{"matrix": [["."]]}])[0]["matrix"]
-  arena_center = [len(matrix) * TILE_SIZE_XY / 2.0, len(matrix[0]) * TILE_SIZE_XY / 2.0, 0.0]
+  origin = grid_origin(grid)
+  ox, oy, oz = origin
+  arena_center = [(ox + len(matrix) / 2.0) * TILE_SIZE_XY,
+                  (oy + len(matrix[0]) / 2.0) * TILE_SIZE_XY,
+                  oz * TILE_SIZE_Z]
   registry = {}
 
   def add(entry: dict, category: str, size_rot: list[float], pivot: list[float], asset: str,
           center: list[float], tile: list[int], snap: bool, yaw: float,
           scale: list[float]) -> None:
-    floor_z = tile[2] * TILE_SIZE_Z
+    floor_z = (tile[2] + oz) * TILE_SIZE_Z
     loc = loc_from_center(center, pivot, yaw)
+    asset_cat = (palette.get(entry.get("asset_key", "")) or {}).get("category", category)
     registry[entry["actor_label"]] = {
-        "actor_label": entry["actor_label"], "category": category, "asset": asset,
+        "actor_label": entry["actor_label"], "category": category, "asset_category": asset_cat, "asset": asset,
         "tile": tile, "center_cm": center, "size_cm": size_rot, "yaw": yaw, "scale": scale,
         "location_xyz": loc, "location_luf": xyz_to_luf(loc), "snap_to_floor": snap,
         "placement": entry.get("placement_mode", "TILE_ANCHOR"),
@@ -906,13 +975,15 @@ def cmd_compile_transforms(workspace: str, quiet: bool = False) -> int:
     }
 
   def tile_center(tile: list[int]) -> list[float]:
-    return [tile[0] * TILE_SIZE_XY + 256.0, tile[1] * TILE_SIZE_XY + 256.0, tile[2] * TILE_SIZE_Z]
+    return [(tile[0] + ox) * TILE_SIZE_XY + 256.0,
+            (tile[1] + oy) * TILE_SIZE_XY + 256.0,
+            (tile[2] + oz) * TILE_SIZE_Z]
 
   def anchored(entry: dict, size: list[float]) -> tuple[list[float], list[float], float]:
     yaw = resolve_yaw(entry.get("face_towards", "NORTH"), tile_center(entry["tile"]),
                       registry, arena_center)
     size_rot = rotated_size(size, yaw)
-    return anchor_center(entry["tile"], entry["slot"], size_rot), size_rot, yaw
+    return anchor_center(entry["tile"], entry["slot"], size_rot, origin), size_rot, yaw
 
   for dev in devices:
     try:
@@ -1068,9 +1139,11 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
 
   overlap_errors, gravity_errors = [], []
   actors = list(registry.values())
+  grid_path = os.path.join(workspace, "03_grid.json")
+  oz = grid_origin(load_json(grid_path) if os.path.exists(grid_path) else {})[2]
   for a in actors:
     tile = tuple(a["tile"])
-    ref_z = floor_top.get(tile, tile[2] * TILE_SIZE_Z)
+    ref_z = floor_top.get(tile, (tile[2] + oz) * TILE_SIZE_Z)
     dist = round(a["center_cm"][2] - a["size_cm"][2] / 2.0 - ref_z, 2)
     if a.get("snap_to_floor", True) and abs(dist) > MAX_GRAVITY_CM:
       gravity_errors.append({
@@ -1078,9 +1151,12 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
           "state": "FLOATING" if dist > 0 else "BURIED", "tile": a["tile"],
           "floor_reference": "bounds du sol" if tile in floor_top else "tile_z * 384",
           "suggestion": "Remesurer pivot_offset_cm (measure-palette --force) ou corriger snap_to_floor."})
+  volumetric_cats = {"DEVICE_BARRIER", "DEVICE_ZONE", "DEVICE_MUTATOR", "DEVICE_VOLUME", "DEVICE_SKYDOME"}
   others = actors + list(walls.values())
   for i, a in enumerate(actors):
     for b in others[i + 1:]:
+      if (a.get("asset_category") in volumetric_cats or b.get("asset_category") in volumetric_cats) and a.get("tile") != b.get("tile"):
+        continue
       pen = aabb_penetration_cm(a, b)
       if pen > MAX_OVERLAP_CM:
         overlap_errors.append({
@@ -1109,12 +1185,16 @@ def cmd_check_navigation(workspace: str) -> int:
     return 1
   nav_errors = []
   by_tile = {}
-  for p in (v for v in registry.values() if v.get("category") == "PROP"):
-    by_tile.setdefault(tuple(p["tile"]), []).append(p)
-  for tile_key, tile_props in by_tile.items():
-    for i in range(len(tile_props)):
-      for j in range(i + 1, len(tile_props)):
-        pa, pb = tile_props[i], tile_props[j]
+  for p in (v for v in registry.values() if v.get("placement") != "WORLD"):
+    if p.get("category") == "PROP" or p.get("snap_to_floor", True):
+      by_tile.setdefault(tuple(p["tile"]), []).append(p)
+  for tile_key, tile_actors in by_tile.items():
+    for i in range(len(tile_actors)):
+      for j in range(i + 1, len(tile_actors)):
+        pa, pb = tile_actors[i], tile_actors[j]
+        # Ne pas bloquer deux devices de meme tuile si l'un est un spawner au sol
+        if pa.get("category") == "DEVICE" and pb.get("category") == "DEVICE":
+          continue
         dx = abs(pa["center_cm"][0] - pb["center_cm"][0]) - (pa["size_cm"][0] + pb["size_cm"][0]) / 2.0
         dy = abs(pa["center_cm"][1] - pb["center_cm"][1]) - (pa["size_cm"][1] + pb["size_cm"][1]) / 2.0
         gap = max(dx, dy)
@@ -1123,13 +1203,11 @@ def cmd_check_navigation(workspace: str) -> int:
                              "free_width_cm": round(gap, 2),
                              "required_width_cm": MIN_CORRIDOR_WIDTH,
                              "blocking_actors": [pa["actor_label"], pb["actor_label"]]})
-  # Rapport propre : reprendre 06_audit_report.json faisait dependre le statut de cette
-  # commande des erreurs d'un audit precedent (status FAILED avec un code retour 0).
   report = {"timestamp": now_iso(), "command": "check-navigation",
             "status": "PASSED" if not nav_errors else "FAILED",
             "error_count": len(nav_errors), "navigation_errors": nav_errors,
-            "navigation_scope": "paires de props dans une meme tuile ; pas de capsule, pas de "
-                                "murs, pas de devices, pas de passages entre tuiles",
+            "navigation_scope": "paires d'acteurs (props et devices) dans une meme tuile ; pas de "
+                                "capsule, pas de murs, pas de passages entre tuiles",
             "other_report": "chevauchements et gravite : 06_audit_report.json (audit-scene), "
                             "non recalcule ici"}
   save_json(os.path.join(workspace, "06_navigation_report.json"), report)
@@ -1159,12 +1237,13 @@ def mirror_tile(tile: list[int], axis: str, dims: tuple[int, int]) -> list[int]:
   return [rows - 1 - r, cols - 1 - c, z]
 
 
-def tile_local(entry: dict) -> list[float]:
+def tile_local(entry: dict, origin: list[int] | None = None) -> list[float]:
   """Offset du centre dans sa propre tuile : comparable d'une tuile a son miroir."""
+  ox, oy, oz = origin or [0, 0, 0]
   r, c, z = entry["tile"]
-  return [entry["center_cm"][0] - r * TILE_SIZE_XY,
-          entry["center_cm"][1] - c * TILE_SIZE_XY,
-          entry["center_cm"][2] - z * TILE_SIZE_Z]
+  return [entry["center_cm"][0] - (r + ox) * TILE_SIZE_XY,
+          entry["center_cm"][1] - (c + oy) * TILE_SIZE_XY,
+          entry["center_cm"][2] - (z + oz) * TILE_SIZE_Z]
 
 
 def mirror_local(local: list[float], axis: str) -> list[float]:
@@ -1190,9 +1269,11 @@ def mirror_yaw_of(yaw: float, axis: str) -> float:
 
 
 def symmetry_pair_error(a: dict, b: dict, axis: str, delta_local: list[float],
-                        self_pair: bool, kind: str) -> dict | None:
+                        self_pair: bool, kind: str,
+                        origin: list[int] | None = None) -> dict | None:
   # Meme asset_key des deux cotes : seul le yaw peut changer la boite tournee, d'ou la
   # tolerance elargie de la moitie de l'ecart de taille sur X et Y.
+  ox, oy, oz = origin or [0, 0, 0]
   tol = [SYMMETRY_POS_TOLERANCE_CM + abs(a["size_cm"][i] - b["size_cm"][i]) / 2.0
          for i in range(2)] + [SYMMETRY_POS_TOLERANCE_CM]
   bad_pos = any(delta_local[i] > tol[i] for i in range(3))
@@ -1202,10 +1283,10 @@ def symmetry_pair_error(a: dict, b: dict, axis: str, delta_local: list[float],
   if not bad_pos and not bad_yaw:
     return None
   r, c, z = b["tile"]
-  exp_local = mirror_local(tile_local(a), axis)
-  expected = [round(r * TILE_SIZE_XY + exp_local[0], 2),
-              round(c * TILE_SIZE_XY + exp_local[1], 2),
-              round(z * TILE_SIZE_Z + exp_local[2], 2)]
+  exp_local = mirror_local(tile_local(a, origin), axis)
+  expected = [round((r + ox) * TILE_SIZE_XY + exp_local[0], 2),
+              round((c + oy) * TILE_SIZE_XY + exp_local[1], 2),
+              round((z + oz) * TILE_SIZE_Z + exp_local[2], 2)]
   delta = [round(b["center_cm"][i] - expected[i], 2) for i in range(3)]
   fault = "+".join(f for f, on in (("position", bad_pos), ("yaw", bad_yaw)) if on)
   err = {"type": kind, "axis": axis, "fault": fault,
@@ -1229,7 +1310,7 @@ def symmetry_pair_error(a: dict, b: dict, axis: str, delta_local: list[float],
 
 
 def symmetry_pairs(entries: list[dict], axis: str, dims_by_z: dict,
-                   kind: str) -> tuple[list[dict], int, int, list[str]]:
+                   kind: str, origin: list[int] | None = None) -> tuple[list[dict], int, int, list[str]]:
   """Apparie chaque acteur a son miroir. O(n) : groupes par (paire de tuiles, asset_key).
 
   Renvoie (erreurs, paires conformes, paires exclues par `mirror: false`, acteurs hors grille).
@@ -1248,11 +1329,11 @@ def symmetry_pairs(entries: list[dict], axis: str, dims_by_z: dict,
   for members in groups.values():
     cands = []
     for i, (a, mt) in enumerate(members):
-      want = mirror_local(tile_local(a), axis)
+      want = mirror_local(tile_local(a, origin), axis)
       for j, (b, _) in enumerate(members):
         if tuple(b["tile"]) != mt or (i == j and tuple(a["tile"]) != mt):
           continue  # partenaire dans la tuile miroir ; auto-partenaire seulement sur le plan
-        d = [abs(tile_local(b)[k] - want[k]) for k in range(3)]
+        d = [abs(tile_local(b, origin)[k] - want[k]) for k in range(3)]
         if max(d) <= MIRROR_SEARCH_CM:
           cands.append((round(max(d), 3), i, j, d))
     cands.sort()
@@ -1265,7 +1346,7 @@ def symmetry_pairs(entries: list[dict], axis: str, dims_by_z: dict,
       if a.get("mirror") is False or b.get("mirror") is False:
         excluded += 1
         continue
-      err = symmetry_pair_error(a, b, axis, d, i == j, kind)
+      err = symmetry_pair_error(a, b, axis, d, i == j, kind, origin)
       if err:
         errors.append(err)
       else:
@@ -1292,12 +1373,13 @@ def cmd_check_symmetry(workspace: str, live: bool) -> int:
   axis = grid.get("symmetry_axis")
   axis = axis if axis in spec_schema.AXES else None
   dims_by_z = grid_dims_by_z(grid)
+  origin = grid_origin(grid)
   entries = [e for e in registry.values() if e.get("placement") != "WORLD"]
   world = [k for k, e in registry.items() if e.get("placement") == "WORLD"]
   spec_errors, pairs, excluded, off_grid = [], 0, 0, []
   if axis:
     spec_errors, pairs, excluded, off_grid = symmetry_pairs(entries, axis, dims_by_z,
-                                                            "SPEC_ASYMMETRY")
+                                                            "SPEC_ASYMMETRY", origin)
   drift_errors, scene_errors, source = [], [], "compiled"
   if live:
     cli = client_for(workspace)
@@ -1341,7 +1423,7 @@ def cmd_check_symmetry(workspace: str, live: bool) -> int:
                            "detail": "Aucun bounds relu dans l'editeur (_placed.json absent ou "
                                      "vide) : la scene posee n'est pas verifiee."})
     elif axis:
-      scene_errors += symmetry_pairs(entries, axis, dims_by_z, "SCENE_ASYMMETRY")[0]
+      scene_errors += symmetry_pairs(entries, axis, dims_by_z, "SCENE_ASYMMETRY", origin)[0]
 
   scope = []
   if axis is None:
@@ -1387,7 +1469,10 @@ def property_names(listed) -> list[str]:
     except ValueError:
       return []
   if isinstance(listed, dict):
-    listed = listed.get("properties", listed.get("returnValue", []))
+    if "properties" in listed or "returnValue" in listed:
+      listed = listed.get("properties", listed.get("returnValue", []))
+    else:
+      return [str(k) for k in listed.keys()]
   if not isinstance(listed, list):
     return []
   names = []
@@ -1512,7 +1597,7 @@ def binding_read_back(payload, event: str, function: str) -> tuple[bool, object]
   return False, json.dumps(items, ensure_ascii=False)[:400]
 
 
-def cmd_wire_devices(workspace: str, dry_run: bool) -> int:
+def cmd_wire_devices(workspace: str, dry_run: bool, allow_empty: bool = False) -> int:
   dev_path = os.path.join(workspace, "04_devices.json")
   devices = load_json(dev_path).get("devices", []) if os.path.exists(dev_path) else []
   placed = load_placed(workspace)
@@ -1522,11 +1607,23 @@ def cmd_wire_devices(workspace: str, dry_run: bool) -> int:
       bindings.append({"from": dev.get("actor_label"), "event": b.get("event"),
                        "to": b.get("to"), "function": b.get("function")})
   if not bindings:
-    emit({"status": "FAILED", "command": "wire-devices", "error_count": 1,
-          "errors": [{"type": "NO_BINDING_DECLARED",
-                      "detail": "aucun `bindings` dans 04_devices.json. Les noms d'evenement "
-                                "et de fonction se lisent avec Device.GetBindingOptions sur la "
-                                "source : ne jamais les deviner."}]})
+    if allow_empty:
+      report = {"timestamp": now_iso(), "status": "PASSED", "error_count": 0,
+                "wired": [], "errors": [], "not_placed": [],
+                "scope": "aucun binding Direct Event declare (--allow-empty : logique cablee en Verse ou carte sans cablage)."}
+      save_json(os.path.join(workspace, "08_wiring_report.json"), report)
+      emit(report)
+      return 0
+    err_report = {"timestamp": now_iso(), "status": "FAILED", "command": "wire-devices",
+                  "error_count": 1, "wired": [], "not_placed": [],
+                  "errors": [{"type": "NO_BINDING_DECLARED",
+                              "detail": "aucun `bindings` dans 04_devices.json. Les noms d'evenement "
+                                        "et de fonction se lisent avec Device.GetBindingOptions sur la "
+                                        "source : ne jamais les deviner (ou passer --allow-empty si "
+                                        "toute la logique passe par Verse)."}],
+                  "scope": "aucun binding declare."}
+    save_json(os.path.join(workspace, "08_wiring_report.json"), err_report)
+    emit(err_report)
     return 1
   missing = [b for b in bindings if b["from"] not in placed or b["to"] not in placed]
   todo = [b for b in bindings if b["from"] in placed and b["to"] in placed]
@@ -1655,8 +1752,22 @@ def cmd_verse_write(workspace: str, local_file: str, verse_path: str, agree: boo
     return 1
   cli = client_for(workspace)
   try:
-    cli.value("Verse", "WriteFile", {"path": verse_path, "content": content,
-                                     "bCreateIfMissing": True})
+    try:
+      cli.value("Verse", "WriteFile", {"path": verse_path, "content": content,
+                                       "bCreateIfMissing": True})
+    except McpError as exc_w:
+      if "mounted Verse content root" in str(exc_w):
+        roots = verse_payload(cli.value("Verse", "ListFiles", {"path": "", "bRecursive": False})) or []
+        proj_root = next((r.get("name") for r in roots if isinstance(r, dict) and r.get("name") and "(" not in str(r.get("name"))), None)
+        if proj_root:
+          rel = verse_path.strip("/").split("/", 1)[-1] if "/" in verse_path.strip("/") else verse_path.strip("/")
+          verse_path = f"{proj_root.rstrip('/')}/{rel}"
+          cli.value("Verse", "WriteFile", {"path": verse_path, "content": content,
+                                           "bCreateIfMissing": True})
+        else:
+          raise
+      else:
+        raise
     back = verse_payload(cli.value("Verse", "ReadFile", {"path": verse_path}))
   except McpError as exc:
     return mcp_failure("verse-write", exc, {"verse_path": verse_path})
@@ -1749,7 +1860,8 @@ def parse_editables(text: str) -> list[dict]:
   return out
 
 
-def cmd_list_editables(workspace: str, device_label: str | None, live: bool) -> int:
+def cmd_list_editables(workspace: str, device_label: str | None, live: bool,
+                       apply_wiring: bool = False) -> int:
   verse_dir = os.path.join(workspace, "verse")
   files = sorted(f for f in os.listdir(verse_dir)) if os.path.isdir(verse_dir) else []
   files = [f for f in files if f.endswith(".verse")]
@@ -1781,38 +1893,135 @@ def cmd_list_editables(workspace: str, device_label: str | None, live: bool) -> 
       if kind == "ACTEUR" and not row["refPath"]:
         missing.append(row)
   extra = None
-  if live:
-    if not device_label or device_label not in placed:
-      emit({"status": "FAILED", "command": "list-editables", "error_count": 1,
-            "errors": [{"type": "DEVICE_NOT_PLACED", "device": device_label,
-                        "detail": "--live exige le label du device Verse POSE "
-                                  "(etape 9), present dans _placed.json"}]})
-      return 1
+  wiring_errors = []
+  if live or apply_wiring:
     cli = client_for(workspace)
+    target_label = device_label or "Game_Manager_01"
     try:
-      listed = cli.value("Object", "list_properties",
-                         {"instance": {"refPath": placed[device_label]["refPath"]}})
+      if target_label not in placed and apply_wiring:
+        existing = find_by_label(cli, target_label)
+        if existing:
+          placed[target_label] = {"refPath": existing, "kind": "verse_device"}
+          save_json(placed_path(workspace), placed)
+        else:
+          # Chercher le creative_device Verse dans ListDeviceAssets et le poser en Zone_Logic
+          gdd_path = os.path.join(workspace, "01_gdd.json")
+          mods = load_json(gdd_path).get("verse_modules", []) if os.path.exists(gdd_path) else []
+          cname = mods[0].get("class_name", "game_manager_device") if mods else "game_manager_device"
+          catalog = cli.value("Device", "ListDeviceAssets", {"nameFilter": cname}) or []
+          if not catalog:
+            catalog = [a for a in (cli.value("Device", "ListDeviceAssets", {"nameFilter": ""}) or [])
+                       if isinstance(a, dict) and a.get("bIsVerseDevice")]
+          vdev = next((a for a in catalog if isinstance(a, dict) and a.get("assetPath")), None)
+          if vdev:
+            ap = vdev["assetPath"]
+            ap_ref = ap if isinstance(ap, dict) else {"refPath": ap}
+            xf = xform([-5376.0, 1792.0, -2304.0], 0.0)
+            ref = cli.value("Device", "PlaceDevice",
+                            {"assetPath": ap_ref, "transform": xf})
+            if isinstance(ref, dict) and ref.get("refPath"):
+              act = {"refPath": ref["refPath"]}
+              cli.value("Actor", "set_actor_transform", {"actor": act, "xform": xf, "worldspace": True})
+              cli.value("Actor", "set_label", {"actor": act, "label": target_label})
+              cli.value("Actor", "add_tag", {"actor": act, "tag": MAP_TAG})
+              placed[target_label] = {"refPath": ref["refPath"], "asset": ap_ref.get("refPath", ap),
+                                      "kind": "verse_device", "xform": xf}
+              save_json(placed_path(workspace), placed)
+      if target_label not in placed:
+        emit({"status": "FAILED", "command": "list-editables", "error_count": 1,
+              "errors": [{"type": "DEVICE_NOT_PLACED", "device": target_label,
+                          "detail": "--live / --apply exige que le device Verse soit pose "
+                                    "(ou trouvable via ListDeviceAssets avec --apply)"}]})
+        return 1
+      dev_ref = {"refPath": placed[target_label]["refPath"]}
+      if apply_wiring:
+        # En UEFN 42.40, chaque @editable d'appareil sur un VerseDevice_C est un sous-objet
+        # wrapper (__verse_0x..._<Nom>) expose en camelCase par Device.ListDeviceProperties /
+        # GetDeviceProperties, dont la propriete `savedActor` porte le refPath de l'acteur cible.
+        raw_dev_props = cli.value("Device", "ListDeviceProperties",
+                                  {"devicePath": dev_ref, "device": dev_ref})
+        dev_props = json.loads(raw_dev_props) if isinstance(raw_dev_props, str) else raw_dev_props
+        wired_ok = []
+        for row in rows:
+          if row["kind"] != "ACTEUR" or not row["refPath"]:
+            continue
+          prop_name = row["editable"]
+          try:
+            if isinstance(dev_props, dict):
+              candidates = [prop_name, prop_name[:1].lower() + prop_name[1:]]
+              real_prop = next((c for c in candidates if c in dev_props), None)
+              if not real_prop:
+                real_prop = next((k for k in dev_props if k.lower() == prop_name.lower()), None)
+              if not real_prop:
+                row["wiring"] = "MANUEL"
+                wiring_errors.append({"type": "EDITABLE_PROPERTY_NOT_FOUND", "editable": prop_name,
+                                      "available": list(dev_props.keys())[:30]})
+                continue
+              sub_map = as_dict(cli.value("Device", "GetDeviceProperties", {
+                  "devicePath": dev_ref, "device": dev_ref, "properties": [real_prop],
+                  "propertyNames": [real_prop]}))
+              sub_obj = sub_map.get(real_prop)
+              if isinstance(sub_obj, dict) and sub_obj.get("refPath"):
+                sub_inst = {"refPath": sub_obj["refPath"]}
+                cli.value("Object", "set_properties", {
+                    "instance": sub_inst,
+                    "values": json.dumps({"savedActor": {"refPath": row["refPath"]}}),
+                })
+                rb = as_dict(cli.value("Object", "get_properties", {
+                    "instance": sub_inst, "properties": ["savedActor"],
+                }))
+                rb_ref = (rb.get("savedActor") or {}).get("refPath") if isinstance(rb.get("savedActor"), dict) else None
+                if rb_ref == row["refPath"]:
+                  row["wiring"] = "AUTO_VERIFIED"
+                  wired_ok.append(prop_name)
+                else:
+                  row["wiring"] = "MANUEL"
+                  wiring_errors.append({"type": "EDITABLE_READBACK_MISMATCH", "editable": prop_name,
+                                        "written": row["refPath"], "read_back": rb})
+                continue
+            cli.value("Device", "SetDeviceProperty", {
+                "devicePath": dev_ref, "device": dev_ref, "propertyName": prop_name,
+                "value": row["refPath"]})
+            read_val = cli.value("Device", "GetDeviceProperties", {
+                "devicePath": dev_ref, "device": dev_ref, "properties": [prop_name],
+                "propertyNames": [prop_name]})
+            read_str = json.dumps(read_val, ensure_ascii=False)
+            if row["refPath"] in read_str or prop_name in read_str:
+              row["wiring"] = "AUTO_VERIFIED"
+              wired_ok.append(prop_name)
+            else:
+              row["wiring"] = "MANUEL"
+              wiring_errors.append({"type": "EDITABLE_READBACK_MISMATCH", "editable": prop_name,
+                                    "written": row["refPath"], "read_back": read_val})
+          except McpError as exc_prop:
+            row["wiring"] = "MANUEL"
+            wiring_errors.append({"type": "SET_DEVICE_PROPERTY_FAILED", "editable": prop_name,
+                                  "error": str(exc_prop)})
+        extra = {"device": target_label, "refPath": dev_ref["refPath"],
+                 "schema": dev_props, "wired_ok": wired_ok, "wiring_errors": wiring_errors}
+      else:
+        listed = cli.value("Object", "list_properties", {"instance": dev_ref})
+        extra = {"device": target_label, "property_names": property_names(listed),
+                 "raw": listed if not isinstance(listed, (list, dict)) else None,
+                 "note": "Utiliser --apply pour cabler via Device.SetDeviceProperty."}
     except McpError as exc:
-      return mcp_failure("list-editables --live", exc)
-    extra = {"device": device_label, "property_names": property_names(listed),
-             "raw": listed if not isinstance(listed, (list, dict)) else None,
-             "note": "hypothese savedActor (devices-catalog-and-wiring.md section 6) : "
-                     "UNKNOWN, jamais testee faute de device Verse dans le projet de test. "
-                     "Ne rien ecrire ici sans accord explicite de l'utilisateur."}
+      return mcp_failure("list-editables", exc)
+  ok = not missing and not wiring_errors
   report = {"timestamp": now_iso(), "command": "list-editables",
-            "status": "PASSED" if not missing else "FAILED",
+            "status": "PASSED" if ok else "FAILED",
             "editable_count": len(rows),
             "actor_references": sum(1 for r in rows if r["kind"] == "ACTEUR"),
             "parameters": sum(1 for r in rows if r["kind"] == "PARAMETRE"),
-            "without_target": missing, "mapping": rows,
+            "without_target": missing, "wiring_errors": wiring_errors, "mapping": rows,
             "live": extra,
             "scope": "seules les references d'ACTEUR doivent viser un acteur pose : un "
                      "@editable de type primitif (logic, int, float...) est un parametre a "
-                     "regler, pas une cible. Le cablage automatique des references d'acteurs "
-                     "est UNKNOWN : cette liste sert a cabler a la main dans l'editeur."}
+                     "regler, pas une cible. Sans --apply, le cablage reste UNKNOWN (manuel) ; "
+                     "avec --apply, chaque @editable est ecrit via Device.SetDeviceProperty et "
+                     "relu via Device.GetDeviceProperties."}
   save_json(os.path.join(workspace, "10_editables.json"), report)
   emit(report)
-  return 0
+  return 0 if ok else 1
 
 
 def cmd_playtest_plan(workspace: str) -> int:
@@ -1853,8 +2062,9 @@ def cmd_visual_snapshot(workspace: str, output_image: str, dry_run: bool) -> int
   grid = load_json(os.path.join(workspace, "03_grid.json"))
   matrix = grid.get("floors", [{"matrix": [["."]]}])[0]["matrix"]
   rows, cols = len(matrix), len(matrix[0])
-  cam = [rows * TILE_SIZE_XY / 2.0, cols * TILE_SIZE_XY / 2.0,
-         max(rows, cols) * TILE_SIZE_XY * 1.2]
+  ox, oy, oz = grid_origin(grid)
+  cam = [(ox + rows / 2.0) * TILE_SIZE_XY, (oy + cols / 2.0) * TILE_SIZE_XY,
+         oz * TILE_SIZE_Z + max(rows, cols) * TILE_SIZE_XY * 1.2]
   cam_xf = {"location": {"x": cam[0], "y": cam[1], "z": cam[2]},
             "rotation": {"pitch": -90.0, "yaw": 0.0, "roll": 0.0},
             "scale": {"x": 1.0, "y": 1.0, "z": 1.0}}
@@ -1927,7 +2137,9 @@ def main() -> int:
                                                "scene posee (axes X, Y, R180)"))
   p.add_argument("--live", action="store_true")
   ws(sub.add_parser("apply-properties"), dry=True)
-  ws(sub.add_parser("wire-devices"), dry=True)
+  ws(sub.add_parser("wire-devices"), dry=True).add_argument(
+      "--allow-empty", action="store_true",
+      help="valide 08_wiring_report.json a PASSED si aucun binding Direct Event n'est declare (cablage Verse)")
   p = ws(sub.add_parser("verse-scan"))
   p.add_argument("--root", default="")
   p.add_argument("--recursive", action="store_true")
@@ -1942,8 +2154,10 @@ def main() -> int:
   p.add_argument("--i-agree-to-modify-project", action="store_true")
   ws(sub.add_parser("verse-build"), dry=True).add_argument("--log-entries", type=int, default=15)
   p = ws(sub.add_parser("list-editables"))
-  p.add_argument("--device", help="label du device Verse pose (requis avec --live)")
+  p.add_argument("--device", help="label du device Verse pose (defaut Game_Manager_01 avec --apply)")
   p.add_argument("--live", action="store_true")
+  p.add_argument("--apply", action="store_true",
+                 help="pose le creative_device si absent et cable les @editable via Device.SetDeviceProperty")
   ws(sub.add_parser("playtest-plan"))
   ws(sub.add_parser("visual-snapshot"), dry=True).add_argument(
       "--output", default=None, help="defaut : <workspace>/topdown.png")
@@ -1987,7 +2201,7 @@ def main() -> int:
   if c == "apply-properties":
     return cmd_apply_properties(workspace, a.dry_run)
   if c == "wire-devices":
-    return cmd_wire_devices(workspace, a.dry_run)
+    return cmd_wire_devices(workspace, a.dry_run, a.allow_empty)
   if c == "verse-scan":
     return cmd_verse_scan(workspace, a.root, a.recursive)
   if c == "verse-grep":
@@ -1997,7 +2211,7 @@ def main() -> int:
   if c == "verse-build":
     return cmd_verse_build(workspace, a.dry_run, a.log_entries)
   if c == "list-editables":
-    return cmd_list_editables(workspace, a.device, a.live)
+    return cmd_list_editables(workspace, a.device, a.live, a.apply)
   if c == "playtest-plan":
     return cmd_playtest_plan(workspace)
   if c == "visual-snapshot":

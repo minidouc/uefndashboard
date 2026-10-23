@@ -43,7 +43,115 @@ TOOLSETS = {
     "Prog": "editor_toolset.toolsets.programmatic.ProgrammaticToolset",
     "Scene": "editor_toolset.toolsets.scene.SceneTools",
     "SMesh": "editor_toolset.toolsets.static_mesh.StaticMeshTools",
+    "Probe": "IslandForgeProbe",
 }
+
+
+def _try_bootstrap_remote_execution() -> bool:
+  """Tente d'initialiser le pont MCP via remote_execution UDP 6766 si UEFN tourne."""
+  probe_path = os.path.normpath(
+      os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "probes", "init_unreal.py"))
+  if not os.path.isfile(probe_path):
+    return False
+  MCAST_GRP = "239.0.0.1"
+  MCAST_PORT = 6766
+  node_id = "bootstrap-mcp-client"
+  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+  sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  try:
+    sock.bind(("0.0.0.0", MCAST_PORT))
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 1)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1)
+    hostname = socket.gethostname()
+    ifaces = ["127.0.0.1"] + [
+        ip for ip in socket.gethostbyname_ex(hostname)[2] if ip != "127.0.0.1"
+    ]
+    for iface in ifaces:
+      try:
+        sock.setsockopt(
+            socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+            socket.inet_aton(MCAST_GRP) + socket.inet_aton(iface))
+      except Exception:
+        pass
+    sock.settimeout(0.2)
+
+    def _bcast(payload: bytes):
+      for iface in ifaces:
+        try:
+          sock.setsockopt(
+              socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(iface))
+          sock.sendto(payload, (MCAST_GRP, MCAST_PORT))
+        except Exception:
+          pass
+
+    ping = json.dumps({
+        "version": 1, "magic": "ue_py", "type": "ping", "source": node_id,
+    }).encode("utf-8")
+    _bcast(ping)
+    remote_node = None
+    t_end = time.time() + 1.5
+    while time.time() < t_end:
+      try:
+        data, _ = sock.recvfrom(65536)
+      except socket.timeout:
+        _bcast(ping)
+        continue
+      msg = json.loads(data.decode("utf-8"))
+      if msg.get("type") == "pong" and msg.get("source") != node_id:
+        remote_node = msg.get("source")
+        break
+    if not remote_node:
+      return False
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(1)
+    srv.settimeout(3.0)
+    cmd_host, cmd_port = srv.getsockname()
+    open_msg = json.dumps({
+        "version": 1, "magic": "ue_py", "type": "open_connection",
+        "source": node_id, "dest": remote_node,
+        "data": {"command_ip": cmd_host, "command_port": cmd_port},
+    }).encode("utf-8")
+    _bcast(open_msg)
+    conn, _ = srv.accept()
+    conn.settimeout(5.0)
+    code = (
+        f"import os; os.environ['ISLANDFORGE_DEFER_TICKS'] = '0'; "
+        f"exec(open(r'{probe_path}', encoding='utf-8').read(), {{'__name__': '__main__'}})"
+    )
+    cmd = json.dumps({
+        "version": 1, "magic": "ue_py", "type": "command",
+        "source": node_id, "dest": remote_node,
+        "data": {"command": code, "unattended": True, "exec_mode": "ExecuteFile"},
+    }).encode("utf-8")
+    conn.sendall(cmd)
+    conn.recv(65536)
+    conn.close()
+    srv.close()
+    for _ in range(15):
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.settimeout(0.1)
+      try:
+        if s.connect_ex(("127.0.0.1", 8000)) == 0:
+          s.close()
+          return True
+      finally:
+        try:
+          s.close()
+        except Exception:
+          pass
+      time.sleep(0.1)
+    return False
+
+  except Exception:
+    return False
+  finally:
+    try:
+      sock.close()
+    except Exception:
+      pass
+
 
 
 class McpError(Exception):
@@ -105,12 +213,16 @@ class McpClient:
       return exc.code, None, _parse_body(text, exc.headers.get("content-type", ""))
     except (socket.timeout, TimeoutError) as exc:
       raise McpTimeout(f"timeout {TIMEOUT_S}s : {exc}") from exc
-    except urllib.error.URLError as exc:
-      if isinstance(exc.reason, (socket.timeout, TimeoutError)):
+    except (urllib.error.URLError, ConnectionError) as exc:
+      reason = getattr(exc, "reason", exc)
+      if isinstance(reason, (socket.timeout, TimeoutError)):
         raise McpTimeout(f"timeout {TIMEOUT_S}s : {exc}") from exc
-      raise McpOffline(f"editeur injoignable sur {self.url} : {exc.reason}") from exc
-    except ConnectionError as exc:
-      raise McpOffline(f"editeur injoignable sur {self.url} : {exc}") from exc
+      if not getattr(self, "_bootstrapped", False) and "127.0.0.1:8000" in self.url:
+        self._bootstrapped = True
+        if _try_bootstrap_remote_execution():
+          return self._post(body, sid)
+      raise McpOffline(f"editeur injoignable sur {self.url} : {reason}") from exc
+
 
   def _next_id(self) -> int:
     self._id += 1
@@ -143,7 +255,8 @@ class McpClient:
       body = {"jsonrpc": "2.0", "id": self._next_id(), "method": method,
               "params": params}
       status, _, j = self._post(body, sid)
-      if status in (400, 404):
+      rpc_err = json.dumps((j or {}).get("error", "")).lower() if isinstance(j, dict) else ""
+      if status in (400, 401, 403, 404) or ("session" in rpc_err or "not initialized" in rpc_err):
         sid = self._session(fresh=True)
         body["id"] = self._next_id()
         status, _, j = self._post(body, sid)
@@ -199,7 +312,15 @@ class McpClient:
     if res.get("isError"):
       raise McpError(f"{toolset}.{tool} : {json.dumps(content, ensure_ascii=False)[:800]}")
     value = content.get("returnValue", content) if isinstance(content, dict) else content
+    if isinstance(value, dict) and isinstance(value.get("image"), dict):
+      img = value["image"]
+      if img.get("data"):
+        images.append({
+            "mimeType": img.get("mimeType", "image/png"),
+            "data": img.get("data", ""),
+        })
     return {"value": value, "content": content, "images": images}
+
 
   def value(self, toolset: str, tool: str, args: dict | None = None):
     return self.call(toolset, tool, args)["value"]
