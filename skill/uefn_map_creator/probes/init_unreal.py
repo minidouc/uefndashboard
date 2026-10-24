@@ -172,7 +172,216 @@ if unreal is not None and hasattr(unreal, "ToolsetDefinition"):
                     {"total": sum(compte.values()), "par_classe": compte},
                     indent=2, ensure_ascii=False)
 
-        _etape("classe_toolset", True, "IslandForgeProbe definie (2 outils)")
+            @tool_call
+            @staticmethod
+            def chercher_playsets(
+                mot_cle: str = "", type_asset: str = "PPID", max_resultats: int = 30
+            ) -> str:
+                """Cherche UNIQUEMENT dans les Playsets et Props Creatif legaux (PPID / PID).
+
+                Args:
+                    mot_cle: Mots-cles separes par des espaces ou underscores (ex: 'neon vendor').
+                    type_asset: 'PPID' (Props/Murs/Sols/Rampes), 'PID' (Prefabs/Devices) ou 'ALL'.
+                    max_resultats: Nombre maximum de chemins legaux renvoyes.
+                Returns:
+                    JSON : liste de chemins d'objets complets (/Pkg/Path/PPID_Nom.PPID_Nom) legaux.
+                """
+                ar = unreal.AssetRegistryHelpers.get_asset_registry()
+                cibles = []
+                t_up = (type_asset or "PPID").upper()
+                if t_up in ("PPID", "ALL"):
+                    cibles.extend(ar.get_assets_by_class(
+                        unreal.TopLevelAssetPath("/Script/FortniteGame", "FortPlaysetPropItemDefinition")))
+                if t_up in ("PID", "ALL"):
+                    cibles.extend(ar.get_assets_by_class(
+                        unreal.TopLevelAssetPath("/Script/FortniteGame", "FortPlaysetItemDefinition")))
+                termes = [x.lower() for x in (mot_cle or "").replace("_", " ").split() if x.strip()]
+                resultats = []
+                for a in cibles:
+                    nom = str(a.asset_name)
+                    nl = nom.lower()
+                    if all(t in nl for t in termes):
+                        chemin = "{}/{}.{}".format(a.package_path, nom, nom)
+                        resultats.append({
+                            "name": nom,
+                            "asset_path": chemin,
+                            "class": str(a.asset_class_path.asset_name),
+                        })
+                        if len(resultats) >= int(max_resultats):
+                            break
+                return json.dumps(
+                    {"query": mot_cle, "count": len(resultats), "results": resultats},
+                    indent=2, ensure_ascii=False)
+
+            @tool_call
+            @staticmethod
+            def verifier_legalite_scene() -> str:
+                """Verifie chaque acteur du niveau ouvert via FortEditorValidatorSubsystem
+                et suggere un remplacement PPID legal pour toute reference illegale.
+
+                Returns:
+                    JSON : status (PASSED/FAILED), acteurs illegaux et remplacements PPID.
+                """
+                import re as _re
+                val_sub = unreal.get_editor_subsystem(unreal.EditorValidatorSubsystem)
+                act_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+                ar = unreal.AssetRegistryHelpers.get_asset_registry()
+                ppids = ar.get_assets_by_class(
+                    unreal.TopLevelAssetPath("/Script/FortniteGame", "FortPlaysetPropItemDefinition"))
+                uc = unreal.DataValidationUsecase.MANUAL
+
+                illegaux = []
+                valides = 0
+                for a in act_sub.get_all_level_actors():
+                    st, warns, errs = val_sub.is_object_valid(a, uc)
+                    msgs = [str(x) for x in list(warns) + list(errs)]
+                    bad_msgs = [
+                        m for m in msgs
+                        if ("disallowed object" in m.lower()
+                            or "illégale" in m.lower()
+                            or "illegale" in m.lower()
+                            or "assetreferencerestrictions" in m.lower()
+                            or "fortexposedassets" in m.lower())
+                    ]
+                    if bad_msgs:
+                        # Extraire le dernier segment /NomObjet.NomObjet de l'asset interdit
+                        last_seg = bad_msgs[-1].rsplit("/", 1)[-1].split(".")[0].strip(" '\"")
+                        clean = _re.sub(r"^(SM|BP|B|S|M|MI|T)_", "", last_seg)
+                        clean_cc = _re.sub(r"([a-z])([A-Z])", r"\1_\2", clean)
+                        tokens = [t.lower() for t in clean_cc.split("_") if len(t) > 2 and not t.isdigit()]
+
+                        suggestions = []
+                        if tokens:
+                            # Chercher d'abord tous les tokens significatifs, sinon les 2 derniers
+                            for sub_tokens in (tokens, tokens[-2:], tokens[-1:]):
+                                if not sub_tokens:
+                                    continue
+                                for p in ppids:
+                                    pn = str(p.asset_name)
+                                    pnl = pn.lower()
+                                    if all(t in pnl for t in sub_tokens):
+                                        cand = "{}/{}.{}".format(p.package_path, pn, pn)
+                                        if cand not in suggestions:
+                                            suggestions.append(cand)
+                                        if len(suggestions) >= 3:
+                                            break
+                                if suggestions:
+                                    break
+                        illegaux.append({
+
+                            "actor_label": a.get_actor_label(),
+                            "actor_class": a.get_class().get_name(),
+                            "refPath": a.get_path_name(),
+                            "messages": bad_msgs,
+                            "suggested_legal_ppids": suggestions,
+                        })
+                    else:
+                        valides += 1
+                return json.dumps({
+                    "status": "PASSED" if not illegaux else "FAILED",
+                    "valid_actors": valides,
+                    "illegal_count": len(illegaux),
+                    "illegal_actors": illegaux,
+                }, indent=2, ensure_ascii=False)
+
+            @tool_call
+            @staticmethod
+            def remplacer_acteurs_illegaux(supprimer_sans_equivalent: bool = False) -> str:
+                """Remplace automatiquement chaque acteur illegal du niveau ouvert par son
+                equivalent PPID_ legal au meme transform (position, rotation, echelle), label et tags.
+
+                Args:
+                    supprimer_sans_equivalent: Si True, supprime aussi les acteurs illegaux sans PPID_ trouve.
+
+                Returns:
+                    JSON : acteurs remplaces, supprimes et restants.
+                """
+                raw = json.loads(IslandForgeProbe.verifier_legalite_scene())
+                illegaux = raw.get("illegal_actors", [])
+                act_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+                val_sub = unreal.get_editor_subsystem(unreal.EditorValidatorSubsystem)
+                uc = unreal.DataValidationUsecase.MANUAL
+                by_path = {a.get_path_name(): a for a in act_sub.get_all_level_actors()}
+                remplaces, supprimes, echecs = [], [], []
+                for item in illegaux:
+                    ref_path = item.get("refPath", "")
+                    actor = by_path.get(ref_path)
+                    if actor is None:
+                        continue
+                    label = actor.get_actor_label()
+                    xf = actor.get_actor_transform()
+                    loc = xf.translation
+                    rot = xf.rotation.rotator()
+                    scl = xf.scale3d
+                    tags = [str(t) for t in list(actor.tags)]
+                    ppids = item.get("suggested_legal_ppids") or []
+                    if ppids:
+                        ppid_path = ppids[0]
+                        xform_dict = {
+                            "location": {"x": float(loc.x), "y": float(loc.y), "z": float(loc.z)},
+                            "rotation": {"pitch": float(rot.pitch), "yaw": float(rot.yaw), "roll": float(rot.roll)},
+                            "scale": {"x": float(scl.x), "y": float(scl.y), "z": float(scl.z)},
+                        }
+                        res = unreal.ToolsetRegistry.execute_tool(
+                            unreal.Name("editor_toolset.toolsets.scene.SceneTools"),
+                            unreal.Name("add_to_scene_from_asset"),
+                            json.dumps({
+                                "asset_path": ppid_path,
+                                "name": label,
+                                "xform": xform_dict,
+                                "snap_to_ground": False,
+                            }),
+                        )
+                        val_txt = getattr(res, "value", "") or ""
+                        err_txt = getattr(res, "error", "") or ""
+                        new_ref = None
+                        try:
+                            new_ref = (json.loads(val_txt).get("returnValue") or {}).get("refPath")
+                        except Exception:
+                            pass
+                        if new_ref and not err_txt:
+                            act_sub.destroy_actor(actor)
+                            new_by_path = {a.get_path_name(): a for a in act_sub.get_all_level_actors()}
+                            new_actor = new_by_path.get(new_ref)
+                            if new_actor is not None:
+                                new_actor.set_actor_label(label)
+                                new_actor.set_actor_transform(xf, False, True)
+                                new_actor.tags = [unreal.Name(t) for t in tags]
+                                st, _, _ = val_sub.is_object_valid(new_actor, uc)
+                            remplaces.append({
+                                "actor_label": label,
+                                "old_refPath": ref_path,
+                                "new_refPath": new_ref,
+                                "ppid_used": ppid_path,
+                            })
+                        else:
+                            echecs.append({
+                                "actor_label": label,
+                                "refPath": ref_path,
+                                "reason": err_txt or val_txt or "spawn_failed",
+                            })
+                    elif supprimer_sans_equivalent:
+                        act_sub.destroy_actor(actor)
+                        supprimes.append({"actor_label": label, "old_refPath": ref_path})
+                    else:
+                        echecs.append({
+                            "actor_label": label,
+                            "refPath": ref_path,
+                            "reason": "aucun_ppid_equivalent",
+                        })
+                after = json.loads(IslandForgeProbe.verifier_legalite_scene())
+                return json.dumps({
+                    "status": after.get("status", "FAILED"),
+                    "replaced_count": len(remplaces),
+                    "removed_count": len(supprimes),
+                    "remaining_illegal_count": after.get("illegal_count", 0),
+                    "replaced": remplaces,
+                    "removed": supprimes,
+                    "failed": echecs,
+                }, indent=2, ensure_ascii=False)
+
+        _etape("classe_toolset", True, "IslandForgeProbe definie (5 outils)")
+
     except Exception:
         IslandForgeProbe = None
         _etape("classe_toolset", False, traceback.format_exc())
@@ -354,22 +563,24 @@ def _demarrer_pont_mcp_secours():
                     if IslandForgeProbe is not None:
                         schemas.append({
                             "name": "IslandForgeProbe",
-                            "description": "Sonde IslandForge (capacites editeur)",
-                            "tools": ["sonder_capacites", "compter_acteurs"],
+                            "description": "Sonde IslandForge (capacites editeur, recherche Playsets PPID/PID, validation et correction legalite UEFN)",
+                            "tools": ["sonder_capacites", "compter_acteurs", "chercher_playsets", "verifier_legalite_scene", "remplacer_acteurs_illegaux"],
                         })
+
                     boite["res"] = {
                         "content": [{"type": "text", "text": json.dumps({"toolsets": schemas})}],
                         "isError": False,
                     }
                     evt.set()
 
-
                 elif action == "describe_toolset":
                     ts = params.get("toolset_name", "")
-                    raw = unreal.ToolsetRegistry.get_toolset_json_schema(unreal.Name(ts))
+                    raw_str = unreal.ToolsetRegistry.get_all_toolset_json_schemas()
+                    schemas = json.loads(raw_str) if raw_str else []
+                    found = next((s for s in schemas if isinstance(s, dict) and s.get("name") == ts), None)
                     boite["res"] = {
-                        "content": [{"type": "text", "text": raw or "{}"}],
-                        "isError": not bool(raw),
+                        "content": [{"type": "text", "text": json.dumps(found or {})}],
+                        "isError": found is None,
                     }
                     evt.set()
 
@@ -397,7 +608,7 @@ def _demarrer_pont_mcp_secours():
                 }
                 evt.set()
 
-    def _appeler_gt(action, params, timeout=55.0):
+    def _appeler_gt(action, params, timeout=120.0):
         boite = {}
         evt = threading.Event()
         file_taches.put((action, params, boite, evt))

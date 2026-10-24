@@ -22,6 +22,7 @@ CLI = os.path.join(SKILL, "script", "uefn_spatial_cli.py")
 CLIENT = os.path.join(SKILL, "script", "mcp_client.py")
 MOCK = os.path.join(HERE, "mock_mcp.py")
 ROOT = os.path.join(tempfile.gettempdir(), "uefn_skill_verify")
+shutil.rmtree(ROOT, ignore_errors=True)
 
 results = []
 
@@ -778,6 +779,43 @@ rc, d, _ = cli(["cleanup"], WS, env)
 check("L4 cleanup supprime les acteurs taggues et efface _placed.json",
       rc == 0 and d and d["status"] == "PASSED" and d["found"] >= before and d["left"] == 0
       and not os.path.exists(os.path.join(WS, "_placed.json")), str(d)[:200])
+
+print("\n== N. Legalite UEFN : interdiction de /Game/ et recherche Playsets (PPID_/PID_) ==")
+ws_ill = sym_ws("illegal_game", "R180", PAIRED)
+pal_ill = json.load(open(os.path.join(ws_ill, "02_palette.json"), encoding="utf-8"))
+pal_ill["assets"]["prop_ramp"]["uefn_path"] = "/Game/Environments/Asteria/NeonCity/Props/SM_BusStop.SM_BusStop"
+write(os.path.join(ws_ill, "02_palette.json"), pal_ill)
+rc, d, _ = cli(["validate-scene"], ws_ill, env)
+check("N1 validate-scene bloque les chemins /Game/ non exposes (ILLEGAL_ASSET_PATH)",
+      rc == 1 and d and "ILLEGAL_ASSET_PATH" in types(d), json.dumps(d)[:240])
+rc, d, _ = cli(["search-playsets", "--query", "neon busstop"], WS, env)
+check("N2 search-playsets retourne uniquement des chemins PPID_/PID_ legaux",
+      rc == 0 and d and d["status"] == "PASSED" and d.get("total_trouves", 0) >= 1
+      and "PPID_" in json.dumps(d.get("resultats", [])), json.dumps(d)[:240])
+rc, d, _ = cli(["audit-legality"], WS, env)
+check("N3 audit-legality verifie la scene via FortEditorValidatorSubsystem -> PASSED",
+      rc == 0 and d and d["status"] == "PASSED" and d.get("illegal_count") == 0
+      and os.path.exists(os.path.join(WS, "06_legality_report.json")), json.dumps(d)[:240])
+m.state(illegal_actors=[{"actor_label": "BusStop_01", "asset_path": "/Game/Athena/BusStop",
+                         "errors": ["référence illégale"], "suggested_legal_ppids": ["PPID_BusStop"]}])
+rc, d, _ = cli(["audit-legality"], WS, env)
+check("N4 audit-legality detecte un acteur /Game/ illegal et suggere un PPID_ -> FAILED rc=1",
+      rc == 1 and d and d["status"] == "FAILED" and d.get("illegal_count") == 1, json.dumps(d)[:240])
+rc, d, _ = cli(["launch-session", "--i-agree-to-launch-session"], WS, env)
+check("N5 launch-session bloque si des acteurs illegaux sont presents (ILLEGAL_ACTORS_BLOCK_SESSION)",
+      rc == 1 and d and d.get("error_kind") == "ILLEGAL_ACTORS_BLOCK_SESSION", json.dumps(d)[:240])
+rc, d, _ = cli(["audit-legality", "--fix"], WS, env)
+check("N6 audit-legality --fix remplace automatiquement les acteurs illegaux -> PASSED",
+      rc == 0 and d and d["status"] == "PASSED" and d.get("replaced_count") == 1, json.dumps(d)[:240])
+rc, d, _ = cli(["launch-session"], WS, env)
+check("N7 launch-session sans accord -> CONSENT_REQUIRED rc=1",
+      rc == 1 and d and d.get("error_kind") == "CONSENT_REQUIRED", json.dumps(d)[:240])
+rc, d, _ = cli(["launch-session", "--i-agree-to-launch-session", "--wait-seconds", "5"], WS, env)
+check("N8 launch-session avec accord -> StartSession + Connected + 12_session_report.json -> PASSED",
+      rc == 0 and d and d["status"] == "PASSED" and d.get("connected") is True
+      and os.path.exists(os.path.join(WS, "12_session_report.json")), json.dumps(d)[:240])
+m.state(illegal_actors=[], session="Disconnected")
+
 m.stop()
 
 print("\n== Resultat ==")

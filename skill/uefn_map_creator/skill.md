@@ -15,15 +15,16 @@ Le skill traduit une vision decrite en langage naturel en une ile UEFN posee, ca
 2. Le serveur MCP est sur `http://127.0.0.1:8000/mcp`, sans authentification : ne jamais l'exposer hors de la machine.
 3. **Ne jamais sauvegarder** (`Save`, `SaveAll`), jamais publier, jamais lancer une session, jamais modifier un asset du projet sans accord explicite de l'utilisateur.
 4. **Regrouper toutes les questions et autorisations a l'etape 1** (confirmation du niveau courant, choix de gameplay si l'invite est ambigue, et accord pour ecrire les fichiers `.verse` du projet). Une fois l'etape 1 validee par l'utilisateur, executer les etapes 2 a 9 d'une seule traite sans redemander d'accord en cours de route.
-5. Ne tenir pour vrai que ce qui a ete relu par un second appel. Une reponse vide (`[]`, `null`, `false`) vaut « inconnu », pas « absent ».
-6. Tout etat est sur disque dans le workspace (jamais dans le skill, jamais seulement dans la conversation).
-7. Signaler a l'utilisateur, dans le rapport final, ce qui n'a pas ete verifie.
+5. **Interdiction absolue d'utiliser des assets `/Game/...` non exposes (illegaux en UEFN)** : pour les props, murs, sols, toits et decors, chercher **uniquement** dans le catalogue des Playsets Creatifs de l'editeur (`FortPlaysetPropItemDefinition` `PPID_...` et `FortPlaysetItemDefinition` `PID_...`) via `search-playsets --query "<mots>"`. Tout chemin `/Game/...` dans `01_gdd.json` ou `02_palette.json` est bloque par `validate-scene` et `measure-palette` (`ILLEGAL_ASSET_PATH`).
+6. Ne tenir pour vrai que ce qui a ete relu par un second appel. Une reponse vide (`[]`, `null`, `false`) vaut « inconnu », pas « absent ».
+7. Tout etat est sur disque dans le workspace (jamais dans le skill, jamais seulement dans la conversation).
+8. Signaler a l'utilisateur, dans le rapport final, ce qui n'a pas ete verifie.
 
 ## Pilotage
 
 Tout passe par le CLI `script/uefn_spatial_cli.py` (client MCP `script/mcp_client.py`). Ne pas recoder le protocole.
 Python **3.10 ou plus** est requis : en dessous, le CLI s'arrete avec le code 2.
-Il n'existe **pas** de Bridge Python, pas de `batch.exec`, pas d'`editor.undo`, pas de `validate_folder` : les mentions de ces commandes dans d'anciennes notes sont caduques.
+Il n'existe **pas** de `batch.exec`, pas d'`editor.undo`, pas de `validate_folder` : les mentions de ces commandes dans d'anciennes notes sont caduques.
 
 ```bash
 python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]
@@ -41,15 +42,15 @@ Chaque appel du CLI spatial est journalise dans `<workspace>/_mcp_calls.jsonl`. 
 python script/tests/verify.py
 ```
 Demarre un faux serveur MCP local (`script/tests/mock_mcp.py`, 127.0.0.1 uniquement) et rejoue la
-chaine complete, y compris les pieges documentes. Attendu : `110/110 OK`. Cela prouve les
-**contrats** du skill (codes retour, statuts, refus sans accord, rapports honnetes), pas le
+chaine complete, y compris les pieges documentes. Attendu : `122/122 OK`. Cela prouve les
+**contrats** du skill (codes retour, statuts, refus sans accord, blocage des assets illegaux `/Game/`, lancement de session, rapports honnetes), pas le
 comportement de l'editeur reel. Procedure de premier test complet : `references/first-run.md`.
 
 ## Fichiers d'etat (`<workspace>/`)
 
 Specs (etapes 1 a 7) :
-- `01_gdd.json` cahier des charges, simulation, `requested_assets`
-- `02_palette.json` assets, chemins MCP, `scale`, tailles et pivots **mesures**
+- `01_gdd.json` cahier des charges, simulation, `requested_assets` (chemins `PPID_`/`PID_` uniquement pour les decors)
+- `02_palette.json` assets, chemins MCP legaux (`PPID_`/`PID_`), `scale`, tailles et pivots **mesures**
 - `03_grid.json` matrice 2D par etage, `symmetric` + `symmetry_axis` (`X`, `Y` miroir, ou
   `R180` rotation 180 degres avec echange des equipes : le cas des arenes versus)
 - `04_devices.json` devices par ancre (`tile` + `slot`) ou en coordonnees absolues
@@ -60,7 +61,8 @@ Specs (etapes 1 a 7) :
   cotes** : un acteur symetrique dont le jumeau est exclu remonte `MIRROR_PARTNER_MISSING`.
 
 Rapports (chacun porte un champ `scope` qui dit ce qu'il ne verifie pas) :
-- `06_audit_report.json` chevauchements, gravite, acteurs absents (`audit-scene`)
+- `06_audit_report.json` chevauchements, gravite, acteurs absents et legalite UEFN (`audit-scene`)
+- `06_legality_report.json` validation officielle UEFN (`FortValidator_FortExposedAssets` / `AssetValidator_AssetReferenceRestrictions`) et suggestions `PPID_` (`audit-legality`)
 - `06_navigation_report.json` couloirs trop etroits (`check-navigation`)
 - `07_properties_report.json` proprietes ecrites puis relues (`apply-properties`)
 - `08_wiring_report.json` cablage relu sur la cible (`wire-devices`)
@@ -68,6 +70,7 @@ Rapports (chacun porte un champ `scope` qui dit ce qu'il ne verifie pas) :
 - `10_editables.json` table `@editable` -> `actor_label` -> `refPath` (`list-editables`)
 - `11_symmetry_report.json` paires miroirs des specs, derive de placement et symetrie de la
   scene posee (`check-symmetry`, `--live`)
+- `12_session_report.json` verification pre-session (`0` acteur illegal), lancement `StartSession` / `PushChanges`, suivi `GetSessionStatus`, `GetGameState` et logs `Valkyrie` (`launch-session`)
 
 Intermediaires calcules : `_compiled_structure.json`, `_compiled_scene.json`, `_placed.json`,
 `_verse_files.json`, `_verse_grep.json`, `_verse_written.json`, `_mcp_calls.jsonl`.
@@ -107,16 +110,19 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
   - Presenter un **Brief unique** court a l'utilisateur :
     1. Le **niveau courant** detecte par `preflight` ;
     2. Le resume du gameplay et du plan (mode, taille en tuiles, logique Verse prevue) + au maximum **1 ou 2 questions de game design** uniquement si l'invite initiale est contradictoire ou trop floue ;
-    3. La demande d'**accord unique** pour construire dans ce niveau et ecrire le fichier `.verse` (`--i-agree-to-modify-project` a l'etape 8).
-- Une fois cet accord donne, rediger `01_gdd.json` (simulation seconde par seconde, `required_devices`, `requested_assets`, `verse_modules`) et les specs initiales, puis enchainer les etapes 2 a 9 sans nouvelle interruption.
-- `validate-scene` controle la **forme** des 5 fichiers (cles, types, enums, labels uniques, tuiles existantes, references declarees avant usage) : une faute de forme ne doit plus produire un transform faux avec un statut `PASSED`.
+    3. La demande d'**accord unique** pour construire dans ce niveau, ecrire le fichier `.verse` (`--i-agree-to-modify-project` a l'etape 8) et lancer la session de verification finale (`--i-agree-to-launch-session` a l'etape 10).
+- Une fois cet accord donne, rediger `01_gdd.json` (simulation seconde par seconde, `required_devices`, `requested_assets`, `verse_modules`) et les specs initiales, puis enchainer les etapes 2 a 10 sans nouvelle interruption.
+- `validate-scene` controle la **forme** des 5 fichiers (cles, types, enums, labels uniques, tuiles existantes, references declarees avant usage, et **legalite des chemins d'assets** `ILLEGAL_ASSET_PATH`) : une faute de forme ou un chemin `/Game/...` non expose ne doit jamais passer avec un statut `PASSED`.
 - Gatekeeper : accord de l'utilisateur obtenu sur le niveau et l'ecriture Verse ; chaque mecanique a son device et sa fonction Verse ; `validate-scene` ne remonte plus d'erreur de forme (seul `PALETTE_EMPTY` reste attendu avant l'etape 2).
 
-### Etape 2 : Recherche et mesure des assets
-- Chemins : `Asset.find_assets` pour les decors, `Device.ListDeviceAssets` pour les devices. Un chemin invente est une erreur ; un resultat vide ne prouve pas l'absence.
-- `measure-palette --dry-run` puis `measure-palette` : chaque asset est pose a `(0, -20000, 5000)`, ses bounds et son `pivot_offset_cm` sont relus, puis il est supprime. Le refus d'un yaw relu non nul evite les mesures faussees.
+### Etape 2 : Recherche dans les Playsets Creatifs et mesure des assets
+- **Regle d'or sur les assets (anti-assets illegaux)** :
+  - **Interdit** d'utiliser `Asset.find_assets` sur `/Game/Athena/...` ou `/Game/Environments/...` pour chercher des decors, murs ou sols : ces StaticMesh/Blueprints internes echouent a la validation UEFN (`FortValidator_FortExposedAssets` / `AssetValidator_AssetReferenceRestrictions`).
+  - Pour tous les decors, murs, sols, rampes et props : utiliser **obligatoirement** `search-playsets --workspace <...> --query "<mots_cles>" [--type PPID|PID|ALL]`, qui interroge `Probe.chercher_playsets` uniquement sur les `FortPlaysetPropItemDefinition` (`PPID_...`, ~100 418 props legaux en ~145 ms) et `FortPlaysetItemDefinition` (`PID_...`, ~1 960 prefabs/devices legaux).
+  - Pour les devices de gameplay : utiliser `Device.ListDeviceAssets` (ou `search-playsets --type PID`).
+- `measure-palette --dry-run` puis `measure-palette` : refuse tout chemin `/Game/...` (`ILLEGAL_ASSET_PATH`), pose chaque asset `PPID_`/`PID_` a `(0, -20000, 5000)`, relit ses bounds et son `pivot_offset_cm`, puis le supprime. Le refus d'un yaw relu non nul evite les mesures faussees.
 - Sortie : `02_palette.json` avec `measured` rempli. Tant que la palette est vide, `validate-scene` et `compile-transforms` s'arretent sur `PALETTE_EMPTY`.
-- Gatekeeper : 100 % des assets de la palette ont des dimensions strictement positives et `measured`.
+- Gatekeeper : 100 % des assets de la palette sont legaux (`PPID_`/`PID_`), ont des dimensions strictement positives et `measured`.
 
 ### Etape 3 : Plan 2D
 - Matrice par etage, `1 case = 512 x 512 x 384 cm`. Legende : `#` sol + murs de perimetre, `.` sol libre, `W` mur interieur, `P` porte, `S1`/`S2` spawns, `O` objectif, `R_*` rampe, `T` tremie, `V` vide.
@@ -142,12 +148,13 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - Gatekeeper : chaque device a un chemin issu de `ListDeviceAssets` et une entree mesuree dans la palette.
 
 ### Etape 6 : Placement et reglages
-- `compile-transforms` (calcul, refuse un asset non mesure et une spec malformee), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform **relue** (position, yaw et echelle). Si un acteur est deja dans `_placed.json` mais que son transform a change dans la spec, `place-scene` (et `build-structure`) le déplace en place via `Actor.set_actor_transform` sans avoir a detruire toute la scene.
+- `compile-transforms` (calcul, refuse un asset non mesure et une spec malformee), puis `place-scene` : les devices par `PlaceDevice` avec transform forcee ensuite, les props par lots de 10, chaque transform **relue** (position, yaw et echelle). Si un acteur est deja dans `_placed.json` mais que son transform a change dans la spec, `place-scene` (et `build-structure`) le deplace en place via `Actor.set_actor_transform` sans avoir a detruire toute la scene.
 - `apply-properties` : `Object.list_properties` -> `set_properties` (`values` en **chaine JSON**) -> `get_properties`. Un nom absent de `list_properties` donne `PROPERTY_NOT_FOUND` avec les noms les plus proches, jamais un nom invente ; une valeur relue differente donne `PROPERTY_MISMATCH`. Rapport : `07_properties_report.json`.
 - `wire-devices` : `GetBindingOptions` sur la **source** valide `event` et `function`, `AddEventBinding`, puis relecture par `ListEventBindings` sur la **cible**. Rapport : `08_wiring_report.json`. Sans `bindings` declares : `NO_BINDING_DECLARED` (ou passer `--allow-empty` si toute la logique passe par Verse : ecrit `08_wiring_report.json` a `PASSED`).
 - `check-symmetry` : verifie que chaque device a son jumeau dans `03_grid.json` (axe `X`, `Y` ou `R180`), a la meme place dans sa tuile et avec le yaw miroir. Rapport : `11_symmetry_report.json`.
+- `audit-legality` (egalement appele automatiquement dans `audit-scene --live`) : execute `unreal.EditorValidatorSubsystem.is_object_valid(actor, unreal.DataValidationUsecase.MANUAL)` sur tous les acteurs du niveau ouvert et detecte toute reference illegale (`FortValidator_FortExposedAssets` / `AssetValidator_AssetReferenceRestrictions`), en proposant automatiquement les remplacements `PPID_` legaux dans `06_legality_report.json`. Avec `audit-legality --fix` (`--remove-unmatched`), `Probe.remplacer_acteurs_illegaux` remplace automatiquement sur place chaque acteur illegal par son `PPID_` legal au meme transform, label et tags.
 - **Rendu / atmosphere : plafond dur.** Aucun outil d'eclairage dans les 388, aucun materiau par instance posee (`set_material` agit sur l'**asset** : tous ses exemplaires changent), ni feuillage, ni landscape. La seule voie vers de la lumiere est un systeme Niagara emissif, a moitie prouve seulement : pose verifiee, creation jamais appelee. Avant de promettre une ambiance, lire `references/mcp-routing.md` §9 et annoncer ce qui n'est pas atteignable plutot que de le laisser decouvrir a l'utilisateur.
-- Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm, gravite <= 2 cm, rien d'absent), `check-symmetry` PASSED, `07_properties_report.json` et `08_wiring_report.json` a `PASSED`. Sans `--live`, le rapport porte `gravity_scope` qui dit que la gravite n'est pas controlee : un `PASSED` hors ligne ne prouve ni le pivot ni la hauteur reellement posee.
+- Gatekeeper : `audit-scene --live` a `0 erreur` (chevauchement <= 5 cm hors volumes `DEVICE_BARRIER`, gravite <= 2 cm, rien d'absent, `0` acteur illegal), `check-symmetry` PASSED, `07_properties_report.json` et `08_wiring_report.json` a `PASSED`. Sans `--live`, le rapport porte `gravity_scope` qui dit que la gravite n'est pas controlee : un `PASSED` hors ligne ne prouve ni le pivot ni la hauteur reellement posee.
 
 ### Etape 7 : Decors et circulation
 - `05_props.json` par `TILE_ANCHOR` ou `RELATIVE_TO_ACTOR` (`reference_actor`, `direction`, `gap_cm`), puis `compile-transforms` et `place-scene` a nouveau.
@@ -164,14 +171,16 @@ Interdit de passer a l'etape `N+1` tant que le gatekeeper de l'etape `N` n'est p
 - `list-editables --apply` :
   1. Parse les `@editable` de `<workspace>/verse/*.verse` et distingue les **references d'acteur** (`ACTEUR`) des **parametres** (`PARAMETRE` : `logic`, `int`, `float`...).
   2. Si le `creative_device` Verse n'est pas encore pose dans `_placed.json`, le cherche automatiquement via `Device.ListDeviceAssets` (`bIsVerseDevice: true`) et le pose en `Zone_Logic` (`Game_Manager_01`).
-  3. Cable chaque reference d'acteur via l'outil officiel `Device.SetDeviceProperty` et relit la valeur via `Device.GetDeviceProperties` (`wiring: "AUTO_VERIFIED"` dans `10_editables.json`). Si une propriete echoue a l'ecriture ou a la relecture, elle reste en `"MANUEL"` et est signalee dans `wiring_errors`.
+  3. Pour les devices Verse (`VerseDevice_C`), resout chaque sous-objet wrapper de propriete via `Device.ListDeviceProperties` + `Device.GetDeviceProperties`, ecrit `{"savedActor": {"refPath": target_ref}}` via `Object.set_properties` et relit via `Object.get_properties` (`wiring: "AUTO_VERIFIED"` dans `10_editables.json`). Si une propriete echoue a l'ecriture ou a la relecture, elle reste en `"MANUEL"` et est signalee dans `wiring_errors`.
 - Gatekeeper : `10_editables.json` a `status: "PASSED"` (`AUTO_VERIFIED`), ou les references restant en `MANUEL` sont clairement annoncees a l'utilisateur.
 
-### Etape 10 : Playtest
-- `playtest-plan` : imprime l'etat courant, la **demande d'accord** et la sequence, sans rien lancer.
-- Ne rien lancer sans accord explicite : `StartSession`, `PushChanges`, `StopSession` sont DANGEREUX et n'ont jamais ete executes ; `GetClientLogEntries` a toujours echoue hors session ; aucune validation d'assets (legalite, publication) n'est accessible par MCP.
-- Avec accord : `StartSession` **une fois**, puis `GetSessionStatus` toutes les 10 s jusqu'a un etat stable.
-- Gatekeeper : un log client reel contenant les lignes de l'auto-test. Sans lui, ecrire « comportement en jeu non verifie » : une ligne `[STEP]` prouve que le code est arrive jusque la, pas que la barriere ou le timer ont reagi.
+### Etape 10 : Lancement de Session et Verification finale (Play-in-Client)
+- Avec l'accord unique obtenu a l'etape 1, lancer `launch-session --workspace <...> --i-agree-to-launch-session [--wait-seconds 90]` :
+  1. Verifie d'abord `Probe.verifier_legalite_scene` : si le moindre acteur illegal est present dans le niveau, bloque immediatement (`ILLEGAL_ACTORS_BLOCK_SESSION`) pour eviter de bloquer UEFN sur une fenetre DataValidation (corriger avec `audit-legality --fix`).
+  2. Lit `Session.GetSessionStatus` : appelle `Session.StartSession` si `Disconnected`, ou `Session.PushChanges` si une session est deja `Connected`.
+  3. Suit l'avancement toutes les 5 s (`Connecting` -> `UpdatingContent` -> `Connected`), recupere les logs `Logs.GetLogEntries` (`category: "Valkyrie"`), et une fois `Connected`, lit `Session.GetGameState` et `Session.GetClientLogEntries` (`pattern: "[SELF_TEST"`). Ecrit `12_session_report.json`.
+- Si l'utilisateur n'a pas souhaite lancer Fortnite a l'etape 1, utiliser `playtest-plan`.
+- Gatekeeper : `12_session_report.json` a `status: "PASSED"` (`0` acteur illegal, session lancee ou connectee sans erreur Valkyrie).
 
 ## Exemple : d'une phrase a deux JSON
 
@@ -198,7 +207,7 @@ Un rapport d'audit en echec a cette forme (champs reels du CLI, `06_audit_report
  "overlap_errors": [{"type": "OVERLAP_ERROR", "actor_a": "Cover_Crate_Main",
    "actor_b": "Pillar_Decor_01", "penetration_cm": 28.4, "tile": [2, 2, 0],
    "suggestion": "Placer Pillar_Decor_01 en RELATIVE_TO_ACTOR avec gap_cm >= 15."}],
- "gravity_errors": [], "scene_errors": [],
+ "gravity_errors": [], "scene_errors": [], "legality_errors": [],
  "other_report": "passages etroits : 06_navigation_report.json (check-navigation)"}
 ```
 Correction : deplacer ou supprimer `Pillar_Decor_01` dans `05_props.json`, puis relancer `compile-transforms`, `place-scene`, `audit-scene --live`, `check-navigation`.
@@ -212,15 +221,15 @@ Correction : deplacer ou supprimer `Pillar_Decor_01` dans `05_props.json`, puis 
 ## Checklist avant d'annoncer la carte terminee
 
 - [ ] `preflight` PASSED et niveau confirme par l'utilisateur.
-- [ ] `validate-scene` PASSED (forme et coherence croisee des 5 specs).
+- [ ] `validate-scene` PASSED (forme, coherence croisee des 5 specs, et 0 `ILLEGAL_ASSET_PATH`).
 - [ ] Les 5 specs et les rapports `06` a `11` existent dans le workspace et sont a jour.
-- [ ] 100 % des assets de la palette sont mesures (`measured`, dimensions > 0).
+- [ ] 100 % des assets de la palette viennent des Playsets Creatifs (`PPID_`/`PID_`) et sont mesures (`measured`, dimensions > 0).
 - [ ] Aucune coordonnee brute inventee : tout vient de `compile-transforms`.
-- [ ] `audit-scene --live` : 0 `OVERLAP_ERROR`, 0 `GRAVITY_ERROR`, 0 `scene_errors`, et `source: "live"` dans le rapport (`not_live` veut dire qu'aucun bounds n'a ete relu).
+- [ ] `audit-scene --live` et `audit-legality` : 0 `OVERLAP_ERROR`, 0 `GRAVITY_ERROR`, 0 `scene_errors`, 0 `ILLEGAL_ACTOR_IN_SCENE` (`06_legality_report.json` PASSED), et `source: "live"` dans le rapport.
 - [ ] `check-navigation` : 0 `CORRIDOR_TOO_NARROW`, avec son perimetre annonce.
 - [ ] `check-symmetry --live` : 0 `SPEC_ASYMMETRY`, 0 `MIRROR_PARTNER_MISSING`, 0 `TRANSFORM_DRIFT`, 0 `SCENE_ASYMMETRY`, et `source: "live"` (`11_symmetry_report.json`) ; chaque `mirror: false` assume et annonce.
 - [ ] `apply-properties` : chaque valeur ecrite relue (`07_properties_report.json` PASSED).
 - [ ] `wire-devices` : cablage relu par `ListEventBindings` sur la cible (`08_wiring_report.json` PASSED).
 - [ ] `verse-build` : aucun diagnostic d'erreur **et** ligne de succes recente (`09_verse_report.json`).
-- [ ] `list-editables` : chaque reference d'acteur a son `refPath`, ou le cablage manuel est annonce.
+- [ ] `list-editables --apply` : chaque reference d'acteur a son `refPath` cable (`AUTO_VERIFIED`), ou le cablage manuel est annonce.
 - [ ] Rapport final qui separe ce qui est prouve, ce qui est inconnu, et ce qui n'a pas ete lance (session, sauvegarde, publication).

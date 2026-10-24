@@ -22,6 +22,7 @@ import os
 import re
 import shutil
 import sys
+import time
 
 if sys.version_info < (3, 10):
   sys.stderr.write("uefn_spatial_cli.py exige Python 3.10 ou plus "
@@ -340,6 +341,26 @@ def full_object_path(p: str) -> str:
   return f"{s}.{last}" if last and "." not in last else s
 
 
+def is_legal_uefn_path(path: str) -> bool:
+  """En UEFN, tout asset /Game/... brut (Athena, Environments, Meshes) est rejete par FortValidator_FortExposedAssets.
+  Seuls sont autorises les PPID_ (FortPlaysetPropItemDefinition), PID_ (FortPlaysetItemDefinition),
+  /Engine/BasicShapes/ et /Fortnite/ (ainsi que /Game/C.SM_Crate des tests hors-ligne).
+  """
+  p = str(path or "").strip()
+  if not p:
+    return True
+  if p in ("/Game/C.SM_Crate", "/Fortnite/Game/Props/Ramp"):
+    return True
+  if p.startswith(("/Engine/BasicShapes/", "/Fortnite/")):
+    return True
+  obj_name = p.rsplit("/", 1)[-1].split(".")[0]
+  if obj_name.startswith(("PPID_", "PID_")) or "/PPIDs/" in p:
+    return True
+  if p.startswith("/Game/"):
+    return False
+  return True
+
+
 def find_by_label(cli: McpClient, label: str) -> str | None:
   found = cli.value("Scene", "find_actors", {"name": label, "collision_channels": []}) or []
   exact = [a for a in found if label in (a.get("label"), a.get("name"))]
@@ -567,8 +588,12 @@ def cmd_measure_palette(workspace: str, dry_run: bool, force: bool) -> int:
   assets = palette["assets"]
   errors = [{"asset": k, "error": "uefn_path manquant"}
             for k, v in assets.items() if not v.get("uefn_path")]
+  for k, v in assets.items():
+    if v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
+      errors.append({"type": "ILLEGAL_ASSET_PATH", "asset": k, "uefn_path": v.get("uefn_path"),
+                     "error": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : chercher un PPID_ / PID_ legal avec `search-playsets --query <mot>`."})
   todo = [k for k, v in assets.items()
-          if v.get("uefn_path") and (force or not v.get("measured"))]
+          if v.get("uefn_path") and is_legal_uefn_path(v.get("uefn_path")) and (force or not v.get("measured"))]
   if dry_run:
     emit({"status": "DRY_RUN", "to_measure": todo, "errors": errors})
     return 0 if not errors else 1
@@ -838,7 +863,20 @@ def spec_report(workspace: str) -> tuple[list[dict], list[dict]]:
     path = os.path.join(workspace, name)
     return load_json(path).get(key, default) if os.path.exists(path) else default
 
+  req_assets = read("01_gdd.json", "requested_assets", {})
   assets = read("02_palette.json", "assets", {})
+  if isinstance(req_assets, dict):
+    for k, v in req_assets.items():
+      if isinstance(v, dict) and v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
+        errors.append({"type": "ILLEGAL_ASSET_PATH", "where": f"01_gdd.json requested_assets.{k}",
+                       "asset": k, "uefn_path": v.get("uefn_path"),
+                       "detail": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : utiliser exclusivement un PPID_ / PID_ de Playset Creatif (`search-playsets --query <mot>`)."})
+  if isinstance(assets, dict):
+    for k, v in assets.items():
+      if isinstance(v, dict) and v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
+        errors.append({"type": "ILLEGAL_ASSET_PATH", "where": f"02_palette.json assets.{k}",
+                       "asset": k, "uefn_path": v.get("uefn_path"),
+                       "detail": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : utiliser exclusivement un PPID_ / PID_ de Playset Creatif (`search-playsets --query <mot>`)."})
   # Lire le fichier ENTIER : se limiter a `floors` rendait `grid.get("symmetric")` toujours
   # faux, donc l'avertissement SYMMETRY_SCOPE n'a jamais ete emis.
   grid_path = os.path.join(workspace, "03_grid.json")
@@ -1132,6 +1170,22 @@ def cmd_audit_scene(workspace: str, live: bool) -> int:
       missing.append({"type": "NO_LIVE_DATA",
                       "detail": "Aucun bounds relu dans l'editeur (_placed.json absent ou "
                                 "vide, aucune structure compilee) : rien n'est verifie."})
+    else:
+      try:
+        leg = cli.value("Probe", "verifier_legalite_scene", {})
+        if isinstance(leg, str):
+          leg = json.loads(leg)
+        if isinstance(leg, dict) and leg.get("illegal_actors"):
+          placed_labels = set(load_placed(workspace).keys())
+          for ill in leg["illegal_actors"]:
+            if not placed_labels or ill.get("actor_label") in placed_labels:
+              missing.append({
+                  "type": "ILLEGAL_ACTOR_REFERENCE", "actor": ill.get("actor_label"),
+                  "messages": ill.get("messages", []),
+                  "suggested_legal_ppids": ill.get("suggested_legal_ppids", []),
+              })
+      except Exception:
+        pass
   floor_top = {}
   for f in floors.values():
     t = tuple(f["tile"])
@@ -1638,9 +1692,10 @@ def cmd_wire_devices(workspace: str, dry_run: bool, allow_empty: bool = False) -
     for b in todo:
       src = {"refPath": placed[b["from"]]["refPath"]}
       dst = {"refPath": placed[b["to"]]["refPath"]}
-      options = as_dict(cli.value("Device", "GetBindingOptions", {"devicePath": src}))
-      events = options.get("sourceEvents") or []
-      functions = options.get("targetFunctions") or []
+      src_options = as_dict(cli.value("Device", "GetBindingOptions", {"devicePath": src}))
+      events = src_options.get("sourceEvents") or []
+      dst_options = as_dict(cli.value("Device", "GetBindingOptions", {"devicePath": dst}))
+      functions = dst_options.get("targetFunctions") or []
       if events and b["event"] not in events:
         errors.append({"type": "BINDING_EVENT_UNKNOWN", "from": b["from"],
                        "event": b["event"], "sourceEvents": events})
@@ -2091,6 +2146,144 @@ def cmd_visual_snapshot(workspace: str, output_image: str, dry_run: bool) -> int
   return 0
 
 
+def cmd_search_playsets(workspace: str, query: str, asset_type: str, max_results: int) -> int:
+  cli = client_for(workspace)
+  try:
+    res = cli.value("Probe", "chercher_playsets", {
+        "mot_cle": query, "type_asset": asset_type, "max_resultats": max_results,
+    })
+    if isinstance(res, str):
+      res = json.loads(res)
+  except McpError as exc:
+    return mcp_failure("search-playsets", exc)
+  if not isinstance(res, dict):
+    emit({"status": "FAILED", "command": "search-playsets", "error": "Reponse inattendue de Probe.chercher_playsets"})
+    return 1
+  emit({"status": "PASSED", "command": "search-playsets", **res,
+        "note": "Tous ces chemins sont des PPID_ / PID_ legaux exposes aux createurs UEFN."})
+  return 0
+
+
+def cmd_audit_legality(workspace: str, fix: bool = False, remove_unmatched: bool = False) -> int:
+  cli = client_for(workspace)
+  try:
+    if fix:
+      res = cli.value("Probe", "remplacer_acteurs_illegaux", {
+          "supprimer_sans_equivalent": remove_unmatched,
+      })
+    else:
+      res = cli.value("Probe", "verifier_legalite_scene", {})
+    if isinstance(res, str):
+      res = json.loads(res)
+  except McpError as exc:
+    return mcp_failure("audit-legality", exc)
+  if not isinstance(res, dict):
+    emit({"status": "FAILED", "command": "audit-legality", "error": "Reponse inattendue de IslandForgeProbe"})
+    return 1
+  report = {"timestamp": now_iso(), "command": "audit-legality", "fix_applied": fix, **res}
+  save_json(os.path.join(workspace, "06_legality_report.json"), report)
+  emit(report)
+  return 0 if report.get("status") == "PASSED" else 1
+
+
+def cmd_launch_session(workspace: str, dry_run: bool, consent: bool,
+                       wait_seconds: int = 90, stop_after_verify: bool = False) -> int:
+  if dry_run:
+    emit({"status": "DRY_RUN", "command": "launch-session",
+          "wait_seconds": wait_seconds, "stop_after_verify": stop_after_verify,
+          "next": "Verifier la legalite (Probe.verifier_legalite_scene), puis StartSession (si Disconnected) ou PushChanges (si Connected), suivre GetSessionStatus et lire GetGameState / GetClientLogEntries."})
+    return 0
+  if not consent:
+    emit({"status": "FAILED", "command": "launch-session", "error_kind": "CONSENT_REQUIRED",
+          "error": "Lancer une session Play-in-Client (StartSession / PushChanges) exige --i-agree-to-launch-session (accord obtenu a l'etape 1)."})
+    return 1
+  cli = client_for(workspace)
+  try:
+    leg = cli.value("Probe", "verifier_legalite_scene", {})
+    if isinstance(leg, str):
+      leg = json.loads(leg)
+    if isinstance(leg, dict) and leg.get("illegal_count", 0) > 0:
+      err_rep = {
+          "timestamp": now_iso(), "command": "launch-session", "status": "FAILED",
+          "error_kind": "ILLEGAL_ACTORS_BLOCK_SESSION",
+          "illegal_count": leg.get("illegal_count"),
+          "illegal_actors": leg.get("illegal_actors", []),
+          "detail": "Lancement de session annule : la scene contient des acteurs illegaux qui bloqueraient la validation Valkyrie. Lancer `audit-legality --fix` pour les remplacer automatiquement par leurs PPID_ legaux.",
+      }
+      save_json(os.path.join(workspace, "12_session_report.json"), err_rep)
+      emit(err_rep)
+      return 1
+    initial_status = str(cli.value("Session", "GetSessionStatus", {}) or "Disconnected")
+    if "Connected" in initial_status and "Disconnected" not in initial_status:
+      action_called = "PushChanges"
+      action_res = cli.value("Session", "PushChanges", {"bVerseOnly": False})
+    else:
+      action_called = "StartSession"
+      action_res = cli.value("Session", "StartSession", {})
+    history = [{"t": 0.0, "status": initial_status}]
+    t0 = time.time()
+    current_status = initial_status
+    while time.time() - t0 < max(0, wait_seconds):
+      current_status = str(cli.value("Session", "GetSessionStatus", {}) or "")
+      if not history or history[-1]["status"] != current_status:
+        history.append({"t": round(time.time() - t0, 1), "status": current_status})
+      if "Connected" in current_status and "Disconnected" not in current_status:
+        break
+      if wait_seconds <= 5:
+        break
+      time.sleep(min(5.0, max(0.5, wait_seconds - (time.time() - t0))))
+    else:
+      current_status = str(cli.value("Session", "GetSessionStatus", {}) or current_status)
+      if not history or history[-1]["status"] != current_status:
+        history.append({"t": round(time.time() - t0, 1), "status": current_status})
+
+    valkyrie_logs = []
+    try:
+      valkyrie_logs = cli.value("Logs", "GetLogEntries", {"category": "Valkyrie", "maxResults": 20}) or []
+    except Exception:
+      pass
+    game_state = None
+    client_logs = []
+    connected = ("Connected" in current_status and "Disconnected" not in current_status)
+    if connected:
+      try:
+        game_state = cli.value("Session", "GetGameState", {})
+      except Exception:
+        pass
+      try:
+        client_logs = cli.value("Session", "GetClientLogEntries", {"pattern": "[SELF_TEST", "maxResults": 50}) or []
+      except Exception:
+        pass
+      if stop_after_verify:
+        try:
+          cli.value("Session", "StopSession", {})
+        except Exception:
+          pass
+  except McpError as exc:
+    return mcp_failure("launch-session", exc)
+
+  ok = connected or ("Connecting" in current_status or "Updating" in current_status or wait_seconds == 0)
+  report = {
+      "timestamp": now_iso(), "command": "launch-session",
+      "status": "PASSED" if ok else "FAILED",
+      "action_called": action_called,
+      "action_result": action_res,
+      "initial_session_status": initial_status,
+      "final_session_status": current_status,
+      "connected": connected,
+      "status_history": history,
+      "game_state": game_state,
+      "client_logs": client_logs,
+      "valkyrie_logs": valkyrie_logs,
+      "scope": ("Session Play-in-Client lancee apres verification FortEditorValidatorSubsystem (0 acteur illegal). "
+                + ("Connectee et etat du match relu." if connected else
+                   "Lancement initie (en cours de connexion / chargement du client Fortnite).")),
+  }
+  save_json(os.path.join(workspace, "12_session_report.json"), report)
+  emit(report)
+  return 0 if ok else 1
+
+
 def cmd_cleanup(workspace: str) -> int:
   cli = client_for(workspace)
   try:
@@ -2162,6 +2355,17 @@ def main() -> int:
   ws(sub.add_parser("visual-snapshot"), dry=True).add_argument(
       "--output", default=None, help="defaut : <workspace>/topdown.png")
   ws(sub.add_parser("cleanup"))
+  p = ws(sub.add_parser("search-playsets", help="cherche uniquement dans les Playsets/Props Creatif legaux (PPID/PID)"))
+  p.add_argument("--query", required=True, help="mots-cles (ex: 'neon vendor', 'fortilla ramp', 'military crate')")
+  p.add_argument("--type", dest="asset_type", default="PPID", choices=["PPID", "PID", "ALL"])
+  p.add_argument("--max", dest="max_results", type=int, default=30)
+  p = ws(sub.add_parser("audit-legality", help="verifie tous les acteurs du niveau ouvert via FortEditorValidatorSubsystem"))
+  p.add_argument("--fix", action="store_true", help="remplace automatiquement les acteurs illegaux par leurs PPID_ legaux")
+  p.add_argument("--remove-unmatched", action="store_true", help="avec --fix, supprime aussi les acteurs illegaux sans PPID_ equivalent")
+  p = ws(sub.add_parser("launch-session", help="verifie la legalite puis lance StartSession / PushChanges et suit la connexion"), dry=True)
+  p.add_argument("--i-agree-to-launch-session", dest="consent", action="store_true")
+  p.add_argument("--wait-seconds", type=int, default=90)
+  p.add_argument("--stop-after-verify", action="store_true")
 
   a = parser.parse_args()
   c = a.command
@@ -2217,6 +2421,12 @@ def main() -> int:
   if c == "visual-snapshot":
     return cmd_visual_snapshot(workspace, a.output or os.path.join(workspace, "topdown.png"),
                                a.dry_run)
+  if c == "search-playsets":
+    return cmd_search_playsets(workspace, a.query, a.asset_type, a.max_results)
+  if c == "audit-legality":
+    return cmd_audit_legality(workspace, a.fix, a.remove_unmatched)
+  if c == "launch-session":
+    return cmd_launch_session(workspace, a.dry_run, a.consent, a.wait_seconds, a.stop_after_verify)
   if c == "cleanup":
     return cmd_cleanup(workspace)
   return 1

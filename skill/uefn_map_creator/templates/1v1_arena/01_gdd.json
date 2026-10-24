@@ -93,11 +93,12 @@
       "notes": "Verifie via Device.ListDeviceAssets {\"nameFilter\": \"Timer\"}."
     },
     "prop_ramp": {
-      "uefn_path": "/Game/Athena/Apollo/Environments/BuildingActors/Fortilla/Stairs/Apollo_Fortilla_Ramp_01.Apollo_Fortilla_Ramp_01_C",
+      "uefn_path": "/CR_Legacy/Creative/Maps/Prefabs/Fortilla/Large/PPIDs/PPID_CR_Legacy_Apollo_Fortilla_Ramp_01_41d19e8b.PPID_CR_Legacy_Apollo_Fortilla_Ramp_01_41d19e8b",
       "category": "PROP_RAMP",
       "path_status": "verifie_42_40",
-      "notes": "Rampe de duel Fortilla verifiee dans UEFN 42.40."
+      "notes": "Rampe de duel Fortilla legale (FortPlaysetPropItemDefinition PPID) verifiee dans UEFN 42.40."
     },
+
 
     "prop_crate": {
       "uefn_path": "/Engine/BasicShapes/Cube",

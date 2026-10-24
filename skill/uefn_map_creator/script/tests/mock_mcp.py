@@ -282,6 +282,65 @@ def tool(tool_name: str, args: dict):
 
   if t == "find_assets":
     return [{"assetPath": "/Engine/BasicShapes/Cube.Cube", "assetName": "Cube"}]
+  if t == "chercher_playsets":
+    q = str(args.get("mot_cle", "")).lower()
+    return {
+        "mot_cle": q,
+        "type_asset": args.get("type_asset", "PPID"),
+        "total_catalogue": 100418,
+        "total_trouves": 1,
+        "duree_ms": 12.0,
+        "resultats": [{
+            "asset_name": "PPID_BeachT_Comp_Asteria_NeonCity_BusStop_A_b0175c6e",
+            "package_name": "/BeachT_Comp/SetupAssets/Maps/PPIDs/PPID_BeachT_Comp_Asteria_NeonCity_BusStop_A_b0175c6e",
+            "full_object_path": "/BeachT_Comp/SetupAssets/Maps/PPIDs/PPID_BeachT_Comp_Asteria_NeonCity_BusStop_A_b0175c6e.PPID_BeachT_Comp_Asteria_NeonCity_BusStop_A_b0175c6e",
+            "class_name": "FortPlaysetPropItemDefinition",
+            "legal_uefn": True,
+        }],
+    }
+  if t == "verifier_legalite_scene":
+    illegal = c.get("illegal_actors", [])
+    return {
+        "status": "FAILED" if illegal else "PASSED",
+        "total_actors": len(ACTORS) + len(illegal),
+        "valid_count": len(ACTORS),
+        "illegal_count": len(illegal),
+        "illegal_actors": illegal,
+    }
+  if t == "remplacer_acteurs_illegaux":
+    illegal = c.get("illegal_actors", [])
+    CFG["illegal_actors"] = []
+    if STATE_FILE and os.path.exists(STATE_FILE):
+      try:
+        st = json.load(open(STATE_FILE, "r", encoding="utf-8"))
+        st["illegal_actors"] = []
+        json.dump(st, open(STATE_FILE, "w", encoding="utf-8"))
+      except Exception:
+        pass
+    return {
+        "status": "PASSED",
+        "replaced_count": len(illegal),
+        "removed_count": 0,
+        "remaining_illegal_count": 0,
+        "replaced": [{"actor_label": x.get("actor_label"), "ppid_used": "PPID_Mock"} for x in illegal],
+        "removed": [],
+        "failed": [],
+    }
+  if t in ("StartSession", "PushChanges"):
+    CFG["session"] = "Connected"
+    if STATE_FILE and os.path.exists(STATE_FILE):
+      try:
+        st = json.load(open(STATE_FILE, "r", encoding="utf-8"))
+        st["session"] = "Connected"
+        json.dump(st, open(STATE_FILE, "w", encoding="utf-8"))
+      except Exception:
+        pass
+    return True
+  if t == "StopSession":
+    CFG["session"] = "Disconnected"
+    return True
+  if t == "GetClientLogEntries":
+    return [{"message": "[SELF_TEST] ALL PASSED"}]
   return None
 
 
