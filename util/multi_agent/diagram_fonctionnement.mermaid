@@ -1,0 +1,33 @@
+%% Système Multi-Agents UEFN — topologie
+%% Source éditable du rendu diagram_fonctionnement.svg
+%% Hub-and-spoke + assembly line séquentielle + filesystem-as-bus
+flowchart TD
+    U[Utilisateur] <-->|4 gates HITL| P["Producer_Orchestrator<br/>FRONTIER · hub unique<br/>planifie · route · valide"]
+    P <-->|valide / rejette| V["Validateurs déterministes<br/>(code Python, pas LLM)"]
+    P -->|1 mission JSON| BUS[("BUS = filesystem<br/>project-state.json (mutable)<br/>handoff/*.json (output-only)")]
+    BUS -->|1 seul agent actif à la fois| F["Agent Flash N<br/>fonction pure : in → travail → out"]
+    F -->|output-only, jamais de transcript| BUS
+    F -.->|8 agents techniques seulement| PY["Python déterministe<br/>coords · clamp Z · bounds · overlap"]
+    PY --> GW["Gateway MCP<br/>allowlist + input/outputSchema"]
+    GW -->|save/snapshot avant DANGEREUX| UE["Unreal Editor UEFN<br/>port 8000/8001"]
+    UE -->|résultat sanitizé, tronqué| F
+    BUS --> LOG["Log de trajectoire<br/>Observe → Act → Evolve"]
+    J["Flash-Lite / Judge<br/>pré-filtre les sorties"] -.->|avant lecture Frontier| P
+
+    classDef chief fill:#4C3BCF,color:#fff,stroke:#372a99;
+    classDef flash fill:#0E9F8A,color:#fff,stroke:#0a7a69;
+    classDef bus fill:#334155,color:#fff,stroke:#222c3a;
+    classDef mcp fill:#1F2937,color:#fff,stroke:#111827;
+    classDef py fill:#0F766E,color:#fff,stroke:#0b5a54;
+    classDef valid fill:#DC4C5A,color:#fff,stroke:#b23a46;
+    classDef hitl fill:#16A34A,color:#fff,stroke:#11803a;
+    classDef user fill:#64748B,color:#fff,stroke:#4f5b6e;
+
+    class P chief;
+    class F flash;
+    class BUS bus;
+    class GW,UE mcp;
+    class PY py;
+    class V,J valid;
+    class U hitl;
+    class LOG user;

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Multi-Agents UEFN — Architecture Système Finale</title>
+<style>
+  :root{
+    --bg:#F4F5FA; --card:#FFFFFF; --ink:#1B2130; --muted:#5C667A; --line:#DDE2EC;
+    --chief:#4C3BCF; --design:#0E9F8A; --tech:#E07B39; --audio:#8B5CF6;
+    --bus:#334155; --valid:#DC4C5A; --hitl:#16A34A; --mcp:#1F2937; --py:#0F766E;
+    --chip:#EEF0F7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding:32px 20px 64px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:26px;letter-spacing:-.3px}
+  h2{font-size:18px;margin:34px 0 14px;padding-left:12px;border-left:4px solid var(--chief)}
+  .sub{color:var(--muted);font-size:14px;margin-top:6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:18px 0 4px;font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+  /* topology */
+  .topo{display:grid;grid-template-columns:1fr;gap:0;align-items:center}
+  .row{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+  .node{border-radius:10px;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:#fff;min-width:150px}
+  .node small{display:block;font-weight:400;font-size:11px;opacity:.9;margin-top:3px}
+  .n-user{background:#64748B}
+  .n-chief{background:var(--chief)}
+  .n-bus{background:var(--bus)}
+  .n-flash{background:var(--design)}
+  .n-mcp{background:var(--mcp)}
+  .n-unreal{background:#111827}
+  .n-py{background:var(--py)}
+  .n-valid{background:var(--valid)}
+  .n-hitl{background:var(--hitl)}
+  .arrow{color:var(--muted);font-size:20px;font-weight:700}
+  .arrow.v{transform:rotate(90deg)}
+  .lane-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 6px;font-weight:700}
+  .band{border:1px dashed var(--line);border-radius:12px;padding:14px;margin:10px 0}
+  /* pipeline phases */
+  .phases{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .phase{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;gap:8px}
+  .phase h3{font-size:12px;text-align:center;color:#fff;background:var(--chief);border-radius:6px;padding:5px 4px;letter-spacing:.4px}
+  .agent{border-radius:7px;padding:7px 8px;font-size:11px;font-weight:600;color:#fff;text-align:center}
+  .agent small{display:block;font-weight:400;font-size:9.5px;opacity:.92;margin-top:2px;font-family:"Consolas",monospace}
+  .a-design{background:var(--design)} .a-tech{background:var(--tech)} .a-audio{background:var(--audio)} .a-chief{background:var(--chief)}
+  /* schema box */
+  pre{background:#111827;color:#E5E7EB;border-radius:10px;padding:16px;overflow-x:auto;font-size:12px;line-height:1.55;font-family:"Consolas","Courier New",monospace}
+  .key{color:#7DD3FC}.str{color:#A7F3D0}.cm{color:#94A3B8}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .box h4{font-size:13.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .box ul{margin-left:16px;font-size:12.5px;color:var(--muted)}
+  .box li{margin:4px 0}
+  .tag{font-size:10px;font-weight:700;color:#fff;border-radius:5px;padding:2px 7px}
+  .t-valid{background:var(--valid)} .t-hitl{background:var(--hitl)} .t-mcp{background:var(--mcp)} .t-loop{background:var(--chief)} .t-route{background:var(--tech)}
+  .pill{background:var(--chip);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--ink);display:inline-block;margin:2px}
+  .src{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
+  .foot{margin-top:30px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+  .center{text-align:center}
+  @media(max-width:900px){.phases{grid-template-columns:repeat(2,1fr)}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Studio Multi-Agents UEFN — Architecture Système Finale</h1>
+  <div class="sub">Epic AI Megajam 2026 · 1 Chef (Frontier) + 20 Spécialistes (Flash) · pont MCP/Python → Unreal Editor · PC 16 Go (exécution séquentielle)</div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--chief)"></i>Chef / Frontier</span>
+    <span><i class="dot" style="background:var(--design)"></i>Pôle Design (hors UEFN)</span>
+    <span><i class="dot" style="background:var(--tech)"></i>Pôle Technique (UEFN/MCP/Verse)</span>
+    <span><i class="dot" style="background:var(--audio)"></i>Pôle Audio & Voix</span>
+    <span><i class="dot" style="background:var(--bus)"></i>Bus = filesystem (JSON)</span>
+    <span><i class="dot" style="background:var(--valid)"></i>Validateurs déterministes</span>
+    <span><i class="dot" style="background:var(--hitl)"></i>Gate HITL</span>
+    <span><i class="dot" style="background:var(--mcp)"></i>Gateway MCP</span>
+  </div>
+
+  <!-- ============ A. TOPOLOGIE ============ -->
+  <h2>A · Topologie — Hub-and-Spoke + Bus disque</h2>
+  <div class="card">
+    <div class="topo">
+
+      <div class="row">
+        <div class="node n-user">Utilisateur<small>seul interlocuteur = le Chef</small></div>
+        <div class="arrow">⇄</div>
+        <div class="node n-hitl">4 Gates HITL<small>brief · GDD · archi · écriture destructrice</small></div>
+        <div class="arrow">⇄</div>
+        <div class="node n-chief">00_Producer_Orchestrator<small>FRONTIER · planifie · route · valide</small></div>
+        <div class="arrow">⇄</div>
+        <div class="node n-valid">Validateurs déterministes<small>schéma + acceptance (CODE, pas LLM)</small></div>
+      </div>
+
+      <div class="center arrow v" style="margin:8px 0">⇅</div>
+
+      <div class="row">
+        <div class="node n-bus" style="min-width:320px">BUS = Filesystem (source de vérité)<small>project-state.json (mutable) · handoff/*.json (black-box output-only) · artifacts 00→07</small></div>
+      </div>
+
+      <div class="center arrow v" style="margin:8px 0">⇅</div>
+
+      <div class="lane-label center">Un SEUL agent Flash actif à la fois (assembly line séquentielle — RAM économisée)</div>
+      <div class="row">
+        <div class="node n-flash">Agent Flash #1<small>handoff_in → travail → handoff_out</small></div>
+        <div class="arrow">→</div>
+        <div class="node n-flash">Agent Flash #2<small>fonction pure, contexte court</small></div>
+        <div class="arrow">→</div>
+        <div class="node n-flash">… 20 spécialistes<small>ne se parlent JAMAIS en direct</small></div>
+      </div>
+
+      <div class="center arrow v" style="margin:8px 0">⇅</div>
+
+      <div class="lane-label center">Uniquement pour les 8 agents techniques</div>
+      <div class="row">
+        <div class="node n-py">Python déterministe<small>coords · bounds · clamp Z · overlap (jamais le LLM)</small></div>
+        <div class="arrow">→</div>
+        <div class="node n-mcp">Gateway MCP<small>allowlist + inputSchema/outputSchema</small></div>
+        <div class="arrow">→</div>
+        <div class="node n-unreal">Unreal Editor UEFN<small>port 8000/8001 · save/snapshot avant DANGEREUX</small></div>
+      </div>
+
+    </div>
+    <div class="src">Sources : hub/Supervisor & agents-as-tools (WP1 p.17, p.48) · Sequential assembly line (WP1 p.25) · black-box output-only (WP3 p.18) · maths externalisées (WP2 p.9) · allowlist/schéma (WP2 p.26, p.41) · garde-fous hors modèle (WP1 p.35).</div>
+  </div>
+
+  <!-- ============ B. PIPELINE ============ -->
+  <h2>B · Chaîne de production séquentielle (7 phases)</h2>
+  <div class="phases">
+
+    <div class="phase">
+      <h3>INIT</h3>
+      <div class="agent a-chief">Producer<small>state + arbo</small></div>
+      <div class="agent a-tech">Engine_Programmer<small>preflight_ok.json</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>CADRAGE</h3>
+      <div class="agent a-chief">Producer<small>brief projet</small></div>
+      <div class="agent a-design">Creative_Director<small>00_vision.json</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>DESIGN</h3>
+      <div class="agent a-design">Game_Designer<small>01_gdd.json</small></div>
+      <div class="agent a-design">System_Designer<small>01_systems.json</small></div>
+      <div class="agent a-design">Economy_Designer<small>01_economy.json</small></div>
+      <div class="agent a-design">Mission_Designer<small>01_missions.json</small></div>
+      <div class="agent a-design">Narrative_Designer<small>01_lore.json</small></div>
+      <div class="agent a-design">Writer_Scénariste<small>01_scripts.json</small></div>
+      <div class="agent a-design">UX_UI_Designer<small>01_ux.json</small></div>
+      <div class="agent a-design">Level_Designer<small>03_grid · 04_dev · 05_props</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>BUILD</h3>
+      <div class="agent a-tech">Lead_Tech_Director<small>02_palette.json (PID)</small></div>
+      <div class="agent a-tech">Physics_Programmer<small>batch géo · 06_audit</small></div>
+      <div class="agent a-tech">Gameplay_Programmer<small>.verse 0 Error</small></div>
+      <div class="agent a-tech">AI_Programmer<small>PNJ / patrouilles</small></div>
+      <div class="agent a-tech">UI_Programmer<small>HUD Verse</small></div>
+      <div class="agent a-tech">Graphics_Programmer<small>éclairage / rendu</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>POLISH</h3>
+      <div class="agent a-audio">Audio_Director<small>07_audio_plan</small></div>
+      <div class="agent a-audio">Composer<small>07_music_cues</small></div>
+      <div class="agent a-audio">Sound_Designer<small>07_sfx_placement</small></div>
+      <div class="agent a-audio">Voice_Designer<small>07_voice_lines</small></div>
+      <div class="agent a-tech">Graphics_Programmer<small>habillage final</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>QA</h3>
+      <div class="agent a-chief">Producer<small>Generator-Critic pivots</small></div>
+      <div class="agent a-tech">Physics_Programmer<small>0 overlap · 0 floating</small></div>
+      <div class="agent a-tech">Engine_Programmer<small>re-preflight MCP</small></div>
+    </div>
+
+    <div class="phase">
+      <h3>SHIPPED</h3>
+      <div class="agent a-chief">Producer<small>release + log trajectoire</small></div>
+      <div class="agent a-design">Writer_Scénariste<small>page itch.io</small></div>
+    </div>
+
+  </div>
+  <div class="src">Retours arrière autorisés si QA échoue. Le Producer est le SEUL à lire/écrire project-state.json et à parler à l'utilisateur. Chaque autre agent = fonction pure handoff_in → handoff_out.</div>
+
+  <!-- ============ C. CONTRAT HANDOFF ============ -->
+  <h2>C · Le contrat qui circule sur le bus (uefn.handoff.v1)</h2>
+  <div class="grid2">
+    <div class="box">
+<pre><span class="cm">// 1 fichier par passage · ≤ 4000 tokens · output-only</span>
+{
+  <span class="key">"$schema"</span>: <span class="str">"uefn.handoff.v1"</span>,
+  <span class="key">"handoff_id"</span>: <span class="str">"H-DESIGN-004"</span>,
+  <span class="key">"from"</span>: <span class="str">"Level_Designer"</span>,
+  <span class="key">"to"</span>: [<span class="str">"Physics_Programmer"</span>],
+  <span class="key">"artifact"</span>: <span class="str">"03_grid.json"</span>,
+  <span class="key">"summary_short"</span>: <span class="str">"≤200c — seul champ relu mot à mot"</span>,
+  <span class="key">"payload"</span>: { <span class="cm">/* livrable brut, atomique */</span> },
+  <span class="key">"constraints"</span>: { <span class="key">"z_floor"</span>:0, <span class="key">"z_ceiling"</span>:400 },
+  <span class="key">"golden_example_ref"</span>: <span class="str">"examples/level/3x3.json"</span>,
+  <span class="key">"acceptance"</span>: [<span class="str">"0_overlap"</span>,<span class="str">"0_floating"</span>],
+  <span class="key">"next_step_hint"</span>: <span class="str">"batch collision avant Verse"</span>
+}</pre>
+    </div>
+    <div class="box">
+      <h4>Règles anti context-rot (Flash)</h4>
+      <ul>
+        <li><b>Black box</b> : on partage l'output, jamais le raisonnement ni le transcript.</li>
+        <li><b>≤ 4000 tokens</b> par handoff ; au-delà → fichier référencé par son <b>nom</b>.</li>
+        <li><b>Faits atomiques</b> en JSON structuré, zéro prose.</li>
+        <li><b>golden_example_ref</b> = In-Context Distillation (1 exemple parfait).</li>
+        <li>Stable → prompt système ; transitoire → fichier d'état.</li>
+      </ul>
+      <div class="src">WP3 p.9 (context rot) · p.18 (black box) · p.22-24 (compaction) · p.34/p.45 (JSON schéma) · p.61 (stable vs transitoire).</div>
+    </div>
+  </div>
+
+  <!-- ============ D. GARDE-FOUS ============ -->
+  <h2>D · Contrôle, anti-boucle & sécurisation MCP</h2>
+  <div class="grid3">
+    <div class="box">
+      <h4><span class="tag t-loop">ANTI-LOOP</span></h4>
+      <ul>
+        <li>Cap d'itérations / phase (dur).</li>
+        <li><b>Détection de delta</b> : 2 tours = même payload → STOP.</li>
+        <li><code>before_tool_callback</code> avant chaque dispatch.</li>
+        <li>Le garde-fou est du <b>CODE</b> hors du modèle.</li>
+      </ul>
+      <div class="src">WP1 p.12/p.35/p.38 · WP4 p.20 (repetitive/communication loops).</div>
+    </div>
+    <div class="box">
+      <h4><span class="tag t-valid">VALIDATEURS</span></h4>
+      <ul>
+        <li>Python coche schéma + acceptance.</li>
+        <li><b>Jamais</b> d'auto-check par le Flash.</li>
+        <li>Error state (isError / 4xx / vide) = STOP, pas "comme si OK".</li>
+        <li>Generator-Critic sur les 3 pivots seulement.</li>
+      </ul>
+      <div class="src">WP2 p.29/p.30 · WP4 p.20 (error state ignoré).</div>
+    </div>
+    <div class="box">
+      <h4><span class="tag t-mcp">MCP SÉCURISÉ</span></h4>
+      <ul>
+        <li>Allowlist + outils épinglés (mcp-inventory).</li>
+        <li>Tasks-level, pas API calls ; params courts.</li>
+        <li>0 coordonnée calculée par le LLM → Python.</li>
+        <li>Least privilege · secrets hors contexte · output sanitizé.</li>
+      </ul>
+      <div class="src">WP2 p.9/p.15-19/p.26/p.41/p.43/p.44/p.47.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h4 style="margin-bottom:10px"><span class="tag t-hitl">GATES HITL</span> &nbsp;4 points d'arrêt obligatoires avec l'utilisateur</h4>
+    <div>
+      <span class="pill">1 · Validation du brief (Creative_Director)</span>
+      <span class="pill">2 · Validation du GDD (Game_Designer)</span>
+      <span class="pill">3 · Validation de l'architecture technique (Lead_Programmer)</span>
+      <span class="pill">4 · Avant TOUTE écriture destructrice dans Unreal</span>
+    </div>
+    <div class="src">WP1 p.26 · WP2 p.36/p.43 · WP5 p.14/p.18. Ne jamais se fier au flag <code>destructiveHint</code> du serveur (WP2 p.27).</div>
+  </div>
+
+  <!-- ============ E. ROUTING ============ -->
+  <h2>E · Routing des modèles</h2>
+  <div class="grid3">
+    <div class="box" style="border-top:4px solid var(--chief)">
+      <h4>FRONTIER</h4>
+      <ul><li>1 agent : le Producer.</li><li>Planification de phase, validation de contrat, arbitrage des pivots, questions utilisateur.</li></ul>
+    </div>
+    <div class="box" style="border-top:4px solid var(--design)">
+      <h4>FLASH</h4>
+      <ul><li>20 spécialistes.</li><li>Génération de payload, rédaction, exécution MCP bornée, extraction structurée.</li></ul>
+    </div>
+    <div class="box" style="border-top:4px solid var(--tech)">
+      <h4>FLASH-LITE / JUDGE</h4>
+      <ul><li>Étage de tri bon marché.</li><li>Filtre les sorties Flash <b>avant</b> que le Frontier ne les lise (schéma cassé, JSON invalide).</li></ul>
+    </div>
+  </div>
+  <div class="src">WP1 p.19-20 (routing frontier↔Flash) · p.38 (Gemini as a Judge / Flash-Lite).</div>
+
+  <!-- ============ F. OBSERVABILITÉ ============ -->
+  <h2>F · Observabilité (version jam allégée)</h2>
+  <div class="card">
+    <div class="row" style="justify-content:flex-start;gap:12px">
+      <div class="node n-mcp" style="min-width:200px">OBSERVE<small>log chaque handoff + appel MCP + résultat</small></div>
+      <div class="arrow">→</div>
+      <div class="node n-valid" style="min-width:200px">ACT<small>corrige / rejoue la mission</small></div>
+      <div class="arrow">→</div>
+      <div class="node n-hitl" style="min-width:200px">EVOLVE<small>golden example mis à jour</small></div>
+    </div>
+    <div class="src" style="margin-top:12px">Passer du <b>Black Box</b> (« c'est faux ») au <b>Glass Box</b> (« faux <i>parce que</i> l'agent X a mal lu le tool result Y ») — WP4 p.21 · boucle Observe→Act→Evolve WP5 p.19-20.</div>
+  </div>
+
+  <div class="foot">
+    <b>Lecture rapide :</b> un seul hub (le Producer) · les 20 agents sont des fonctions pures qui ne se parlent jamais · toute la mémoire vit sur le disque (bus JSON) · un seul agent actif à la fois pour tenir en RAM · les maths et les validations sont du code déterministe, jamais du LLM · 4 gates humains · tout est loggué pour déboguer.<br><br>
+    Schéma dérivé des 5 White Papers Google « Agents » (Introduction · Tools & MCP · Context Engineering · Quality · Prototype to Production). Les valeurs <code>4000 tokens</code>, <code>cap d'itérations</code> et <code>cooldown</code> sont des adaptations maison aux contraintes du studio, pas des normes littérales de Google.
+  </div>
+
+</div>
+</body>
+</html>
