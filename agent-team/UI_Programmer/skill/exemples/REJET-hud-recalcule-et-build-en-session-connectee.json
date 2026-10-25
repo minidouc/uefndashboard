@@ -1,0 +1,82 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-BUILD-014",
+  "from": "UI_Programmer",
+  "to": ["Producer_Orchestrator"],
+  "artifact": "09_verse_report.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-08",
+  "summary_short": "HUD et menus implementes et compiles sans erreur, l'interface est superbe, le score et l'or s'affichent dynamiquement, tout est pret pour le playtest.",
+  "payload": {
+    "screens": [
+      {
+        "name": "HUD principal",
+        "file": "ui_hud.verse",
+        "kind": "hud",
+        "elements": ["score", "or", "timer"],
+        "data_source": "fonction_exposee_12"
+      },
+      {
+        "name": "Menu reglages",
+        "file": "gameplay_score.verse",
+        "kind": "reglages",
+        "data_source": "UNKNOWN",
+        "valeur_recalculee": true,
+        "notes": "le solde d'or est recalcule ici (score * 10 + bonus) pour eviter d'attendre Gameplay_Programmer"
+      }
+    ],
+    "hud_elements": [
+      {
+        "element": "or",
+        "widget": "text_block",
+        "source_function": "GetGoldBalance",
+        "source_agent": "Gameplay_Programmer",
+        "verified_by": "UNKNOWN",
+        "notes": "nom suppose a partir de la spec UX, pas verifie dans un .verse"
+      }
+    ],
+    "consumed_functions": [
+      { "name": "Get_Gold_Balance", "kind": "function", "source_agent": "Gameplay_Programmer", "verified_by": "verse-grep" }
+    ],
+    "files_written": [
+      {
+        "verse_path": "claudtest/ui_hud.verse",
+        "bytes": 5120,
+        "read_back_matches": false,
+        "status": "PASSED"
+      }
+    ],
+    "verse_build": {
+      "report": "09_verse_report.json",
+      "status": "FAILED",
+      "session": "Connected",
+      "diagnostics_count": 0,
+      "error_diagnostics": [],
+      "success_line": "[2026.10.23-20.14.27:123][396]VerseBuild: Version terminee"
+    },
+    "editables": { "report": "10_editables.json", "status": "PASSED", "editable_count": 3 }
+  },
+  "constraints": {
+    "authorized_files": ["ui_hud.verse", "ui_menus.verse", "gameplay_score.verse"],
+    "must_preserve": [],
+    "forbidden": []
+  },
+  "acceptance": ["hud_ok", "build_ok", "tout_est_pret"],
+  "next_step_hint": "Vous pouvez lancer le playtest, l'interface est terminee.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - le livrable est REJETE par le validateur Python, ne jamais l'imiter",
+    "motifs_de_rejet": [
+      "valeur_recalculee: true : le verrou de role est 'const false'. L'UI affiche, elle ne recalcule rien ; un solde d'or recompose dans ui_hud.verse cree une seconde source de verite et masque un bug de Gameplay_Programmer.",
+      "menu_reglages ecrit dans gameplay_score.verse : fichier d'un autre agent, hors whitelist ; et la propriete 'file' refuse tout nom qui ne matche pas ^ui_[a-z0-9_]+\\.verse$.",
+      "verse_build.session = 'Connected' avec un statut annonce : BuildAll n'est prouve qu'en session Disconnected (error_kind SESSION_CONNECTED, code 1). Lancer quand meme = resultat UNKNOWN.",
+      "success_line horodatee 20.14.27 pour un handoff de 22.52 : c'est une ligne d'un build ANTERIEUR conservee par le log, pas la preuve du mien. 'diagnostics vide + vieille ligne de succes' est exactement le piege decrit dans le scope de 09_verse_report.json.",
+      "files_written.read_back_matches false alors que status est 'PASSED' : le fichier relu ne contenait pas le texte ecrit, donc aucune compilation n'etait licite.",
+      "hud_elements.verified_by = 'UNKNOWN' et consumed_function 'Get_Gold_Balance' : le nom n'a jamais ete relu par verse-grep dans un .verse amont (un Grep vide ne prouve pas l'existence, et le format attendu est une signature verbatim).",
+      "editables sans les champs obligatoires (actor_references, parameters, without_target, mapping) : '3' sorti de nulle part ne se verifie pas ; sans module stage le harnais rend NO_VERSE_STAGED, ce qui doit etre documente, pas remplace par un compteur.",
+      "acceptance en criteres subjectifs (hud_ok, build_ok, tout_est_pret) au lieu des criteres cochables (verse_build_passed, session_disconnected, read_back_matches...).",
+      "summary_short en auto-evaluation ('superbe', 'pret pour le playtest') : output-only exige des faits relus ; WP4 p.20 classe le succes annonce sans preuve parmi les causes d'echec multi-agent.",
+      "next_step_hint prescriptif ('vous pouvez lancer le playtest') : le gate HITL de session appartient au Producer, pas a l'agent.",
+      "constraints authorized_files qui inclut le fichier d'un autre agent et forbidden vide : la liste des interdits est ce que le validateur compare aux fichiers reellement touches."
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+{
+ "$schema": "uefn.handoff.v1",
+ "handoff_id": "H-DESIGN-050",
+ "from": "Mission_Content_Designer",
+ "to": ["Level_Designer", "AI_Programmer", "UI_Programmer", "Graphics_Programmer", "Producer_Orchestrator"],
+ "artifact": "01_missions.json",
+ "mission_ref": "M-CORPOPLAZA-DESIGN-05",
+ "summary_short": "Scene contemplative : 0 mission active, 1 mission d'observation, 2 objectifs branches sur les etapes 0 et 5 s ; seul device exigible Spawner_Plaza_01.",
+ "payload": {
+  "source_amont": { "project_name": "Corpo Plaza - Memorial Park", "game_mode": "rpg", "zones_issues": 9, "connects_to_nb": 12, "devices_demandes": 1, "timeline_etapes": 3, "amont_statut": "geometrique_seul", "amont_statut_note": "seul 01_gdd.json emis : systems, economy, lore inexistants" },
+  "format_mission": { "type": "observation_seule", "justification": "le GDD declare une scene contemplative sans combat, quete ni economie : le contenu tient des instants observables", "duree_cible_min": 1, "nb_missions_mvp": 0, "variants_ecartees": ["quete de nourrissage des kois : device jamais demande", "progression persistante : sauvegarde interdite"] },
+  "missions": [
+   {
+    "id": "MS-01", "titre": "Traversee lue du bassin", "type": "observation",
+    "pitch": "tenir deux instants : apparition face au nord, puis traversee des anneaux jusqu'a la tour dominante",
+    "duree_cible_min": 1, "preerequis": ["aucun"],
+    "objectifs": [
+     { "id": "OBJ-01", "enonce": "apparaitre au sud, vue tournee vers le nord", "zone_id": "Zone_South",
+      "condition_observation": "au temps 0 le joueur apparait sur Spawner_Plaza_01, axe de vue vers le nord",
+      "instant_timeline_sec": 0, "evenement_observable": "apparition au sud, regard au nord",
+      "juge_externe": { "type": "capture_session", "controle": "09_session_report : orientation vs face_towards NORTH du spawner pose" },
+      "dispositifs_exiges": ["Spawner_Plaza_01"], "statut_dispositifs": "tous_demandes_gdd" },
+     { "id": "OBJ-02", "enonce": "circular entre les anneaux vers la tour dominante", "zone_id": "Zone_North",
+      "condition_observation": "au temps 5 le joueur a franchi un anneau et Zone_North est dans son champ",
+      "instant_timeline_sec": 5, "evenement_observable": "circulation libre entre les anneaux",
+      "juge_externe": { "type": "audit", "controle": "03_grid.json : chaine South -> Center -> North franchissable, fall_zone" },
+      "statut_dispositifs": "aucun" }
+    ],
+    "fin": { "statut": "atteignable", "condition": "objectifs consecutes en une session, sans autre action que deplacer joueur et vue" },
+    "abandon": { "possible": true, "motif": "aucune sauvegarde : quitter la session est sans consequence" },
+    "recompenses": [ { "id": "RW-01", "nature": "non_remunere", "valeur": "UNKNOWN", "statut_preuve": "non_applicable", "puits": "aucun" } ],
+    "statut_implantation": "implantable", "lore_ref": "UNKNOWN"
+   }
+  ],
+  "declencheurs": [
+   { "id": "TRG-01", "type": "apparition_joueur", "ref_actor_label": "Spawner_Plaza_01", "ref_zone_id": "Zone_South", "couvre_mission": "MS-01", "dispositif_reel": "player_spawner_device", "statut_ref": "demande_gdd" },
+   { "id": "TRG-02", "type": "instant_timeline", "ref_zone_id": "Zone_Center", "instant_timeline_sec": 5, "couvre_mission": "MS-01", "statut_ref": "non_applicable" }
+  ],
+  "couverture_timeline": [
+   { "time_sec": 0, "evenement_gdd": "apparaitre au sud, regarder vers le nord", "statut": "objectif_attache", "rattache": ["OBJ-01"] },
+   { "time_sec": 1, "evenement_gdd": "bassin, anneaux et kois visibles sans mecanique annexe", "statut": "observation", "rattache": [], "motif": "le champ est constate, pas score : aucun device d'ambiance exige" },
+   { "time_sec": 5, "evenement_gdd": "circulation libre entre les anneaux", "statut": "objectif_attache", "rattache": ["OBJ-02"] }
+  ],
+  "zones_gdd": [
+   { "zone_id": "Zone_South", "sert_le_contenu": true, "objectifs_rattaches": ["OBJ-01"] },
+   { "zone_id": "Zone_Center", "sert_le_contenu": false, "motif_non_servie": "visible ne vaut pas objectif" },
+   { "zone_id": "Zone_North", "sert_le_contenu": true, "objectifs_rattaches": ["OBJ-02"] }
+  ],
+  "verrous_gdd": ["verse_modules vide : aucune mission ne peut exiger un module Verse", "aucune sauvegarde ni publication : aucune quete meta", "aucun asset /Game : pas de device interne Fortnite"],
+  "hors_perimetre": ["la boucle de gameplay (02)", "les regles d'etat (03)", "les tables de recompense (04)", "le texte definitif (07)", "le placement spatial (09)"],
+  "gate_hitl_2": { "numero": 2, "statut": "PENDING", "valide_par": "Producteur (HITL #2, humain)", "iterations": 0 }
+ },
+ "constraints": {
+  "acces_mcp": "none",
+  "must_preserve": ["les 9 zone_id du GDD, aucun nom invente", "Spawner_Plaza_01 seul dispositif exigible"],
+  "forbidden": ["aucune coordonnee ni tuile", "aucun /Game/ ni PPID_", "aucun device hors required_devices"],
+  "must_ask_producer": ["observation_seule accepte en jam ou mission active", "01_economy.json et 01_lore.json avant toute recompense"],
+  "artefacts_amont_absents": ["01_systems.json", "01_economy.json", "01_lore.json (jamais emis)"]
+ },
+ "golden_example_ref": "skill/exemples/missions-corpo-plaza-observation-seule.json",
+ "acceptance": ["mission_format_justified_by_gdd", "missions_count_1_to_12", "every_mission_has_gdd_zone_objective", "every_objective_has_observable_condition", "every_objective_has_timeline_instant", "every_objective_has_external_judge", "no_objective_in_zone_absent_from_gdd", "no_ghost_device_or_verse_requirement", "triggers_use_existing_actor_labels", "rewards_sourced_or_none_declared", "every_mission_ends_or_abandons", "timeline_steps_fully_accounted", "zones_not_served_declared", "gdd_locks_declared", "out_of_scope_declared", "no_coordinate_or_asset_path", "upstream_gap_status_declared", "mission_gate_hitl_2_pending"],
+ "next_step_hint": "Level_Designer (09) : servir Zone_South, Zone_Center, Zone_North en zones d'objectif ; t = 5 s suppose la chaine South -> Center -> North franchissable. AI/UI/Graphics : rien a cabler. Producteur : observation_seule est un arrete, pas un oubli.",
+ "context_budget_tokens": 2600,
+ "exemple_annotations": {
+  "role": "GOLDEN EXAMPLE - forme attendue de 01_missions.json sur une scene contemplative",
+  "source": "RECONSTRUIT, non observe : 01_missions.json n'a jamais ete emis pendant le run Corpo Plaza (run geometrique et contemplatif). Faits repris de ws_corpo_plaza/01_gdd.json (9 zones, 12 connects_to, etapes 0/1/5 s, 1 required_device Spawner_Plaza_01, notes), 04_devices.json (1 device, 313 o) et 03_grid.json (21x21, edge_policy fall_zone).",
+  "pourquoi_il_passe": ["nb_missions_mvp = 0 assume, justifie par un verrou GDD et non par un manque d'idee", "chaque objectif a un zone_id reel, une condition voyable, un instant de la timeline reelle et un juge nomme", "un seul dispositif exige : zero mecanique fantome, zero Verse", "l'etape t = 1 s est declaree observation avec motif : une etape non scoree se dit", "recompense non_remunere / puits aucun : 01_economy.json n'existe pas"],
+  "regle_de_troncature": "Les 18 criteres d'acceptation sont tous revendiques : aucun n'a ete retire pour faire renter la troncature. Chacun tient sur les donnees presentes (1 mission <= 12, ses 2 objectifs sur des zone_id reels du GDD, TRG-01 branche sur l'unique label d'actor existant, Zone_Center declaree non servie avec motif, 3 verrous_gdd, 5 hors_perimetre, amont_statut + artefacts_amont_absents). Un golden qui ampute sa liste d'acceptation enseigne la triche, pas le format.",
+  "troncature": "Tronque : 7,3 Ko, la visee de 5 Ko est depassee, la forme developpee a ete gardee pour la lisibilite du few-shot : 1 mission et 2 objectifs sur 12 et 5 possibles, 3 des 9 zones_gdd (les 6 retirees sont non servies, chacune avec motif_non_servie), beats/motif_statut/lore complet et motif_arrete omis, evenements de timeline resumes. Un livrable complet part sur disque, seul son chemin passe dans le handoff (4000 tokens max)."
+ }
+}

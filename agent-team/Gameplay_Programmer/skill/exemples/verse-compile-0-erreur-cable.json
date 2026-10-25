@@ -1,0 +1,159 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-BUILD-021",
+  "from": "Gameplay_Programmer",
+  "to": [
+    "AI_Programmer",
+    "UI_Programmer",
+    "Producer_Orchestrator"
+  ],
+  "artifact": "09_verse_report.json",
+  "mission_ref": "M-1V1BUILDFIGHT-BUILD-08",
+  "summary_short": "game_manager_device.verse ecrit puis relu (2442 octets). verse-build PASSED sans diagnostic, ligne de succes 23.32.21 recente. 6 editables, 0 sans cible, 1 binding relu sur la cible, 0 AUTO_VERIFIED.",
+  "payload": {
+    "report": {
+      "timestamp": "2026-10-20T23:32:16.670455+00:00",
+      "command": "verse-build",
+      "session": "Disconnected",
+      "status": "PASSED",
+      "diagnostics_count": 0,
+      "error_diagnostics": [],
+      "build_log_lines": [
+        "[2026.10.20-23.32.21:205][724]VerseBuild: SUCCES -- Version terminee."
+      ],
+      "success_lines": [
+        "[2026.10.20-23.32.21:205][724]VerseBuild: SUCCES -- Version terminee."
+      ],
+      "scope": "une liste de diagnostics vide ne suffit PAS : il faut aussi une ligne de succes recente dans VerseBuild. Le log garde les builds precedents : comparer l'horodatage a 2026-10-20T23:32:16.670455+00:00"
+    },
+    "files": [
+      {
+        "file_name": "game_manager_device.verse",
+        "verse_project_path": "/1a52cfc2-.../game_manager_device.verse",
+        "class_name": "game_manager_device",
+        "class_kind": "creative_device",
+        "declared_in_palette": true,
+        "read_back_matches": true,
+        "bytes": 2442,
+        "editable_names": [
+          "DebugSelfTest",
+          "Spawner_P1_01",
+          "Granter_Loadout_01",
+          "Barrier_Center_01",
+          "Round_Timer_01"
+        ],
+        "public_functions": [
+          "OnPlayerSpawned",
+          "StartNewRound",
+          "OnRoundTimerFinished",
+          "RunSelfTest"
+        ]
+      }
+    ],
+    "editables": {
+      "timestamp": "2026-10-21T00:01:13+00:00",
+      "command": "list-editables",
+      "status": "PASSED",
+      "editable_count": 6,
+      "actor_references": 5,
+      "parameters": 1,
+      "without_target": [],
+      "wiring_errors": [],
+      "mapping": [
+        {
+          "file": "game_manager_device.verse",
+          "editable": "Spawner_P1_01",
+          "type": "player_spawner_device",
+          "kind": "ACTEUR",
+          "declared_in_04_devices": true,
+          "asset_key": "player_spawner",
+          "refPath": "/1a52cfc2-8485-44f7-8516-3583d0b0c33c/testmcp.testmcp:PersistentLevel.BP_Creative_Player_Spawner_Prop_C_UAID_00FFA9FB53741B0D03_1543002450",
+          "wiring": "MANUEL"
+        }
+      ],
+      "scope": "seules les references d'ACTEUR doivent viser un acteur pose : un @editable primitif est un parametre a regler. Le cablage automatique est UNKNOWN : liste a cabler a la main."
+    },
+    "wiring": {
+      "timestamp": "2026-10-21T00:01:09+00:00",
+      "status": "PASSED",
+      "error_count": 0,
+      "wired": [
+        {
+          "from": "Round_Timer_01",
+          "event": "OnSuccess",
+          "to": "Barrier_Center_01",
+          "function": "Disable",
+          "read_back": {
+            "sourceEvent": "OnSuccess",
+            "targetFunction": "Disable"
+          }
+        }
+      ],
+      "errors": [],
+      "not_placed": [],
+      "scope": "cablage evenement -> fonction entre devices poses. Les canaux (GameplayTagContainer) et les references @editable ne sont pas couverts."
+    },
+    "wired_devices_count": 0,
+    "public_entries": [
+      "OnPlayerSpawned",
+      "StartNewRound",
+      "OnRoundTimerFinished",
+      "RunSelfTest"
+    ],
+    "events_for_agent13": [
+      "StartNewRound() : relancer une manche",
+      "IsRoundActive : a tester avant de distribuer une recompense"
+    ]
+  },
+  "constraints": {
+    "only_verse_files": [
+      "game_manager_device.verse"
+    ],
+    "must_not_move": [
+      "Spawner_P1_01",
+      "Barrier_Center_01",
+      "Round_Timer_01",
+      "Granter_Loadout_01"
+    ],
+    "forbidden": [
+      "aucun deplacement d'acteur",
+      "aucune session lancee",
+      "aucun --apply sans accord Producer",
+      "PNJ / fort_character = agent 13",
+      "canvas = agent 14"
+    ],
+    "session_state_required": "Disconnected",
+    "tuning_source": "01_gdd.json (gameplay_timeline_sec, verse_modules) + 04_devices.json"
+  },
+  "acceptance": [
+    "0_error_diagnostics",
+    "success_line_present",
+    "session_disconnected",
+    "files_rewritten_read_back",
+    "files_in_palette_scope",
+    "api_symbols_resolved",
+    "0_editable_without_target",
+    "0_wiring_errors",
+    "bindings_read_back_on_target",
+    "refpath_from_04_devices",
+    "public_entries_named",
+    "no_actor_moved"
+  ],
+  "next_step_hint": "Les 5 references d'acteur sont MANUEL : table a cabler dans l'editeur, ou AUTO_VERIFIED par list-editables --apply sur decision du Producteur.",
+  "context_budget_tokens": 2000,
+  "golden_example_ref": "skill/exemples/verse-compile-0-erreur-cable.json",
+  "exemple_annotations": {
+    "role": "GOLDEN - livrable recevable de l'agent 12",
+    "provenance": "Donnees reelles du run 1v1-buildfight (2026-10-21) : 09_verse_report.json, 10_editables.json, 08_wiring_report.json, _verse_written.json.",
+    "troncatures": "build_log_lines 15 -> 1 ; success_lines 5 -> 1 ; mapping 6 lignes -> 1 ; wiring_errors absent du fichier du 2026-10-21, mis a [] comme le CLI actuel.",
+    "pourquoi_ca_passe": [
+      "session 'Disconnected' relue AVANT BuildAll ; 0 diagnostic ET success_lines 23.32.21 posterieure a l'appel 23:32:16",
+      "read_back_matches true, 2442 octets mesures ; actor_label exacts de 04_devices.json, refPath relu de _placed.json",
+      "binding prouve par ListEventBindings sur la CIBLE, pas par le retour null de AddEventBinding",
+      "wired_devices_count = 0 : rien en AUTO_VERIFIED, donc rien annonce cable",
+      "files_in_palette_scope : files[0].declared_in_palette = true, le .verse ecrit est dans le perimetre declare ; api_symbols_resolved : targetFunction 'Disable' relue sur la cible Barrier_Center_01 et les 4 public_functions relues du fichier -- les symboles appeles sont prouves existants, pas supposes. Ces deux criteres sont revendiques parce que le payload les montre ; la troncature n'en a elimine aucun."
+    ],
+    "a_ne_pas_sur_vendre": "BuildAll compile TOUT le Verse : mon perimetre est payload.files. Un code qui compile n'a pas ete execute en jeu (GetClientLogEntries hors session : 'No client log was found...').",
+    "budget": "context_budget_tokens = 2000, mesure sur deux lectures. Lecture contrat : le handoff hors exemple_annotations fait 4033 caracteres (~1152 tokens a 3,5 car/token). Lecture few-shot : le fichier entier lu tel quel fait 6838 caracteres (~1954 tokens). 2000 couvre la pire des deux et reste sous le plafond 4000 ; les 900 puis 1400 declares avant ne couvraient que la premiere."
+  }
+}

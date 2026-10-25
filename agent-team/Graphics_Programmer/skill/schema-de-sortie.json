@@ -1,0 +1,377 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Graphics_Programmer.v1",
+  "title": "Graphics_Programmer - contrat du livrable d'ambiance visuelle (devices PID_/PPID_, proprietes relues, preuves par capture)",
+  "description": "Schema de sortie de l'agent Graphics_Programmer (agent 15, pole Technique, phase POLISH). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte les devices d'ambiance poses et signes, le rapport de proprietes relu, et le verdict d'image appuye sur une capture reellement lue. Validable par un validateur Python, jamais par le modele.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Graphics_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": [
+        "05_visuals.json",
+        "07_properties_report.json"
+      ],
+      "description": "Un seul artefact annonce par handoff (regle : une seule mission a la fois). Les captures et le rapport de proprietes sont miroirs dans payload."
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["visual_devices", "properties", "snapshot"],
+      "properties": {
+        "visual_devices": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/definitions/visual_device" },
+          "description": "Tout ce que cet agent a pose. Un acteur present dans l'Outliner et absent de cette liste est un motif de rejet (niveau rejouable / idempotent exige)."
+        },
+        "theme_reference": { "$ref": "#/definitions/theme_reference" },
+        "properties": { "$ref": "#/definitions/properties_report" },
+        "snapshot": { "$ref": "#/definitions/snapshot" },
+        "legality": { "$ref": "#/definitions/legality" },
+        "iterations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["passe", "signe", "correction"],
+            "properties": {
+              "passe": { "type": "integer", "minimum": 1 },
+              "signe": { "type": "string", "minLength": 1, "maxLength": 300 },
+              "correction": { "type": "string", "minLength": 1, "maxLength": 300 },
+              "effet_relu": { "type": "string", "maxLength": 300 }
+            }
+          },
+          "description": "Boucle reelle capture -> diagnostic -> reglage -> recapture. Une passe sans effet relu doit apparaitre."
+        },
+        "not_sourced": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Champs volontairement en UNKNOWN avec la raison (ex. aucun PID_ de skydome ou de brouille trouve au catalogue)."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["must_preserve", "forbidden"],
+      "properties": {
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "legal_asset_prefixes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Prefixes de catalogues autorises (PID_ / PPID_ exposes aux createurs UEFN). Un chemin /Game/Athena ou /Game/Environments est refuse."
+        },
+        "audit_amont_requis": {
+          "const": "06_audit_report.json PASSED source live"
+        },
+        "session_state_interdite": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Etats de session ou aucune ecriture n'est licite (Connected, Connecting, UpdatingContent)."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "audit_amont_passee_live",
+          "devices_tous_consignes",
+          "asset_paths_pid_ou_ppid",
+          "refpath_persistes",
+          "legalite_0_acteur_illegal",
+          "proprietes_toutes_relues",
+          "aucune_property_inventee",
+          "camera_relue",
+          "png_lu",
+          "verdict_fonde_sur_capture",
+          "relance_idempotente",
+          "aucun_reglage_hors_spec"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "visual_device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "role_visuel", "asset_path", "placement_mode", "status"],
+      "properties": {
+        "actor_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]+$",
+          "description": "Label Outliner sans espace : c'est la cle de _placed.json et de la relance idempotente."
+        },
+        "role_visuel": {
+          "enum": [
+            "ambiance_globale",
+            "eclairage_localise",
+            "ciel_skybox",
+            "brouillard",
+            "post_process",
+            "lumiere_couleur",
+            "enseigne_emissive",
+            "autre"
+          ]
+        },
+        "asset_path": {
+          "type": "string",
+          "pattern": "^/.+\\.(PID_|PPID_)[A-Za-z0-9_.]+$",
+          "description": "Chemin exact rendu par search-playsets ; le motif impose un identifiant PID_ ou PPID_ et donc exclut /Game/Athena et /Game/Environments."
+        },
+        "source_recherche": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Requete qui a rendu ce chemin (ex. search-playsets --query 'Sunburst lamp' --type ALL -> search_lamp.json). Un chemin sans source = UNKNOWN."
+        },
+        "placement_mode": { "enum": ["WORLD", "TILE_ANCHOR", "RELATIVE_TO_ACTOR"] },
+        "world_location_cm": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" },
+          "description": "Exige en mode WORLD ; la tuile est derivee par compile-transforms, jamais calculee par l'agent."
+        },
+        "tile": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "integer" } },
+        "ref_path": {
+          "type": "string",
+          "description": "refPath persiste dans _placed.json apres pose. Un status 'placed' sans ref_path est un motif de rejet."
+        },
+        "xform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["location", "rotation"],
+          "properties": {
+            "location": { "type": "object", "additionalProperties": true },
+            "rotation": { "type": "object", "additionalProperties": true },
+            "scale": { "type": "object", "additionalProperties": true }
+          },
+          "description": "Transform RELUE de l'acteur pose (pas la transform demandee)."
+        },
+        "status": { "enum": ["placed", "skipped", "UNKNOWN"] },
+        "properties_tentees": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/property_attempt" },
+          "description": "Une entree par propriete visee sur ce device, y compris celles qui n'ont pas pu etre ecrites."
+        },
+        "consigne_dans_05_visuals": { "const": true },
+        "notes": { "type": "string", "maxLength": 400 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["status"],
+            "properties": { "status": { "const": "placed" } }
+          },
+          "then": { "required": ["ref_path", "xform"] },
+          "description": "Un device pose doit porter son refPath persiste et sa transform RELUE, sinon la relance n'est pas idempotente."
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["placement_mode"],
+            "properties": { "placement_mode": { "const": "WORLD" } }
+          },
+          "then": { "required": ["world_location_cm"] },
+          "description": "En mode WORLD l'ancre est une position monde explicite ; la tuile derivee sert uniquement aux rapports."
+        }
+      ]
+    },
+    "property_attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["property", "target", "read_back", "status"],
+      "properties": {
+        "property": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Nom repris tel quel de list_properties. Un nom absent de cette liste doit apparaitre avec status NOT_FOUND, jamais remplace par un nom invente."
+        },
+        "target": {},
+        "read_back": {},
+        "status": {
+          "enum": ["RELUE_CONFORME", "MISMATCH", "UNREADABLE", "NOT_FOUND", "NON_TENTE"],
+          "description": "Seul RELUE_CONFORME autorise a dire 'applique'. La concordance target/read_back est verifiee par le validateur, pas par l'agent."
+        },
+        "detail": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "theme_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "attendu", "obtenu"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "attendu": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "obtenu": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "ecart_assume": { "type": "string", "maxLength": 400 }
+      },
+      "description": "Le theme vient de 00_vision.json (ou du handoff de Creative_Director) : attendu cite la source, obtenu decrit ce que la capture montre."
+    },
+    "properties_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report", "status", "error_count", "applied", "errors", "not_placed", "scope"],
+      "properties": {
+        "report": { "const": "07_properties_report.json" },
+        "status": { "enum": ["PASSED", "FAILED"] },
+        "error_count": { "type": "integer", "minimum": 0 },
+        "applied": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["actor", "property", "written", "read_back"],
+            "properties": {
+              "actor": { "type": "string", "minLength": 1 },
+              "property": { "type": "string", "minLength": 1 },
+              "written": {},
+              "read_back": {}
+            }
+          },
+          "description": "Forme reellement emise par apply-properties : une ligne n'existe que si get_properties a rendu la cle."
+        },
+        "errors": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "not_placed": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "couvre_devices_verse": {
+          "const": false,
+          "description": "Verrou de perimetre : SetDeviceProperty n'est pas couvert par apply-properties (outil inconnu, jamais teste sur un creative_device)."
+        },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["captures", "verdict", "appuye_par"],
+      "properties": {
+        "captures": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/capture" }
+        },
+        "verdict": { "enum": ["conforme", "approxime", "non_conforme", "UNKNOWN"] },
+        "appuye_par": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Noms des PNG relus qui soutiennent le verdict. Un verdict sans capture listee est rejete."
+        },
+        "scope": { "type": "string", "maxLength": 400 }
+      },
+      "description": "Le controle visuel : le verdict est une lecture d'image, pas une impression. Une capture surexposee ou coupee ne prouve rien et doit apparaitre avec son correction."
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "bytes", "camera_requested", "camera_read_back", "image_lue", "observations"],
+      "properties": {
+        "file": { "type": "string", "pattern": "^[A-Za-z0-9_-]+\\.png$" },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "command": { "enum": ["visual-snapshot", "capture_view.py"] },
+        "camera_requested": { "type": "object", "additionalProperties": true },
+        "camera_read_back": { "type": "object", "additionalProperties": true },
+        "image_lue": {
+          "const": true,
+          "description": "L'agent a ouvert le PNG et l'a decrit. false ou absent = aucune preuve."
+        },
+        "observations": { "type": "string", "minLength": 1, "maxLength": 600 },
+        "notes": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "legality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report", "status", "valid_actors", "illegal_count", "illegal_actors"],
+      "properties": {
+        "report": { "const": "06_legality_report.json" },
+        "status": { "enum": ["PASSED", "FAILED"] },
+        "valid_actors": { "type": "integer", "minimum": 0 },
+        "illegal_count": { "type": "integer", "minimum": 0 },
+        "illegal_actors": { "type": "array", "items": { "type": "object", "additionalProperties": true } }
+      },
+      "description": "Relu APRES mes poses : un device d'ambiance illegal ferait echouer la validation d'ile et bloque la session."
+    }
+  }
+}

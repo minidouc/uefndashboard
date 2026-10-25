@@ -42,6 +42,7 @@ flowchart TD
 | 03 | [`03-parametrage-agents.md`](./03-parametrage-agents.md) | **Paramétrage** — quoi donner à chaque agent, comment, avec exemples |
 | 04 | [`04-contrat-handoff.md`](./04-contrat-handoff.md) | **Contrat de handoff** — le JSON qui circule sur le bus (`uefn.handoff.v1`) |
 | 05 | [`05-securite-mcp.md`](./05-securite-mcp.md) | **Sécurité MCP** — anti-hallucination, validateurs, gates HITL |
+| 06 | [`06-structure-dossier-agent.md`](./06-structure-dossier-agent.md) | **Structure du dossier d'un agent** — arborescence `persona.md` + `SKILL.md` + `skill/` |
 
 ### Diagrammes
 - [`diagram_fonctionnement.svg`](./diagram_fonctionnement.svg) — topologie (rendu)

@@ -1,0 +1,414 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Economy_Designer.v1",
+  "title": "Economy_Designer - contrat du livrable 01_economy.json",
+  "description": "Schema de sortie de l'agent Economy_Designer (agent 04, pole Design, phase DESIGN). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte l'economie arretee : sources (puits), sinks, taux, horizon de partie, courbe de progression, compteurs exposes aux devices, et ce qui est explicitement NON impose. Regle maitresse anti-hallucination : un Flash ne calcule aucun chiffre d'equilibrage de tete (WP2 p.9, maths externalisees). Chaque valeur porte donc un statut de preuve : mesure (issu d'un run reel, avec le fichier source), reserve (hypothese a tester, avec le test qui la departage) ou UNKNOWN. Un prix ou un taux sans statut est un motif de rejet. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset, aucun PPID_/PID_ final, aucun device impose.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Economy_Designer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "01_economy.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statut_economie",
+        "modele_economique",
+        "justification_modele",
+        "ressources",
+        "horizon_partie",
+        "courbe_progression",
+        "compteurs_exposes",
+        "non_imposes",
+        "anti_exploits",
+        "gate_hitl_2"
+      ],
+      "properties": {
+        "statut_economie": {
+          "enum": ["IMPOSEE", "NON_IMPOSEE", "UNKNOWN"],
+          "description": "Le brief impose-t-il une economie ? NON_IMPOSEE se documente, cela ne se tait pas : les puits et les sinks restent ecrits avec leur statut."
+        },
+        "modele_economique": {
+          "enum": ["AUCUN", "COSMETIQUE", "HYBRIDE", "PROGRESSION", "UNKNOWN"],
+          "description": "Modele verrouille. AUCUN = gratuit sans boutique ni progression persistante ; UNKNOWN = question bloquante remontee au Producteur."
+        },
+        "justification_modele": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 400,
+          "description": "Pourquoi ce modele, ancre dans le brief amont (01_gdd.json notes, 01_systems.json, 00_vision.json)."
+        },
+        "ton_coherence": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Comment le modele sert le ton declare par le Creative_Director (une boutique neon kawaii dans une scene solennelle est une faute de coherence)."
+        },
+        "ressources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/ressource" },
+          "description": "Toutes les choses qui circulent entre les mains du joueur : monnaies, XP meta, cles, scores persistables. Une ressource NON_IMPOSEE reste listee avec ses puits et ses sinks a statut NON_IMPOSE."
+        },
+        "horizon_partie": { "$ref": "#/definitions/horizon_partie" },
+        "courbe_progression": { "$ref": "#/definitions/courbe_progression" },
+        "compteurs_exposes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/compteur" },
+          "description": "Les seuls compteurs reellement disponibles cote Creatif (devices poses, editable_count, modules Verse). Tout compteur non cable est dit comme tel."
+        },
+        "non_imposes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 12,
+          "items": { "type": "string", "minLength": 6 },
+          "description": "Ce que l'economie n'exige pas et ne fera pas : sauvegarde, boutique, saison, battle pass, farm. Ecrire cette liste evite que l'aval la devine."
+        },
+        "anti_exploits": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/exploit" },
+          "description": "Pour chaque puits : au moins une facon de l'exploiter et sa parade, ou la mention NON_CONCERNE motivee."
+        },
+        "gaps_eco": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 6 },
+          "description": "Troubles de brief specifiques a l'economie, egalement remontes dans constraints.must_ask_producer."
+        },
+        "non_verifie": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 6 },
+          "description": "Ce qui ne sera pas mesure pendant la jam (equilibrage reel, retention, inflation) et ne peut donc pas etre presente comme tenu."
+        },
+        "gate_hitl_2": { "$ref": "#/definitions/gate_hitl_2" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": {
+          "const": "none",
+          "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur, aucune lecture de compteur en direct."
+        },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous transmis en aval : les roles suivants les appliquent sans redemander le contexte amont."
+        },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        },
+        "tuning_reserves": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Resume des valeurs a statut reserve avec le test qui les departage, pour le Gameplay_Programmer (12) qui les lit comme source de tuning."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "economy_model_declared",
+          "every_value_carries_proof_status",
+          "every_rate_has_tie_breaker_test",
+          "every_measure_cites_source_file",
+          "playthrough_lifetime_declared",
+          "zero_persistent_resource_when_save_forbidden",
+          "no_sink_without_source",
+          "no_infinite_farm_loop",
+          "counters_declared_match_real_devices",
+          "non_imposed_scope_written",
+          "exploit_checklist_present",
+          "no_coordinate_or_asset_path",
+          "unknown_used_not_invented",
+          "economy_gate_hitl_2_pending"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "statut_preuve": {
+      "enum": ["mesure", "reserve", "UNKNOWN"],
+      "description": "mesure = chiffre issu d'un run reel et cite par son fichier ; reserve = hypothese a tester, le test qui la departage est obligatoire ; UNKNOWN = donnee absente, jamais une valeur plausible."
+    },
+    "flux": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "cote", "statut", "declencheur", "valeur", "statut_preuve"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^(SRC|SNK)_[A-Za-z0-9_]{3,40}$" },
+        "cote": { "enum": ["puits", "sink"], "description": "puits = ce qui remplit la ressource ; sink = ce qui la vide. Un sink sans puits est un motif de rejet." },
+        "statut": { "enum": ["NON_IMPOSE", "EXISTANT", "UNKNOWN"] },
+        "declencheur": { "type": "string", "minLength": 6, "description": "Evenement de jeu qui ouvre le flux (fin de mission, achat, mort, observation d'une zone)." },
+        "valeur": { "type": ["number", "string"], "description": "Quantite par declenchement, ou le mot NON_IMPOSEE / UNKNOWN. Never a bare unsourced number." },
+        "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+        "preuve": { "type": "string", "minLength": 8, "description": "Obligatoire quand statut_preuve = mesure : fichier ou rapport reel du run (01_gdd.json, 04_devices.json, 10_editables.json, rapport d'audit)." },
+        "test_departage": { "type": "string", "minLength": 8, "description": "Obligatoire quand statut_preuve = reserve : la maniere dont une passe de jeu ou un script tranche entre cette valeur et sa voisine." },
+        "unite": { "type": "string", "minLength": 1 },
+        "persistance": { "enum": ["aucune", "seance", "inter_session", "UNKNOWN"], "description": "inter_session exige une sauvegarde : interdit si le brief l'exclut." },
+        "periodicite_sec": { "type": ["number", "string"], "description": "Intervalle du flux ; sert au calcul d'inflation puits/sinks. Un chiffre ici sans statut de preuve est un rejet." },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "statut_preuve": { "const": "reserve" } }, "required": ["statut_preuve"] },
+          "then": { "required": ["test_departage"] }
+        },
+        {
+          "if": { "properties": { "statut_preuve": { "const": "mesure" } }, "required": ["statut_preuve"] },
+          "then": { "required": ["preuve"] }
+        }
+      ]
+    },
+    "taux": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "objet", "valeur", "unite", "statut_preuve"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TX_[A-Za-z0-9_]{3,40}$" },
+        "objet": { "type": "string", "minLength": 6, "description": "Ce que le taux regle : drop, prix, cout d'entretien, XP par action, vitesse d'inflation." },
+        "valeur": { "type": ["number", "string"] },
+        "unite": { "type": "string", "minLength": 1, "description": "unite explicite (par_seance, par_heure_jeu, pourcentage, unite_monnaie) : un taux sans unite n'est pas controlable." },
+        "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+        "preuve": { "type": "string", "minLength": 8 },
+        "test_departage": { "type": "string", "minLength": 8 },
+        "plage_acceptee": { "type": "string", "minLength": 3, "description": "Bornes entre lesquelles une simulation peut trancher, exprimees en unite et non en gout." },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "statut_preuve": { "const": "reserve" } }, "required": ["statut_preuve"] },
+          "then": { "required": ["test_departage"] }
+        },
+        {
+          "if": { "properties": { "statut_preuve": { "const": "mesure" } }, "required": ["statut_preuve"] },
+          "then": { "required": ["preuve"] }
+        }
+      ]
+    },
+    "ressource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nom", "statut", "sources", "sinks", "taux"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^R_[A-Za-z0-9_]{3,40}$" },
+        "nom": { "type": "string", "minLength": 3 },
+        "type": { "enum": ["monnaie", "xp_meta", "cle", "objet", "score", "cosmetique", "autre"] },
+        "statut": { "enum": ["NON_IMPOSE", "EXISTANT", "UNKNOWN"] },
+        "transfers": { "enum": ["aucun", "seance", "compte", "UNKNOWN"], "description": "Transferabilite declaree ; 'compte' exige une sauvegarde inter-session." },
+        "sources": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/flux" }, "description": "Puits de la ressource. Jamais vide : si rien n'est impose, ecrire un flux a statut NON_IMPOSE." },
+        "sinks": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/flux" }, "description": "Eviers de la ressource." },
+        "taux": { "type": "array", "items": { "$ref": "#/definitions/taux" } },
+        "motif_statut": { "type": "string", "minLength": 8 },
+        "notes": { "type": "string" }
+      }
+    },
+    "horizon_partie": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duree_de_vie", "persistance_requise", "sauvegarde_autorisee", "seance_reference"],
+      "properties": {
+        "duree_de_vie": {
+          "enum": ["seance", "session_recurrente", "saison", "perenne", "UNKNOWN"],
+          "description": "Duree de vie declaree de l'economie : une economy sans horizon ne peut pas etre equilibree."
+        },
+        "persistance_requise": { "type": "boolean" },
+        "sauvegarde_autorisee": {
+          "enum": ["INTERDITE_PAR_BRIEF", "AUTORISEE", "UNKNOWN"],
+          "description": "Vient du brief amont (note de 01_gdd.json : aucune sauvegarde ni publication). Interdite = 0 ressource inter-session toleree."
+        },
+        "seance_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["valeur", "statut_preuve"],
+          "properties": {
+            "valeur": { "type": ["number", "string"] },
+            "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+            "preuve": { "type": "string", "minLength": 8 },
+            "test_departage": { "type": "string", "minLength": 8 },
+            "base": { "type": "string", "minLength": 6 }
+          }
+        },
+        "equilibre_puits_sinks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statut_preuve", "commentaire"],
+          "properties": {
+            "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+            "commentaire": { "type": "string", "minLength": 10 },
+            "test_departage": { "type": "string", "minLength": 8 },
+            "preuve": { "type": "string", "minLength": 8 }
+          },
+          "description": "Anti-inflation : total gagne vs total depense sur la seance reference. NON_MESURABLE sans run est un etat valide, pas un trou."
+        },
+        "reset": { "enum": ["aucun", "manual", "saisonnier", "UNKNOWN"] }
+      }
+    },
+    "courbe_progression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut"],
+      "properties": {
+        "statut": { "enum": ["IMPOSEE", "NON_IMPOSEE", "UNKNOWN"] },
+        "paliers": { "type": "array", "maxItems": 12, "items": { "$ref": "#/definitions/palier" } },
+        "time_to_max": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["valeur", "statut_preuve"],
+          "properties": {
+            "valeur": { "type": ["number", "string"] },
+            "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+            "preuve": { "type": "string", "minLength": 8 },
+            "test_departage": { "type": "string", "minLength": 8 }
+          },
+          "description": "Time-to-max en heures de jeu ; au-dessous de 5 h, alerte de fin de jeu trop rapide."
+        },
+        "motif_statut": { "type": "string", "minLength": 8 },
+        "notes": { "type": "string" }
+      }
+    },
+    "palier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "debloque", "cout", "statut_preuve"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "debloque": { "type": "string", "minLength": 3 },
+        "cout": { "type": ["number", "string"] },
+        "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+        "preuve": { "type": "string", "minLength": 8 },
+        "test_departage": { "type": "string", "minLength": 8 }
+      }
+    },
+    "compteur": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nom", "device_classe", "compteur_cable", "valeur", "statut_preuve", "source_reelle"],
+      "properties": {
+        "nom": { "type": "string", "pattern": "^[A-Za-z0-9_.]{3,48}$", "description": "Label du compteur ou du device, jamais un chemin d'asset." },
+        "device_classe": { "type": "string", "pattern": "^[a-z0-9_]{3,60}$", "description": "Classe de device Creatif en minuscules (player_spawner_device...). Un /Game/ ou un PPID_ final est refuse par le pattern." },
+        "compteur_cable": { "type": "boolean", "description": "Le compteur est-il reellement cable dans la scene ? faux = le dire, ne pas le sous-entendre." },
+        "valeur": { "type": ["number", "string"], "description": "Etat mesure (ex. 0 editable cable) ou UNKNOWN." },
+        "statut_preuve": { "$ref": "#/definitions/statut_preuve" },
+        "preuve": { "type": "string", "minLength": 8 },
+        "test_departage": { "type": "string", "minLength": 8 },
+        "source_reelle": { "type": "string", "minLength": 8, "description": "Fichier du run qui atteste : 04_devices.json, 10_editables.json, 01_gdd.json." },
+        "consommateurs": { "type": "array", "items": { "type": "string" }, "description": "Qui lit ce compteur : UI_Programmer (14), Gameplay_Programmer (12), Mission_Content_Designer (05)." },
+        "notes": { "type": "string" }
+      }
+    },
+    "exploit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signature", "parade", "statut"],
+      "properties": {
+        "signature": { "type": "string", "minLength": 10 },
+        "parade": { "type": "string", "minLength": 8 },
+        "statut": { "enum": ["PARADE_ECRITE", "NON_CONCERNE", "A_COUVRIR"] },
+        "type": { "enum": ["farm_infini", "duplication", "inflation", "achat_revente", "aucun_flux", "UNKNOWN"] },
+        "flux_concerne": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "gate_hitl_2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "description": "Gate HITL #2 (specs de design validees par l'humain via le Producteur). L'agent ne peut ecrire que PENDING : VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain.",
+      "properties": {
+        "numero": { "const": 2 },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+        "valide_par": { "type": "string", "minLength": 1 },
+        "date_validation": { "type": "string" },
+        "iterations": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    }
+  }
+}

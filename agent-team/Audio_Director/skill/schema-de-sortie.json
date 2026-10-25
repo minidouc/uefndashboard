@@ -1,0 +1,308 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Audio_Director.v1",
+  "title": "Audio_Director - contrat du livrable 13_audio_direction.json",
+  "description": "Schema de sortie de l'agent Audio_Director (agent 17, pole Audio, phase POLISH). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte la DIRECTION sonore, pas sa realisation : les pistes sont rendues par Composer (18), Sound_Designer (19), Voice_Designer (20), la pose par les programmeurs (12/14/15). Agent de conception : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset final, aucun device impose, aucune valeur absolue de niveau sonore. Chaque champ est cochable par un validateur Python ou par un juge externe, jamais par mon appreciation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": { "const": "uefn.handoff.v1" },
+    "handoff_id": { "type": "string", "pattern": "^H-[A-Z]+-[0-9]{3,}$" },
+    "from": { "const": "Audio_Director" },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": { "const": "13_audio_direction.json" },
+    "mission_ref": { "type": "string", "minLength": 1 },
+    "summary_short": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference_vision",
+        "palette_sonore",
+        "cartographie_par_zone",
+        "regles_de_mix",
+        "interdits",
+        "mesures",
+        "faisabilite_creatif",
+        "abstentions_assumees",
+        "gate_hitl"
+      ],
+      "properties": {
+        "reference_vision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "statut_source", "ambiances_imposees", "signature_imposee", "place_du_silence", "interdits_sonores_repris"],
+          "description": "L'amont qui me fixe la direction : payload.identite_sonore de 00_vision.json (Creative_Director, agent 01) = ambiances, signature, silence, interdits. Je ne rederive pas la vision : je la reprends ou j'ecris qu'elle est absente.",
+          "properties": {
+            "source": { "type": "string", "minLength": 6, "description": "Fichier et champ amont reellement lus (ex. 00_vision.json > payload.identite_sonore)." },
+            "statut_source": { "enum": ["vision_lue", "vision_absente_reconstruite", "UNKNOWN"], "description": "vision_absente_reconstruite = l'artefact amont n'existe pas dans le workspace et la direction est rebatie depuis 01_gdd.json + le journal. Ce statut s'ecrit, il ne se cache pas." },
+            "ambiances_imposees": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 3 } },
+            "signature_imposee": { "type": "string", "minLength": 3 },
+            "place_du_silence": { "type": "string", "minLength": 3 },
+            "interdits_sonores_repris": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 3 } },
+            "ecart_de_source": { "type": "array", "items": { "type": "string" }, "description": "Ce que la vision imposait et que le run ne permet pas de tenir." }
+          }
+        },
+        "palette_sonore": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["layers"],
+          "description": "Decomposition en couches sonores avec role et priorite de mix. Le ton (ce que aucune cle ne saurait encoder) est calibre par le few-shot de skill/exemples/, pas par un adjectif ici.",
+          "properties": {
+            "layers": { "type": "array", "minItems": 3, "maxItems": 6, "items": { "$ref": "#/definitions/layer" } },
+            "emotions_cibles": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 3 }, "description": "Palette emotionnelle sonore. Non cochable seule : elle explique les criteres, elle ne les remplace pas." }
+          }
+        },
+        "cartographie_par_zone": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/intention_zone" },
+          "description": "Une intention sonore = un rattachement zone_id du GDD ou actor_label existant. Jamais une coordonnee, jamais un XYZ."
+        },
+        "regles_de_mix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ordre_de_priorite", "masquage", "silence_contractuel", "declencheurs_mecaniques"],
+          "description": "Priorites entre couches, seuils de masquage, part du silence. Un ordre de priorite doit etre la liste complete des ids de layers.",
+          "properties": {
+            "ordre_de_priorite": { "type": "array", "minItems": 3, "maxItems": 6, "items": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" } },
+            "masquage": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["dominant", "masque", "regle", "statut"],
+                "properties": {
+                  "dominant": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" },
+                  "masque": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" },
+                  "regle": { "type": "string", "minLength": 8 },
+                  "statut": { "$ref": "#/definitions/statut_element" }
+                }
+              }
+            },
+            "silence_contractuel": { "type": "string", "minLength": 8, "description": "Le silence est une regle de mix, pas une absence : ce qui ne joue pas et qui ne jouera pas." },
+            "declencheurs_mecaniques": {
+              "type": "array",
+              "maxItems": 0,
+              "items": { "type": "string" },
+              "description": "Tableau vide obligatoire : la decision 4 du run (scene contemplative, aucun combat, aucune quete, aucune economie, aucune mecanique annexe) interdit tout declencheur adaptatif. Un seul element = handoff invalide."
+            },
+            "co_dependances": { "type": "array", "items": { "type": "string" }, "description": "Ce qui se voit et doit donc s'entendre (Graphics_Programmer 15, UI_Programmer 14) : un flash visuel sans impact sonore est une incoherence." }
+          }
+        },
+        "interdits": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 10,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Sons et musiques que l'ile ne produira jamais. Trois minimum : sans eux la direction n'est pas arretee."
+        },
+        "mesures": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/mesure" },
+          "description": "Toute valeur chiffree porte un statut de preuve. Une valeur sans preuve n'est pas une mesure : c'est une reserve ou UNKNOWN."
+        },
+        "faisabilite_creatif": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statut_global", "requetes_audio_menees", "famille_assets_audio", "commande_verification", "consequence_si_introuvable"],
+          "description": "Ce que le catalogue Creatif permet reellement en audio. Dans ce run, AUCUNE requete audio n'a ete menee : le statut est A_VERIFIER, jamais acquis.",
+          "properties": {
+            "statut_global": { "enum": ["A_VERIFIER", "VERIFIEE", "IMPOSSIBLE"] },
+            "requetes_audio_menees": { "type": "integer", "minimum": 0, "description": "Nombre de requetes catalogue reellement executees pour l'audio. 0 = rien n'est acquis." },
+            "famille_assets_audio": { "type": "string", "minLength": 3, "description": "Famille d'assets ou device vise, declare comme piste. UNKNOWN tant qu'une recherche n'a pas statue. Jamais un PPID_/PID_ final impose : le choix d'asset appartient au Lead_Programmer." },
+            "piste_device": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["nom", "provenance", "statut"],
+              "properties": {
+                "nom": { "type": "string", "minLength": 3 },
+                "provenance": { "type": "string", "minLength": 6, "description": "Document qui cite le device (spec de l'agent 11), pas un inventaire du run." },
+                "statut": { "$ref": "#/definitions/statut_element" },
+                "jamais_verifie_dans_ce_run": { "type": "boolean" }
+              }
+            },
+            "commande_verification": { "type": "string", "minLength": 12, "description": "La commande exacte qui trancherait. Un outil non verifie ne s'execute pas (05-securite-mcp.md) : je l'ecris, je ne l'appelle pas." },
+            "consequence_si_introuvable": { "type": "string", "minLength": 8 }
+          }
+        },
+        "abstentions_assumees": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/abstention" },
+          "description": "Ce que la direction ne couvre pas, et pourquoi. Une abstention tue est une faute de pipeline."
+        },
+        "gate_hitl": { "$ref": "#/definitions/gate_hitl" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Audio de conception : aucun appel MCP, aucune ecriture dans l'editeur." },
+        "must_preserve": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Garde-fous transmis en aval : les roles suivants les appliquent sans redemander le contexte amont." },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "must_ask_producer": { "type": "array", "items": { "type": "string" }, "description": "Questions bloquantes remontees au Producteur, jamais posees a l'utilisateur en direct. 15 max par phase." },
+        "hors_perimetre_run": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue, ce qui est tronque, ce qui est reconstruit). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "layers_count_3_to_6",
+          "each_layer_has_mix_priority_1_to_5",
+          "each_layer_has_proof_status",
+          "priority_order_lists_every_layer_id",
+          "every_intention_attached_to_gdd_zone_id_or_existing_actor_label",
+          "zero_intention_attached_to_coordinates",
+          "every_mesure_has_proof_status",
+          "no_absolute_db_or_loudness_claim",
+          "zero_action_music_layer",
+          "zero_combat_or_quest_sfx",
+          "zero_voice_layer_without_npc_programmed",
+          "no_mechanical_trigger_declared",
+          "audio_asset_faisabilite_marked_a_verifier",
+          "verification_command_written_for_unverified_device",
+          "no_final_ppid_or_pid_imposed",
+          "assumed_abstentions_listed_with_motif",
+          "vision_sonore_source_declared_or_reconstructed",
+          "no_mcp_call_acces_none",
+          "hitl_gate_statut_pending_only",
+          "summary_short_max_200_chars"
+        ]
+      }
+    },
+    "next_step_hint": { "type": "string", "maxLength": 400 },
+    "context_budget_tokens": { "type": "integer", "maximum": 4000 }
+  },
+  "definitions": {
+    "statut_element": {
+      "enum": ["NON_POSE", "A_VERIFIER", "UNKNOWN"],
+      "description": "NON_POSE = rien d'equivalent n'existe dans le niveau a ce jour ; A_VERIFIER = piste documentee mais non testee dans ce run ; UNKNOWN = donnee absente, jamais inventee. Un statut absent = handoff rejete."
+    },
+    "layer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "intention", "densite", "priorite_mix", "statut", "conformite_decision"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" },
+        "role": { "enum": ["ambience", "signature", "habillage_distant", "evenement", "voix", "musique"] },
+        "intention": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "densite": { "enum": ["nulle", "ponctuelle", "rare", "continue"] },
+        "priorite_mix": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "statut": { "$ref": "#/definitions/statut_element" },
+        "conformite_decision": { "enum": ["conforme", "hors_decision"], "description": "hors_decision = la couche suppose une mecanique que la scene contemplative interdit. Le validateur rejette toute couche hors_decision." },
+        "rendu_par": { "type": "string", "enum": ["Composer", "Sound_Designer", "Voice_Designer", "UNKNOWN"], "description": "Le role aval qui produit la piste. Je ne produis rien moi-meme." }
+      }
+    },
+    "intention_zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rattachement_type", "rattachement", "intention_sonore", "layers_actifs", "volume_relatif", "statut"],
+      "properties": {
+        "rattachement_type": { "enum": ["zone_id", "actor_label"] },
+        "rattachement": {
+          "type": "string",
+          "pattern": "^(Zone_[A-Za-z0-9_]+|[A-Z][A-Za-z0-9]*(_[A-Za-z0-9]+)+)$",
+          "description": "Un zone_id de 01_gdd.json ou un actor_label reel (ex. Spawner_Plaza_01). Le pattern refuse espaces, crochets et virgules : une coordonnee ne peut donc pas passer."
+        },
+        "intention_sonore": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "layers_actifs": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" } },
+        "volume_relatif": { "enum": ["nul", "fond", "secondaire", "principal"], "description": "Ordonnancement relatif uniquement : un niveau absolu exigerait une session client connectee, jamais obtenue dans ce run." },
+        "masque": { "type": "array", "items": { "type": "string", "pattern": "^LAY-[A-Z]{2,6}$" } },
+        "statut": { "$ref": "#/definitions/statut_element" },
+        "motif_statut": { "type": "string", "minLength": 6 }
+      }
+    },
+    "mesure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "objet", "valeur", "unite", "statut_preuve"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^M[0-9]{1,2}$" },
+        "objet": { "type": "string", "minLength": 3 },
+        "valeur": { "type": ["number", "string"], "description": "Nombre ou chaine (\"UNKNOWN\"). Une valeur inventee n'est pas une mesure." },
+        "unite": { "type": "string", "minLength": 2, "pattern": "^(?!.*(dB|db|DB|decibel|sonometre)).*$", "description": "Unite adimensionnelle ou de structure (part, layer, seconde, rang). Le validateur refuse toute unite de niveau absolu : un niveau absoluabsolu sans session connectee est une preuve fabrique." },
+        "statut_preuve": { "enum": ["mesure", "reserve", "UNKNOWN"], "description": "mesure = valeur obtenue par un controle reel ; reserve = plage demandee, non verifiee ; UNKNOWN = aucune donnee." },
+        "moyen_preuve": { "type": "string", "minLength": 6, "description": "Comment un juge externe controlerait : quel inventaire, quelle session, quel comptage." }
+      }
+    },
+    "abstention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objet", "motif", "statut"],
+      "properties": {
+        "objet": { "type": "string", "minLength": 3 },
+        "motif": { "type": "string", "minLength": 8 },
+        "impact_aval": { "type": "string" },
+        "statut": { "$ref": "#/definitions/statut_element" }
+      }
+    },
+    "gate_hitl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "description": "Gate HITL presenting the audio direction before any editor write. L'agent n'ecrit que PENDING : VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain, jamais celle du modele.",
+      "properties": {
+        "numero": { "type": "integer", "enum": [3, 4] },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+        "valide_par": { "type": "string", "minLength": 1 },
+        "date_validation": { "type": "string" },
+        "iterations": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$id": "uefn.longterm.UX_UI_Designer.v1",
+  "agent": "UX_UI_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des contrats de fichiers, un lexique de statuts, des pieges de lecture et des chiffres reels d'un run UEFN.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 08, pole Design, phase DESIGN, modele Flash ; execution sequentielle stricte, un seul agent actif a la fois, PC 16 Go",
+    "artifact": "01_ux_ui.json, sous enveloppe uefn.handoff.v1",
+    "amont": ["00_vision.json (01)", "01_gdd.json (02)", "01_systems.json (03)", "01_scripts.json (07)"],
+    "aval": ["UI_Programmer (14, implemente le HUD en Verse)", "Gameplay_Programmer (12, expose les fonctions)", "AI_Programmer (13)", "Level_Designer (09, signaletique in-world)", "Producer_Orchestrator (hub unique)"],
+    "acces_mcp": "none : ni lecture ni ecriture dans l'editeur, aucun CLI",
+    "gates_hitl": "4 gates (1 brief creatif, 2 GDD, 3 architecture technique, 4 avant toute ecriture destructive) ; un agent n'ecrit que PENDING dans un champ de gate",
+    "pivots_generator_critic": "Creative_Director (01), Game_Designer (02), Lead_Programmer (11) - UX_UI_Designer n'est pas un pivot, son juge est externe",
+    "legal_uefn": "seuls les assets Creatifs du catalogue sont mobilisables en aval : PPID_ (environ 100 418) et PID_ (environ 1 960) ; /Game/Athena et /Game/Environments font echouer la validation de l'ile",
+    "frontiere_stable_transitoire": "WP3 p.61 : etat mouvant (project-state.json, handoffs, rapports du run) hors du dossier d'agent"
+  },
+  "contrats_fichiers": {
+    "00_vision.json": "ton, palette, promesses, anti-references : je decline la DA en regles d'affichage, je ne choisis aucun hex",
+    "01_gdd.json": "source de mon perimetre : game_mode, zones, connects_to, gameplay_timeline_sec, required_devices, notes (interdictions). Une valeur ne s'affiche que si une mecanique est jouee",
+    "01_systems.json": "inventaire des valeurs existantes (vie, ressource, cooldown) : ce que j'affiche doit y avoir un correspondant ET une fonction exposee",
+    "01_scripts.json": "tous les textes affiches : je reference une cle, je n'ecris jamais le libelle ; artefact absent = texte_ref UNKNOWN",
+    "01_economie.json": "boutique, inventaire, monnaies : sans ce fichier, les ecrans economiques partent en abstention categorie economie",
+    "04_devices.json": "liste des devices reellement poses : un element qui exige un device absent est abstenu, jamais pretendu",
+    "08_wiring_report.json": "wired [], error_count 0, PASSED avec --allow-empty : un PASSED ne prouve aucun binding ; lire le tableau wired, pas le statut",
+    "09_verse_report.json": "build Verse : diagnostics_count 0 et lignes de succes ne signifient pas qu'une fonction est exposee ; verifier l'existence d'un module custom",
+    "10_editables.json": "inventaire reel des @editable : editable_count, actor_references, parameters, live.tool_result ; c'est mon contrat de consommation",
+    "tech_mcp_inventory": "je ne l'appelle pas : je l'utilise seulement pour savoir qu'un device HUD est indisponible"
+  },
+  "lexique_statuts": {
+    "affiche_source_lue": "valeur produite par une fonction nommee, lue dans un artefact du run",
+    "attente_source_inconnue": "element dessine sans fonction ni texte source : admissible seulement avec un UNKNOWN ecrit",
+    "abstenu": "je ne dessine pas, et j'ecris pourquoi avec l'artefact qui verrouille",
+    "inutile_pour_ce_mode": "l'element serait illegitime pour ce game_mode (un score dans une scene sans mecanique)",
+    "exposee_lue": "fonction trouvee dans 09_verse_report.json, 10_editables.json ou 08_wiring_report.json",
+    "non_exposee": "l'artefact lu dit explicitement qu'il n'y a rien a exposer",
+    "NO_VERSE_STAGED": "aucun module Verse prepare dans workspace/verse/ : etat sans objet documente, pas un echec",
+    "PASSED": "statut d'un rapport ; ne vaut preuve que si le corps du rapport est non vide",
+    "PENDING": "seule valeur de gate qu'un agent puisse ecrire"
+  },
+  "pieges_editeur": [
+    { "piege": "mannequin translucide au centre de player.png", "signe": "silhouette humaine geante et semi-transparente, posee pile sur la tuile d'apparition, visible en vue joueur", "cause": "apercu EDITEUR du Player Spawner (la camera de capture est posee exactement sur le spawner) ; absent en jeu client", "conduite": "ne jamais le lire comme un acteur de decor, un PNJ ou un element d'interface ; ne rien dessiner dessus ; croiser avec oblique.png et topdown.png" },
+    { "piege": "liste d'editables vide lue comme un oubli", "signe": "10_editables.json : editable_count 0, custom_verse_modules 0, NO_VERSE_STAGED", "cause": "aucun Verse ecrit, par decision de perimetre sur ce run", "conduite": "consigner la limite dans limites_techniques_lues et marquer source_fonction UNKNOWN ; ne jamais inventer une fonction pour combler" },
+    { "piege": "un build vert vendu comme une interface branchable", "signe": "09_verse_report.json diagnostics_count 0, lignes SUCCES", "cause": "le moteur compile sans module custom : rien n'est expose au HUD", "conduite": "exiger le nom de la fonction, pas le statut du build" },
+    { "piege": "wiring PASSED avec allow-empty", "signe": "08_wiring_report.json wired [], error_count 0", "cause": "aucun binding Direct Event declare", "conduite": "promettre un flux d'evenement a l'agent 14 serait faux : le declarer non_exposee" },
+    { "piege": "game_mode lu comme une obligation de HUD", "signe": "un rpg sans score, sans vie affichee, sans quete", "cause": "le mode de jeu ne prejuge pas des mecaniques jouees ; ici 3 etapes de timeline, aucune mecanique", "conduite": "abstentions motivees, 1 ecran de jeu nu, 1 menu minimal" },
+    { "piege": "le modele complete les trous", "signe": "GetPlayerHealth(), 12 450 points, cle hud.vie, Map_Device_01", "cause": "un Flash redige une interface verosimlable quand la source manque", "conduite": "UNKNOWN explicite + question au Producteur ; jamais un nom de fonction hors artefact" },
+    { "piege": "confondre emprise et pixels", "signe": "demande de taille en px ou de coordonnee d'ancrage", "cause": "la resolution cible est une contrainte technique, pas une decision de design", "conduite": "gabarit en emprise relative : zone + capacite + regle de debordement" },
+    { "piege": "textes du Writer absents", "signe": "01_scripts.json non emis pendant la run", "cause": "phase d'ecriture du script non passee", "conduite": "texte_ref UNKNOWN, capacite redigee dans le gabarit, jamais un libelle ecrit par moi" }
+  ],
+  "decisions_de_pipeline": [
+    "UI_Programmer (14) s'abonne aux fonctions exposees par Gameplay (12) et AI (13) et ne recalcule AUCUNE valeur affichee : regle de pipeline verifiee dans ce depot, et raison pour laquelle source_fonction est obligatoire ou UNKNOWN",
+    "UX_UI_Designer ne code pas : la carte d'interface est un contrat, l'implantation appartient a 14",
+    "un design a 0 composant persistant est un livrable LEGAL quand les abstentions sont ecrites avec leur verrou",
+    "la signaletique in-world est arbitree par Level_Designer (09) quand un element de HUD est abstenu : la place se lit dans la scene, pas dans un widget",
+    "seul le Producer_Orchestrator parle a l'humain ; je remonte des gaps, jamais une question en direct",
+    "la liste des devices fait foi (04_devices.json) : un composant qui exige un device inexistant est abstenu",
+    "artefacts non emis pendant le run Corpo Plaza : 00_vision.json, 01_systems.json, 01_scripts.json, 01_economie.json - tout ce qui en depend est UNKNOWN"
+  ],
+  "chiffres_de_reference": {
+    "note": "Chiffres reels du run Corpo Plaza - Memorial Park (ws_corpo_plaza, 2026-10-23 et 24) : des echelles et des preuves, pas des cibles.",
+    "grille": "23 x 23 x 1 tuiles",
+    "tuile_cm": "512 x 512 x 384 cm (dalle moteur 512 x 512 x 32)",
+    "zones": 9,
+    "connects_to": 12,
+    "gameplay_timeline_sec": "3 etapes : 0 s apparition au sud sur Spawner_Plaza_01, regard nord ; 1 s bassin, trois anneaux et deux koi visibles ; 5 s marche libre",
+    "devices": "1 seul : Spawner_Plaza_01 (player_spawner_device, tuile [4,11,0], face NORTH)",
+    "assets_demandes": 22,
+    "editables_json_octets": 605,
+    "wiring_json_octets": 268,
+    "verse_json_octets": 1985,
+    "editables_reels": "editable_count 0, actor_references 0, parameters 0, wired [], custom_verse_modules 0, NO_VERSE_STAGED",
+    "niveau": "claudetest",
+    "legalite_et_audit": "582 acteurs legaux / 0 erreur apres trois passes ; 91 chevauchements nes des bounds rotatifs, corriges",
+    "memoire_machine": "16 Go, d'ou l'execution sequentielle et un seul agent actif",
+    "gates_hitl": 4,
+    "questions_producteur_max_par_phase": 15,
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "exemples_max_par_paquet": 3,
+    "interface_du_run": "0 ecran implemente, 0 composant persistant, aucun HUD obligatoire : une decision d'UX tracee, pas un oubli"
+  }
+}

@@ -1,0 +1,499 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.System_Designer.v1",
+  "title": "System_Designer - contrat du livrable 01_systems.json",
+  "description": "Schema de sortie de l'agent System_Designer (agent 03, pole Design, phase DESIGN, modele Flash). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte les mecaniques et leurs regles d'etat, chaque entree d'entree/sortie, les dependances aux devices deja declares dans 01_gdd.json et surtout la condition d'observation de chaque mecanique : une mecanique sans preuve observable n'est pas une mecanique, c'est une intention. Validable par un validateur Python, jamais par le modele. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset, aucun nom d'API Verse invente (api_vers est borne a UNKNOWN ou aucune). Ecrire 'aucun_systeme' quand la scene est contemplative est une sortie legale, pas un echec.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "System_Designer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "01_systems.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bilan_systemes",
+        "declare_aucune_mecanique",
+        "mechanics",
+        "jalons_observation",
+        "tuning",
+        "hors_portee",
+        "contradictions_amont"
+      ],
+      "properties": {
+        "bilan_systemes": {
+          "enum": ["aucun_systeme", "regles_de_presence_seules", "systemes_de_jeu_actifs"],
+          "description": "Sortie explicite du role. 'aucun_systeme' et 'regles_de_presence_seules' sont des livrables valides (scene contemplative, aucun module Verse) : les declarer vaut livrable, pas echec."
+        },
+        "declare_aucune_mecanique": {
+          "type": "boolean",
+          "description": "true si aucune mecanique de jeu (combat, score, quete, inventaire, timer, nage) n'est active. Doit etre coherent avec bilan_systemes et avec game_mode de 01_gdd.json ; une contradiction s'ecrit dans contradictions_amont."
+        },
+        "mechanics": {
+          "type": "array",
+          "maxItems": 7,
+          "items": { "$ref": "#/definitions/mecanique" },
+          "description": "Une entree par mecanique ou regle d'etat. Au-dela de 7, le GDD est probablement trop ambitieux : alerte au Producteur plutot que 8 fiches superficielles."
+        },
+        "jalons_observation": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/jalon" },
+          "description": "Accouplement aux etapes de gameplay_timeline_sec de 01_gdd.json : a quel instant quoi doit tenir et comment un juge externe le voit."
+        },
+        "tuning": { "$ref": "#/definitions/tuning" },
+        "hors_portee": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hors_portee" },
+          "description": "Effets que les portees Verse et le catalogue Creatif legaux ne permettent pas. Les taire = les promettre."
+        },
+        "contradictions_amont": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/contradiction" },
+          "description": "Ce que 00_vision.json ou 01_gdd.json disent et que mes systemes ne peuvent pas tenir ensemble. Le role les declare, il ne les arbitre pas."
+        },
+        "rapports_jam_attendus": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Noms des rapports de validation que la jam est censee produire pour prouver mes systemes (ex. 08_wiring_report.json en mode allow-empty). Noms lus dans le journal de run, jamais inventes."
+        },
+        "herite_de": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Artefacts amont reellement consommes, avec leur statut lu (00_vision.json, 01_gdd.json)."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "bilan_systemes": { "const": "aucun_systeme" } },
+            "required": ["bilan_systemes"]
+          },
+          "then": {
+            "properties": {
+              "mechanics": { "maxItems": 0 },
+              "declare_aucune_mecanique": { "const": true }
+            }
+          }
+        }
+      ]
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": {
+          "const": "none",
+          "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur."
+        },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous transmis en aval : regles que chaque role suivant applique sans redemander le contexte amont."
+        },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "preconditions_amont": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ce qui devait etre acquis avant mon appel : gate HITL #2 (GDD) accordee, 01_gdd.json lu avec son statut reel."
+        },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "bilan_systemes_declared",
+          "each_mechanic_has_state_transition",
+          "each_mechanic_has_observation_condition",
+          "each_mechanic_has_traced_device_dependency",
+          "no_invented_verse_api",
+          "no_illegal_asset_path",
+          "no_coordinate_written_by_model",
+          "timeline_steps_all_covered",
+          "tuning_values_all_traced",
+          "out_of_scope_effects_declared",
+          "upstream_contradictions_declared",
+          "no_mechanic_declared_or_empty_coherent",
+          "no_self_validation_no_user_contact"
+        ]
+      },
+      "description": "Criteres 100 % cochables par un validateur Python (parcours du payload + comparaison avec 01_gdd.json), jamais par un jugement de LLM (WP4 p.20)."
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "mecanique": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nom",
+        "type",
+        "intention",
+        "etat",
+        "entrees",
+        "sorties",
+        "observation",
+        "besoin_vers",
+        "api_vers",
+        "dependances_devices"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^SYS[0-9]{1,2}$" },
+        "nom": { "type": "string", "minLength": 3, "maxLength": 80 },
+        "type": {
+          "enum": ["declencheur", "regle_perpetuelle", "transition_etat", "contrainte_de_lecture"],
+          "description": "contrainte_de_lecture = regle sans action joueur (une vue, une portee), declaree comme telle pour ne pas la compter comme mecanique de jeu."
+        },
+        "intention": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240,
+          "pattern": "^(?!.*(/Game/|Athena|Environments)).+$",
+          "description": "Ce que la mecanique fait ressentir, en une phrase. Les adjectifs ne suffisent pas : l'observation les porte."
+        },
+        "etat": { "$ref": "#/definitions/etat" },
+        "entrees": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "$ref": "#/definitions/entree" },
+          "description": "Qui declenche. Une mecanique sans entree n'est pas declenchable : motif de rejet."
+        },
+        "sorties": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "$ref": "#/definitions/sortie" },
+          "description": "Ce qui change ailleurs (device, autre systeme, journal de session). 'aucune' est permis et doit alors etre motive par l'observation."
+        },
+        "observation": { "$ref": "#/definitions/observation" },
+        "besoin_vers": {
+          "enum": ["aucun", "inconnu", "module_requis"],
+          "description": "aucun = tenu par un device ou le moteur seul ; module_requis = du Verse doit exister ; inconnu = non verifie, done a arbitrer en phase TECHNIQUE."
+        },
+        "api_vers": {
+          "enum": ["UNKNOWN", "aucune"],
+          "description": "Aucun nom d'API Verse n'est invente ici. Soit 'aucune' (aucune API necessaire), soit 'UNKNOWN' tant que le Lead_Programmer (11) ne l'a pas verifiee dans la doc Verse."
+        },
+        "dependances_devices": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/dependance_device" },
+          "description": "Vide autorise seulement si besoin_vers = aucun et qu'une entree moteur suffit."
+        },
+        "chiffres_cles": {
+          "type": "array",
+          "maxItems": 6,
+          "items": { "type": "string", "minLength": 4 },
+          "description": "Durees, distances et seuils de la mecanique, chacun avec sa source (01_gdd.json, 00_vision.json) ou UNKNOWN. Jamais de coordonnee (x, y, z)."
+        },
+        "co_signe_avec": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Roles avec qui une valeur est partagee (Economy_Designer pour les recompenses, Mission_Content_Designer pour les objectifs)."
+        }
+      }
+    },
+    "etat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "transitions"],
+      "properties": {
+        "initial": { "type": "string", "minLength": 3 },
+        "transitions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "#/definitions/transition" },
+          "description": "Un etat sans transition n'est pas un etat, c'est une etiquette : motif de rejet."
+        },
+        "invariants": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "type": "string", "minLength": 5 },
+          "description": "Ce qui reste vrai quel que soit l'etat (ex. un seul spawner actif, aucune porte verrouillee)."
+        },
+        "memoire": {
+          "enum": ["aucune", "par_session", "persistante_hors_perimetre"],
+          "description": "La scene contemplative du run courant n'a aucune sauvegarde : 'persistante_hors_perimetre' documente une ambition non couverte."
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["de", "a", "quand"],
+      "properties": {
+        "de": { "type": "string", "minLength": 2 },
+        "a": { "type": "string", "minLength": 2 },
+        "quand": {
+          "type": "string",
+          "minLength": 6,
+          "pattern": "^(?!.*(/Game/|Athena|Environments)).+$",
+          "description": "Evenement ou condition declenchante, formulable en une phrase falsifiable."
+        },
+        "effet": { "type": "string", "minLength": 3 },
+        "garde": { "type": "string", "description": "Condition suspensive (ex. joueur en vue de Zone_Center)." }
+      }
+    },
+    "entree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["depuis", "evenement"],
+      "properties": {
+        "depuis": {
+          "enum": ["joueur", "device", "moteur", "temporisation", "zone", "autre_systeme", "aucune"],
+          "description": "L'origine de l'evenement. 'zone' renvoie aux zone_id de 01_gdd.json, jamais a une coordonnee."
+        },
+        "evenement": { "type": "string", "minLength": 4, "pattern": "^(?!.*(/Game/|Athena|Environments)).+$" },
+        "ref_amont": { "type": "string", "description": "zone_id, actor_label ou time_sec de 01_gdd.json cite comme source." }
+      }
+    },
+    "sortie": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vers", "effet"],
+      "properties": {
+        "vers": { "enum": ["joueur", "device", "ui", "journal_de_session", "autre_systeme", "aucune"] },
+        "effet": { "type": "string", "minLength": 4, "pattern": "^(?!.*(/Game/|Athena|Environments)).+$" },
+        "conso_aval": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Roles aval listees dans le pipeline qui consomment cette sortie (04, 05, 08, 12, 14)."
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preuve", "critere", "verifiable_en_jam"],
+      "description": "Le champ qui distingue une mecanique d'une intention : comment un juge externe, humain ou validateur, voit que la regle tourne.",
+      "properties": {
+        "preuve": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "pattern": "^(?!.*(/Game/|Athena|Environments)).+$",
+          "description": "Rapport, capture ou fait de session qui prouve. Ex. 06_navigation_report.json avec navigation_errors vide."
+        },
+        "critere": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "description": "Enonce binaire : un tiers peut dire tenu / non tenu sans interpreter un adjectif."
+        },
+        "qui_verifie": { "enum": ["validateur_python", "juge_humain", "rapport_mcp", "autre_agent"] },
+        "verifiable_en_jam": { "type": "boolean" },
+        "a_defaut": {
+          "type": "string",
+          "description": "Ce qu'on ecrit si la preuve n'existe pas : UNKNOWN + question au Producteur, jamais un statut invente."
+        }
+      }
+    },
+    "dependance_device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "device_class", "source"],
+      "properties": {
+        "actor_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "description": "Label declare en amont (Spawner_Plaza_01), sans espace. Aucun PPID_/PID_ final n'est impose ici."
+        },
+        "device_class": { "type": "string", "minLength": 3 },
+        "source": {
+          "enum": ["01_gdd.required_devices", "03_grid.json", "UNKNOWN"],
+          "description": "Toute dependance doit etre tracee. Une dependance sans source est une hypothese deguisee : motif de rejet."
+        }
+      }
+    },
+    "jalon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time_sec", "ce_qui_doit_tenir", "preuve_attendue"],
+      "properties": {
+        "time_sec": { "type": "integer", "minimum": 0, "description": "Instant repris de gameplay_timeline_sec de 01_gdd.json." },
+        "ce_qui_doit_tenir": { "type": "string", "minLength": 8, "pattern": "^(?!.*(/Game/|Athena|Environments)).+$" },
+        "preuve_attendue": { "type": "string", "minLength": 8 },
+        "systemes_lies": { "type": "array", "items": { "type": "string", "pattern": "^SYS[0-9]{1,2}$" } },
+        "sans_mecanique_annexe": { "type": "boolean" }
+      }
+    },
+    "tuning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["philosophie", "parametres", "coherence"],
+      "properties": {
+        "philosophie": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 400,
+          "description": "Les invariants chiffres du role (TTK, DPS, cooldown, time-to-max) ou leur motif d'absence. Une absence doit etre argumentee, pas taillee."
+        },
+        "parametres": {
+          "type": "array",
+          "maxItems": 20,
+          "items": { "$ref": "#/definitions/parametre" }
+        },
+        "coherence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 6 },
+          "description": "Equations ou invariants verifies entre tables (HP / DPS = TTK). Au moins une ligne, fut-elle 'sans objet : aucun systeme de jeu'."
+        },
+        "sensibilite": {
+          "type": "array",
+          "maxItems": 3,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "3 scenarios de derive au plus (joueur 2x meilleur, session 2x plus longue) quand des chiffres existent."
+        }
+      }
+    },
+    "parametre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cle", "valeur", "source"],
+      "properties": {
+        "cle": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "valeur": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Valeur chiffee en cle ASCII, ou UNKNOWN. null et 'TBD' sont des placeholders : rejet."
+        },
+        "unite": { "type": "string", "description": "s, ms, cm, u, pourcentage. Une valeur sans unite n'est pas reglable." },
+        "source": {
+          "enum": ["01_gdd.json", "00_vision.json", "catalogue_creatif", "standard_genre_non_source", "UNKNOWN"],
+          "description": "Toute valeur est tracee ; 'standard_genre_non_source' s'assume et part en question au Producteur."
+        },
+        "reglable_en_vers": {
+          "enum": ["oui", "non", "UNKNOWN"],
+          "description": "Un parametre non reglable en Verse est fige a la compilation : le dire ici, pas le decouvrir en phase TECHNIQUE."
+        }
+      }
+    },
+    "hors_portee": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["effet", "motif", "statut"],
+      "properties": {
+        "effet": {
+          "type": "string",
+          "minLength": 6,
+          "pattern": "^(?!.*(/Game/|Athena|Environments)).+$",
+          "description": "L'effet demande par l'amont (vision, notes de GDD), non realisable dans les portees legales."
+        },
+        "motif": { "type": "string", "minLength": 8 },
+        "statut": {
+          "enum": ["hors_portee_legale", "non_realisable_sans_vers", "abandonne_declare", "remplace_par_lecture"],
+          "description": "hors_portee_legale = exigerait un asset hors catalogue Creatif ; non_realisable_sans_vers = aucun module Verse dans le perimetre du run ; abandonne_declare = renonce explicitement ; remplace_par_lecture = devient une contrainte de lecture, pas une mecanique."
+        },
+        "alternative": { "type": "string" },
+        "ecart_a_inscrire_chez": {
+          "type": "string",
+          "description": "Role aval qui doit consigner l'ecart dans son propre artefact (Creative_Director 00_vision.json, Game_Designer 01_gdd.json)."
+        }
+      }
+    },
+    "contradiction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["champ", "valeur_amont", "implication", "gravite"],
+      "properties": {
+        "champ": { "type": "string", "minLength": 3 },
+        "valeur_amont": { "type": "string", "minLength": 1 },
+        "implication": { "type": "string", "minLength": 8 },
+        "gravite": { "enum": ["bloquante", "a_arbitrer", "consentie"] },
+        "question_producteur": { "type": "string", "minLength": 8 }
+      }
+    }
+  }
+}

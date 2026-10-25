@@ -1,0 +1,384 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Voice_Designer.v1",
+  "title": "Voice_Designer - contrat du livrable 13_voice.json",
+  "description": "Schema de sortie de l'agent Voice_Designer (agent 20, pole Audio, phase POLISH). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte le plan de voix : casting, intentions de lecture, repere de diction, plan de sous-titrage, statut du support de lecture. Agent Audio de conception : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset, aucun PPID_/PID_ final, aucune ecoute allegable en session. Le texte des lignes appartient a Writer_Scenariste (07) : on reference une cle de chaine, on ne recopie jamais le texte. Une valeur absente reste UNKNOWN ; une duree n'est jamais presentee comme mesuree.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": { "const": "uefn.handoff.v1" },
+    "handoff_id": { "type": "string", "pattern": "^H-[A-Z]+-[0-9]{3,}$" },
+    "from": { "const": "Voice_Designer" },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": { "const": "13_voice.json" },
+    "mission_ref": { "type": "string", "minLength": 1 },
+    "summary_short": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "distribution",
+        "locuteurs",
+        "intentions_de_lecture",
+        "repere_diction",
+        "signalitique_in_world",
+        "regles_de_sous_titrage",
+        "support_lecture",
+        "abstentions"
+      ],
+      "properties": {
+        "distribution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statut", "motif", "preuves", "nb_locuteurs_attendus", "nb_repliques_a_distribuer"],
+          "properties": {
+            "statut": {
+              "enum": ["AUCUNE", "PARTIELLE", "COMPLETE"],
+              "description": "AUCUNE est une valeur legale et un livrable a part entiere, a condition d'etre motivee et preuves. PARTIELLE = certaines lignes seulement. COMPLETE = toutes les lignes doublables de l'amont sont distribuees."
+            },
+            "motif": { "type": "string", "minLength": 20 },
+            "preuves": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 10 },
+              "description": "Faits tracables citant l'artefact amont et son champ (01_gdd.json, 01_scripts.json, 10_editables.json, journal). Une distribution sans preuve n'est pas une decision, c'est une hypothese."
+            },
+            "nb_locuteurs_attendus": { "type": "integer", "minimum": 0 },
+            "nb_repliques_a_distribuer": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "locuteurs": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "$ref": "#/definitions/locuteur" },
+          "description": "Un locuteur seulement s'il est adosse a un artefact reel. Aucun locuteur dans l'amont => tableau vide, et distribution.statut = AUCUNE. Caster un personnage qui n'existe pas dans le pipeline est l'interdiction structurante de ce role."
+        },
+        "intentions_de_lecture": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "$ref": "#/definitions/intention" }
+        },
+        "repere_diction": { "$ref": "#/definitions/repere_diction" },
+        "signalitique_in_world": { "$ref": "#/definitions/signalitique" },
+        "regles_de_sous_titrage": { "$ref": "#/definitions/sous_titrage" },
+        "support_lecture": { "$ref": "#/definitions/support_lecture" },
+        "abstentions": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/definitions/abstention" },
+          "description": "Ce que ce paquet ne fait pas volontairement, avec le motif et le role destinataire. Trois minimum : une frontiere de role non ecrite est une frontiere franchie."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "distribution": { "properties": { "statut": { "const": "AUCUNE" } }, "required": ["statut"] } },
+            "required": ["distribution"]
+          },
+          "then": {
+            "properties": {
+              "locuteurs": { "maxItems": 0 },
+              "intentions_de_lecture": {
+                "items": {
+                  "properties": {
+                    "mode_reception": { "not": { "const": "VOIX" } },
+                    "locuteur_ref": { "const": "AUCUN" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Audio de conception : aucun appel MCP, aucune ecriture dans l'editeur, aucune recherche catalogue." },
+        "must_preserve": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur, jamais posees a l'utilisateur en direct. 15 max par phase."
+        },
+        "statut_session": {
+          "enum": ["PLAY_IN_CLIENT_CONNECTE", "PLAY_IN_CLIENT_NON_CONNECTE", "UNKNOWN"],
+          "description": "Tant que PLAY_IN_CLIENT_NON_CONNECTE ou UNKNOWN, aucune ecoute n'est allegable et rien ne peut etre declare pose ou entendu."
+        },
+        "langues_couvertes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "every_referenced_string_key_exists_upstream_or_is_UNKNOWN",
+          "every_locuteur_grounded_in_gdd_or_devices_or_plan_says_AUCUN",
+          "no_locuteur_invented_beyond_pipeline",
+          "no_line_text_copied_or_rewritten",
+          "no_duration_presented_as_measured",
+          "lecture_support_status_declared",
+          "no_play_in_session_listen_claim",
+          "distribution_aucune_backed_by_traceable_evidence",
+          "subtitle_rules_declared_against_ui_evidence",
+          "diction_reference_has_in_tone_and_off_tone_pair",
+          "coherent_with_no_side_mechanics",
+          "no_coordinate_asset_path_or_final_pid",
+          "acces_mcp_none_and_no_user_contact",
+          "missing_data_marked_UNKNOWN_not_invented",
+          "in_world_signage_reading_mode_declared",
+          "gate_fields_only_PENDING"
+        ]
+      }
+    },
+    "next_step_hint": { "type": "string", "maxLength": 400 },
+    "context_budget_tokens": { "type": "integer", "maximum": 4000 }
+  },
+  "definitions": {
+    "preuve_source": {
+      "enum": ["01_gdd.json", "04_devices.json", "01_scripts.json", "10_editables.json", "00_vision.json", "01_lore.json", "UNKNOWN"],
+      "description": "Artefacts reels du pipeline. Un locuteur ou une ligne doit pointer l'un d'eux, avec preuve ; sinon statut UNKNOWN et la ligne reste hors perimetre."
+    },
+    "duree_non_mesuree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valeur", "statut"],
+      "properties": {
+        "valeur": { "enum": ["UNKNOWN", "RESERVE"], "description": "Aucun nombre de secondes ici : le type est une chaine a deux valeurs. RESERVE = creneau budgete pour l'aval, pas une mesure." },
+        "statut": { "enum": ["NON_MESUREE", "A_RECALER_APRES_ENREGISTREMENT"], "description": "Une duree de doublage ne peut pas etre presentee comme mesuree : rien n'a ete enregistre et la session play-in-client n'etait pas connectee." },
+        "note": { "type": "string", "minLength": 3 }
+      }
+    },
+    "locuteur": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_locuteur", "source_artefact", "preuve_existence", "statut", "profil"],
+      "properties": {
+        "id_locuteur": { "type": "string", "pattern": "^VOI-[a-z0-9_]{3,30}$" },
+        "source_artefact": { "$ref": "#/definitions/preuve_source" },
+        "preuve_existence": {
+          "type": "string",
+          "minLength": 15,
+          "description": "Le device ou le champ qui fait que ce personnage existe dans le pipeline, cite artefact + champ. Un nom de personnage ne suffit pas."
+        },
+        "statut": { "enum": ["CONFIRME", "A_CONFIRMER", "UNKNOWN"] },
+        "profil": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["age_apparent", "tessiture"],
+          "properties": {
+            "age_apparent": { "type": "string", "minLength": 3 },
+            "tessiture": { "type": "string", "minLength": 3 },
+            "accent": { "type": "string" },
+            "temperament": { "type": "string" }
+          }
+        },
+        "support_de_lecture": {
+          "enum": ["PNJ_VOIX_DIEGETIQUE", "VOIX_OFF", "ANNONCEUR", "SOUS_TITRE_SEUL", "UNKNOWN"],
+          "description": "Contrainte specifique : chaque role de voix doit declarer sur quoi il s'appuie pour etre entendu. Sans device ni module declare, la valeur est UNKNOWN et le casting ne vaut rien."
+        },
+        "device_associe": {
+          "type": "string",
+          "pattern": "^(?!.*(/Game/|PPID_|PID_)).{0,80}$",
+          "description": "Label du device cite par l'amont (ex. un npc_editor), jamais un chemin d'asset ni un PID_: le choix d'asset appartient a Lead_Programmer."
+        }
+      }
+    },
+    "intention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cle_ligne", "statut_ligne", "mode_reception", "locuteur_ref", "lecture_conforme", "lecture_hors_ton", "motif_hors_ton"],
+      "properties": {
+        "cle_ligne": {
+          "type": "string",
+          "pattern": "^(ui_hud|ui_menus|ui_panneaux|voix|sous_titres)\\.[a-z0-9_]{3,60}$",
+          "description": "Cle de chaine de l'amont (07 / 08). Le pattern interdit toute autre forme : pas de texte recopie, pas de cle inventee."
+        },
+        "statut_ligne": {
+          "enum": ["EXISTANTE", "NON_EMISE", "UNKNOWN"],
+          "description": "EXISTANTE = cle portee par un artefact amont reellement emis ; NON_EMISE = cle prevue par 07 mais artefact jamais emis pendant la run ; UNKNOWN sinon."
+        },
+        "preuve_ligne": { "type": "string", "description": "Artefact + champ cites quand statut_ligne = EXISTANTE, sinon UNKNOWN." },
+        "mode_reception": {
+          "enum": ["VOIX", "LECTURE_SILENCIEUSE", "SOUS_TITRE", "UNKNOWN"],
+          "description": "Une ligne peut etre dite, lue en silence ou sous-titree. C'est une decision de design, pas un defaut."
+        },
+        "locuteur_ref": { "type": "string", "pattern": "^(VOI-[a-z0-9_]{3,30}|AUCUN|UNKNOWN)$" },
+        "intention_globale": { "type": "string", "minLength": 10 },
+        "lecture_conforme": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Few-shot de ton (03-parametrage-agents.md section 4) : la maniere dont la ligne se lit, decrite sans recopier le texte."
+        },
+        "lecture_hors_ton": { "type": "string", "minLength": 10 },
+        "motif_hors_ton": { "type": "string", "minLength": 20 },
+        "duree": { "$ref": "#/definitions/duree_non_mesuree" }
+      }
+    },
+    "repere_diction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["langue", "registre", "interdits", "source_amont", "statut"],
+      "properties": {
+        "langue": { "type": "string", "minLength": 2 },
+        "registre": { "type": "string", "minLength": 10 },
+        "rythme": { "type": "string", "minLength": 3 },
+        "tics_autorises": { "type": "array", "items": { "type": "string" } },
+        "interdits": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 5 } },
+        "source_amont": { "type": "string", "minLength": 5, "description": "D'ou vient le registre : 00_vision.json.theme.ton, 01_lore.json, 01_scripts.json.ton_reference. Le ton du Voice_Designer ne s'auto-invente pas." },
+        "note": { "type": "string" },
+        "statut": { "enum": ["A_APPLIQUER", "SANS_OBJET", "UNKNOWN"] }
+      }
+    },
+    "signalitique": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut", "decision", "motif"],
+      "properties": {
+        "statut": {
+          "enum": ["LUE_PAS_ENTENDUE", "DITE_PAR_VOIX", "MIXTE", "UNKNOWN"],
+          "description": "Le mode de reception des panneaux et cartons in-world. Sur une scene contemplative sans haut-parleur, LUE_PAS_ENTENDUE est une decision a ecrire noir sur blanc, pas une absence subie."
+        },
+        "decision": { "type": "string", "minLength": 20 },
+        "motif": { "type": "string", "minLength": 20 },
+        "cles_concernees": { "type": "array", "items": { "type": "string" } },
+        "arbitrage_attendu": { "type": "boolean" }
+      }
+    },
+    "sous_titrage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut_applicabilite", "preuve_existence_ui", "synchronisation", "regles", "duree_affichage"],
+      "properties": {
+        "statut_applicabilite": {
+          "enum": ["ACTIVE", "CONDITIONNELLE", "NON_APPLICABLE"],
+          "description": "CONDITIONNELLE quand aucune UI n'est cablee : les regles sont redigees pour l'aval, elles ne pretendent pas s'appliquer maintenant."
+        },
+        "preuve_existence_ui": {
+          "type": "string",
+          "minLength": 15,
+          "description": "Ce qui prouve qu'il y a (ou non) une UI : 10_editables.json (editable_count), 08_wiring_report.json (wired). Sans preuve, statut NON_APPLICABLE + UNKNOWN."
+        },
+        "langue_source": { "type": "string", "minLength": 2 },
+        "synchronisation": { "enum": ["AUCUNE_VOIX", "TIMING_RESERVE", "ANCRE_ECRAN", "UNKNOWN"] },
+        "max_caracteres_par_ligne": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 160,
+          "description": "Reprise d'une contrainte declaree par l'amont (01_scripts.json.contraintes_de_place), jamais une mesure calculee ici."
+        },
+        "regles": { "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 10 } },
+        "duree_affichage": { "$ref": "#/definitions/duree_non_mesuree" }
+      }
+    },
+    "support_lecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut", "commande_verification", "famille", "requetes_catalogue_famille_audio", "preuve_de_recherche", "note_de_session"],
+      "properties": {
+        "statut": {
+          "enum": ["NON_VERIFYE", "VERIFIE_PRESENT", "VERIFIE_ABSENT"],
+          "description": "Contrainte specifique du role : un plan de voix declare son support de lecture. NON_VERIFYE = aucun device audio recherche ni pose (cas de ce run). Seuls VERIFIE_PRESENT / VERIFIE_ABSENT autorisent une affirmation ; jamais une voix declaree posee ou entendue."
+        },
+        "commande_verification": {
+          "type": "string",
+          "pattern": "^search-playsets --type PID",
+          "description": "La commande catalogue qui trancherait. Voice_Designer ne l'appelle pas (acces_mcp = none) : il la prescrit a Lead_Programmer."
+        },
+        "famille": { "enum": ["AUDIO_VOIX", "AUDIO_AMBIANCE", "AUDIO_SFX", "VISUEL", "UNKNOWN"] },
+        "requetes_catalogue_famille_audio": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 200,
+          "description": "Nombre reel de requetes audio tentees sur le run. 0 est un fait, pas un oubli a masquer."
+        },
+        "preuve_de_recherche": { "type": "string", "minLength": 15 },
+        "etat_verse": { "enum": ["NO_VERSE_STAGED", "MODULES_DECLARES", "UNKNOWN"] },
+        "note_de_session": {
+          "type": "string",
+          "minLength": 15,
+          "description": "Etat de la session play-in-client a la redaction. Non connectee = aucune ecoute allegable."
+        }
+      }
+    },
+    "abstention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sujet", "motif", "renvoi_vers"],
+      "properties": {
+        "sujet": { "type": "string", "minLength": 5 },
+        "motif": { "type": "string", "minLength": 10 },
+        "renvoi_vers": {
+          "enum": [
+            "Producer_Orchestrator",
+            "Creative_Director",
+            "Game_Designer",
+            "Narrative_Designer",
+            "Writer_Scenariste",
+            "UX_UI_Designer",
+            "Level_Designer",
+            "Lead_Programmer",
+            "Gameplay_Programmer",
+            "AI_Programmer",
+            "UI_Programmer",
+            "Audio_Director",
+            "Composer",
+            "Sound_Designer"
+          ]
+        }
+      }
+    }
+  }
+}

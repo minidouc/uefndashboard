@@ -1,0 +1,167 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-015",
+  "from": "Graphics_Programmer",
+  "to": ["Producer_Orchestrator", "Creative_Director"],
+  "artifact": "05_visuals.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-09",
+  "summary_short": "Ambiance relue sur 3 captures lues : 1 lampadaire Lit, 1 enseigne HoloIcon, 1 poisson neon emissif ; 0 propriete ecrite, 0 acteur illegal (582), verdict approxime (holographie non prouvee).",
+  "payload": {
+    "visual_devices": [
+      {
+        "actor_label": "Lamp_01",
+        "role_visuel": "eclairage_localise",
+        "asset_path": "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_CP_Sunburst_Streetlamp_01_Lit_ab4b2342.PPID_CRP_Sunburst_CP_Sunburst_Streetlamp_01_Lit_ab4b2342",
+        "source_recherche": "search-playsets --query 'Sunburst lamp' (search_sunburst_lamp.json) ; variante Streetlamp Lit retenue (02_palette.json)",
+        "placement_mode": "TILE_ANCHOR",
+        "tile": [7, 10, 0],
+        "ref_path": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest.claudtest:PersistentLevel.CP_Sunburst_Streetlamp_01_Lit_C_UAID_08F97E52BCAA0A0E03_1292800662",
+        "xform": {
+          "location": { "x": 5060.06, "y": 6449.51, "z": 0.0 },
+          "rotation": { "pitch": 0.0, "yaw": 14.04, "roll": 0.0 },
+          "scale": { "x": 1.0, "y": 1.0, "z": 1.0 }
+        },
+        "status": "placed",
+        "consigne_dans_05_visuals": true,
+        "properties_tentees": [
+          { "property": "intensity", "target": null, "read_back": null, "status": "NON_TENTE",
+            "detail": "list_properties jamais appele sur cet acteur : ecrire un nom serait l'inventer" }
+        ],
+        "notes": "lumiere obtenue par l'asset lui-meme (Streetlamp_01_Lit) : 0 outil lumiere dans les 388 outils MCP"
+      },
+      {
+        "actor_label": "Sign_Vertical_01",
+        "role_visuel": "enseigne_emissive",
+        "asset_path": "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Cybercity_Sign_HoloIcon_db77bf46.PPID_CRP_Sunburst_BP_Cybercity_Sign_HoloIcon_db77bf46",
+        "source_recherche": "search-playsets --query 'Sunburst sign' (search_sunburst_sign.json)",
+        "placement_mode": "TILE_ANCHOR",
+        "tile": [20, 9, 0],
+        "ref_path": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest.claudtest:PersistentLevel.BP_Cybercity_Sign_HoloIcon_C_UAID_08F97E52BCAA0A0E03_1295910696",
+        "xform": {
+          "location": { "x": 11533.45, "y": 5948.52, "z": 71.3 },
+          "rotation": { "pitch": 0.0, "yaw": 167.47, "roll": 0.0 },
+          "scale": { "x": 0.62, "y": 0.62, "z": 0.62 }
+        },
+        "status": "placed",
+        "consigne_dans_05_visuals": true,
+        "properties_tentees": [],
+        "notes": "pivot Z 485 cm corrige par la spec (enseignes enfoncees de -3,2 a -3,07 cm puis +3,44 cm)"
+      },
+      {
+        "actor_label": "Koi_Holo_Cyan",
+        "role_visuel": "enseigne_emissive",
+        "asset_path": "/Harbor_Comp/SetupAssets/Maps/PPIDs/PPID_Harbor_Comp_BP_SunStroke_NeonSignFish_A_2f46f41a.PPID_Harbor_Comp_BP_SunStroke_NeonSignFish_A_2f46f41a",
+        "source_recherche": "search-playsets --query 'neon fish' (search_neon_fish.json) ; requetes 'koi' et 'cyan fish' sans resultat",
+        "placement_mode": "RELATIVE_TO_ACTOR",
+        "ref_path": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest.claudtest:PersistentLevel.BP_SunStroke_NeonSignFish_A_C_UAID_08F97E52BCAA0A0E03_1293957678",
+        "xform": {
+          "location": { "x": 6917.88, "y": 4802.99, "z": 1119.19 },
+          "rotation": { "pitch": 0.0, "yaw": 90.0, "roll": 0.0 },
+          "scale": { "x": 1.7088383560975016, "y": 1.7088383560975016, "z": 1.7088383560975016 }
+        },
+        "status": "placed",
+        "consigne_dans_05_visuals": true,
+        "properties_tentees": [],
+        "notes": "candidat poisson neon emissif, pas un mesh opaque renomme ; couleur cyan et silhouette koi non certifiees"
+      }
+    ],
+    "theme_reference": {
+      "source": "00_vision.json absent du workspace de reference ; references visuelles relues : mp01.png / mp02.png (brief CP77)",
+      "attendu": "poissons holographiques translucides, eclairage d'ambiance pilote, atmosphere neon",
+      "obtenu": "enseignes neon visiblement emissives (pas des meshes opaques), lampadaires deja allumes, aucune atmosphere reglee",
+      "ecart_assume": "critere emissif satisfait, critere holographique non satisfie : approxime, jamais proven"
+    },
+    "properties": {
+      "report": "07_properties_report.json",
+      "status": "PASSED",
+      "error_count": 0,
+      "applied": [],
+      "errors": [],
+      "not_placed": [],
+      "scope": "chaque valeur ecrite par set_properties est relue par get_properties ; les devices Verse (SetDeviceProperty) ne sont pas couverts : outil inconnu, jamais teste sur un creative_device"
+    },
+    "snapshot": {
+      "captures": [
+        {
+          "file": "topdown.png",
+          "bytes": 908861,
+          "command": "capture_view.py",
+          "camera_requested": { "location": { "x": 6912.0, "y": 6912.0, "z": 35000.0 }, "rotation": { "pitch": -90.0, "yaw": 0.0, "roll": 0.0 } },
+          "camera_read_back": { "location": { "x": 6912, "y": 6912, "z": 35000 }, "rotation": { "pitch": -90, "yaw": 0, "roll": 0 } },
+          "image_lue": true,
+          "observations": "plateforme carree complete, couronne de 16 tours, bassin central, trois anneaux lisibles, deux poissons opposes (orange a l'ouest, cyan a l'est), 4 enseignes aux bords"
+        },
+        {
+          "file": "player.png",
+          "bytes": 1357369,
+          "command": "capture_view.py",
+          "camera_requested": { "location": { "x": 3328.0, "y": 6912.0, "z": 260.0 }, "rotation": { "pitch": 12.0, "yaw": 0.0, "roll": 0.0 } },
+          "camera_read_back": { "location": { "x": 3328, "y": 6912, "z": 260 }, "rotation": { "pitch": 12.000000000000002, "yaw": 0, "roll": 0 } },
+          "image_lue": true,
+          "observations": "vue depuis le spawner sud : les deux enseignes poisson neon encadrent le champ ; le mannequin translucide central est l'apercu editeur du Player Spawner, pas un acteur de decor"
+        }
+      ],
+      "verdict": "approxime",
+      "appuye_par": ["topdown.png", "player.png"],
+      "scope": "le cadrage par defaut de visual-snapshot (Z = max(lignes, colonnes) x 512 x 1,2) etait trop proche : capture corrigee en reculant la camera"
+    },
+    "legality": {
+      "report": "06_legality_report.json",
+      "status": "PASSED",
+      "valid_actors": 582,
+      "illegal_count": 0,
+      "illegal_actors": []
+    },
+    "not_sourced": [
+      "aucun device PID_ d'ambiance (skydome, brouillard, post-process, lumiere reglable) trouve : 49 requetes catalogue tentees, seules les familles Sunburst/Harbor/DelMar/Covert ont rendu des PPID_ visuels",
+      "0 outil light/emissive/lumen/terrain/foliage dans les 388 outils MCP inventories : l'eclairage vient de l'asset, pas d'un reglage",
+      "aucun nom de propriete d'ambiance n'a ete liste (Object.list_properties jamais appele sur ces acteurs)"
+    ]
+  },
+  "constraints": {
+    "must_preserve": ["Lamp_01", "Sign_Vertical_01", "Koi_Holo_Cyan", "Spawner_Plaza_01"],
+    "forbidden": [
+      "aucun reglage manuel dans l'editeur hors spec",
+      "aucun chemin /Game/Athena ou /Game/Environments",
+      "aucun device pose hors 05_visuals.json",
+      "aucune propriete declaree appliquee sans relecture",
+      "aucun MaterialInstanceTools.set_* sans accord Engine_Programmer + Producer"
+    ],
+    "legal_asset_prefixes": ["PID_", "PPID_"],
+    "audit_amont_requis": "06_audit_report.json PASSED source live",
+    "session_state_interdite": ["Connected", "Connecting", "UpdatingContent"]
+  },
+  "golden_example_ref": "skill/exemples/ambiance-rellue-et-prouvee.json",
+  "acceptance": [
+    "audit_amont_passee_live",
+    "devices_tous_consignes",
+    "asset_paths_pid_ou_ppid",
+    "refpath_persistes",
+    "legalite_0_acteur_illegal",
+    "aucune_property_inventee",
+    "camera_relue",
+    "png_lu",
+    "verdict_fonde_sur_capture",
+    "relance_idempotente"
+  ],
+  "next_step_hint": "06_audit_report.json PASSED source live (22:52:11) et 06_legality_report.json 582 acteurs / 0 illegal (22:52:12) relus apres poses. Pour un ciel, un brouillard ou un post-process reels, il manque un device legal et un nom de propriete liste : a faire statuer par Engine_Programmer avant toute nouvelle pose.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN EXAMPLE - la forme attendue de 05_visuals.json quand l'ambiance ne peut etre que documentee",
+    "donnees_reelles": [
+      "les 3 devices : asset_path, refPath, xform relus et notes repris de _placed.json / 02_palette.json / 05_props.json du run du 2026-10-23",
+      "properties : 07_properties_report.json verbatim (applied [] car aucune propriete demandee) avec son scope",
+      "captures : topdown.png et player.png + les paires camera requested/read_back de topdown_camera.json et player_camera.json, octets verifies sur disque",
+      "legality : 06_legality_report.json verbatim ; theme : comparaison article 13.3 du journal (mp01.png / mp02.png)"
+    ],
+    "part_stagsee": "le run de reference n'a jamais delegue de passe d'ambiance : ces trois props ont ete poses par Physics_Programmer. Ils sont reemployes ici pour montrer la forme d'un device consigne (label, asset_path PID_/PPID_, refPath, transform relue), pas pour revendiquer une pose faite par l'agent 15.",
+    "criteres_hors_acceptance": "proprietes_toutes_relues et aucun_reglage_hors_spec restent hors liste, et non par omission : properties.applied = [] (aucune propriete demandee, donc aucune ecrite et aucune relue) et le status du rapport est le verbatim PASSED. Ce sont des criteres de realisation -- les revendiquer laisserait croire qu'une passe get_properties a eu lieu. La convention du paquet est la suivante : un critere de declaration ou d'interdit se coche sur donnees reels ou vides (legalite_0_acteur_illegal, aucune_property_inventee), un critere de realisation ne se coche que si l'action a ete faite et relue.",
+    "pourquoi_il_passe": [
+      "aucune propriete n'est declaree appliquee : status NON_TENTE ou liste vide, et le rapport reste le verbatim PASSED -- la discipline 'rien d'ecrit sans relecture' est visible dans le document",
+      "verdict 'approxime' appuye sur deux PNG relus (image_lue true, bytes, camera_read_back) : le manque d'holographie est ecrit, pas maquille",
+      "chaque asset_path porte un identifiant PPID_ : le motif du schema exclut de fait /Game/Athena",
+      "not_sourced enonce les trois limites (catalogue, outils lumiere, proprietes jamais listees) au lieu de les laisser implicites",
+      "summary_short : des comptes et des statuts relus, aucun adjectif d'auto-evaluation"
+    ]
+  }
+}

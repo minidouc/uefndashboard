@@ -1,0 +1,147 @@
+{
+  "$id": "uefn.longterm.Mission_Content_Designer.v1",
+  "agent": "Mission_Content_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des faits de pipeline sources, des chiffres reels de run, un lexique de statuts et des pieges de conception de contenu. Tout ce qui n'est pas sourci est marque UNKNOWN.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 05, pole Design, phase DESIGN ; appele apres Game_Designer (02), System_Designer (03), Economy_Designer (04) et Narrative_Designer (06)",
+    "artifact": "01_missions.json",
+    "enveloppe": "uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; payload = resultat atomique, jamais de prose",
+    "amont": ["Creative_Director (00_vision.json)", "Game_Designer (01_gdd.json)", "System_Designer (01_systems.json)", "Economy_Designer (01_economy.json)", "Narrative_Designer (01_lore.json)"],
+    "aval": ["Level_Designer (09, place les zones d'objectif)", "AI_Programmer (13)", "UI_Programmer (14)", "Graphics_Programmer (15)", "Producer_Orchestrator"],
+    "chaine": "00_vision.json -> 01_gdd.json -> 01_systems.json / 01_economy.json / 01_lore.json -> 01_missions.json -> 03_grid.json (09) -> 04_devices.json (Physics) -> Verse (10-15)",
+    "studio": "21 agents (20 specialistes + Producteur Frontier), execution strictement sequentielle, hub-and-spoke via Producer_Orchestrator, filesystem comme bus, PC 16 Go",
+    "gates_hitl": ["#1 brief creatif (Creative_Director)", "#2 volet design (GDD et specs 01_*, dont le mien)", "#3 architecture technique", "#4 avant toute ecriture destructive dans Unreal"],
+    "regle_gate": "un agent n'ecrit que PENDING dans un champ de gate ; VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain",
+    "jam": "Epic AI Megajam 2026, 12-16 novembre 2026 (util/multi_agent/README.md) ; reglement et criteres officiels UNKNOWN",
+    "securite": "acces_mcp: none pour les agents Design (05-securite-mcp.md, variante A) ; lecture de fichiers uniquement",
+    "maths_externalisees": "aucune coordonnee calculee par un modele : le handoff passe une zone_id et un instant, le Python chiffre (WP2 p.9)",
+    "black_box": "un agent partage son output, pas son processus (WP3 p.18) ; les handoffs sont les seuls canaux entre agents (WP4 p.20)"
+  },
+  "contrats_fichiers": {
+    "ce_que_jis_en_entree": {
+      "01_gdd.json": "source unique des lieux jouables : project_name, game_mode, scale_category, zones[].zone_id, connects_to[] paires de zones, gameplay_timeline_sec[].{time,event}, required_devices[].{actor_label,device_class}, requested_assets, verse_modules, notes",
+      "01_systems.json": "regles d'etat, minuteries, etats de sauvegarde : sans lui, aucun preerequis d'objectif ne peut etre garantie",
+      "01_economy.json": "puits de recompense et drop tables : sans lui, toute recompense est non_remunere ou UNKNOWN",
+      "01_lore.json": "factions, personnages, trame : sans lui, lore_ref = UNKNOWN et je n'invente aucun nom",
+      "03_grid.json": "grille effective du Level_Designer : sert a verifier qu'une zone d'objectif est franchissable (connects_to, edge_policy)",
+      "04_devices.json": "liste reelle des devices poses : seule source des actor_label que je peux citer"
+    },
+    "ce_que_je_produis": {
+      "01_missions.json": "source_amont, format_mission, missions[], declencheurs[], couverture_timeline[], zones_gdd[], verrous_gdd[], hors_perimetre[], gate_hitl_2 ; enveloppe handoff complete avec acceptance machine-checkable",
+      "ecrit_hors_de_mon_dossier": "handoff/H-DESIGN-<seq>__Mission_Content_Designer__to__<To>.json (bus, committe, log de trajectoire)"
+    },
+    "contrat_de_poids": "payload atomique, detail long sur disque et chemin seul dans le handoff ; context_budget_tokens <= 4000 [adaptation maison]",
+    "interdits_de_redaction": ["coordonnees XYZ ou tuiles absolues", "chemins /Game/ (ILLEGAL_ASSET_PATH)", "PPID_/PID_ finals (choix Lead_Programmer)", "textes definitifs (07)", "placement spatial (09)", "code Verse (10-15)"]
+  },
+  "lexique_statuts": {
+    "amont_statut": "complet = systems + economy + lore emis ; partiel = certains absents ; geometrique_seul = seul le GDD existe reellement (cas du run Corpo Plaza) ; UNKNOWN = non releve",
+    "format_mission": "scriptee (beats fixes) / emergente (objectifs sans sequence) / evenementielle (recurrent, hors trame) / observation_seule (aucun objectif actif, tenue d'instants lisibles) / boss (phases <= 3)",
+    "type_objectif": "principal / secondaire / secret / observation",
+    "statut_dispositifs": "tous_demandes_gdd = licite ; au_moins_un_non_demande = mecanique fantome, motif de rejet ; aucun = objectif sans device",
+    "statut_implantation": "implantable / conditionnel (ca bloque ailleurs) / non_implantable (s'assume, ne se maquille pas) / UNKNOWN",
+    "statut_preuve_recompense": "sourcee_amont (entree reelle de 01_economy.json) / approximee / sans_source (rejete) / non_applicable (nature non_remunere) / UNKNOWN",
+    "couverture_etape": "objectif_attache (au moins un objectif rattache, liste non vide) / observation / non_couvert / hors_contenu",
+    "fin": "atteignable / ouverte / aucune ; une fin ouverte ou aucune exige abandon.possible = true",
+    "juge_externe": "validateur_python / audit / capture_session / humain_hitl / UNKNOWN ; le designer n'est jamais un juge",
+    "mecanique_fantome": "toute exigence de device, de volume, de timer, de mover ou de module Verse non present dans required_devices ou verse_modules du GDD",
+    "zone_servie": "une zone sert le contenu si au moins un objectif s'y declenche ; la voir depuis un autre point ne la rend pas servie"
+  },
+  "pieges_de_conception": [
+    {
+      "signe": "Le GDD declare game_mode rpg et une note 'scene contemplative, aucune sauvegarde ni publication', avec verse_modules vide.",
+      "cause": "Le mode decrit un cadre, pas un contenu ; la note et l'absence de script sont les vraies limites. Un designer qui lit 'rpg' et ecrit des quetes produit du contenu non implantable.",
+      "conduite": "format observation_seule, nb_missions_mvp = 0 assume, 1 mission d'observation aux objectifs branches sur les etapes 0/1/5 s, recompense non_remunere / puits aucun, verrous_gdd recopies."
+    },
+    {
+      "signe": "Un objectif s'appuie sur 'le joueur entre dans le volume ouest' alors que le GDD ne demande qu'un player_spawner.",
+      "cause": "Le volume, le timer et l'interaction sont des devices ; un seul device existe reellement (Spawner_Plaza_01, 1 entree dans 04_devices.json).",
+      "conduite": "statut_dispositifs = au_moins_un_non_demande donc rejet avant envoi ; soit l'objectif est reecrit sans device, soit statut_implantation = non_implantable + question au Producteur."
+    },
+    {
+      "signe": "L'objectif est 'le joueur trouve cela beau' ou 'ressent le recueillement'.",
+      "cause": "Aucune condition d'observation : ni validateur ni juge ne peut dire tenu ou non tenu (WP4 p.20).",
+      "conduite": "conversion en evenement visible ('le bassin, les trois anneaux et les deux kois sont dans le champ au temps 1 s') + juge et artefact nommes ; sinon suppression."
+    },
+    {
+      "signe": "Une recompense annonce '500 XP' sans entree d'aucune table.",
+      "cause": "01_economy.json n'a jamais ete emis : il n'y a pas de puits, donc rien ne paie.",
+      "conduite": "soit source_ref reel + statut_preuve sourcee_amont, soit nature non_remunere + puits aucun ; sans_source est un motif de rejet, jamais un chiffre plausible."
+    },
+    {
+      "signe": "Une mission 'riche' place ses objectifs dans Zone_Koi_Lagoon ou Zone_Basin_Upper.",
+      "cause": "Zone inventee : le GDD ne declare que 9 zone_id ; l'espace appartient au Level_Designer (09).",
+      "conduite": "rattacher a un zone_id existant (Zone_South, Zone_Center, Zone_East, Zone_West, Zone_North, SW/SE/NW/NE) ou remonter la demande de zone au Game_Designer via le Producteur."
+    },
+    {
+      "signe": "La timeline du GDD (0 s, 1 s, 5 s) est remplacee par des temps de mission en minutes non annees.",
+      "cause": "Les etapes reelles sont le seul horloge commune au run ; les deplacer casse la convergence avec 09 et la session.",
+      "conduite": "couverture_timeline reprend chaque time_sec tel quel avec statut et objectifs rattaches ; toute etape non couverte se declare (non_couvert + motif)."
+    },
+    {
+      "signe": "La fiche exige 'la montee au niveau 2' ou 'la symetrie des anneaux'.",
+      "cause": "La grille reelle n'a qu'un seul z_index (21x21 effectifs sur 23x23x1 demandes), edge_policy fall_zone, symmetric false et symmetry_axis null ; la verticalite est portee par l'intention props, pas par des etages poses.",
+      "conduite": "ecrire l'intention (point haut, horizon) et la revendiquer comme a verifier par Level_Designer ; ne jamais en faire une condition d'objectif garantie."
+    },
+    {
+      "signe": "Une mission n'a ni fin ni abandon ('la quete reste ouverte tant que le joueur veut').",
+      "cause": "Aucun seuil de sortie : le downstream ne peut ni la clore ni la proposer au HITL.",
+      "conduite": "fin.statut = atteignable avec condition et seuil, ou abandon.possible = true avec consequence ; sinon BLOCKED."
+    },
+    {
+      "signe": "Le livrable contient un chemin /Game/Athena/... pour un trigger, ou un PPID_ copie d'un autre role.",
+      "cause": "Confusion des niveaux d'abstraction : un designer de contenu cite des roles de device, pas des references d'assets ; /Game est illegal et fait echouer la validation d'ile.",
+      "conduite": "dispositif_reel = device_class generique (player_spawner_device) + statut_ref ; tout chemin d'asset est retire avant envoi."
+    },
+    {
+      "signe": "La passe sort avec gate_hitl_2.statut = VALIDE_HUMAIN signe par le role lui-meme.",
+      "cause": "Confusion entre rendre et valider ; le gate #2 est une decision humaine portee par le Producteur.",
+      "conduite": "PENDING dans toute sortie d'agent, iterations <= 3 ; un handoff auto-valide est rejete."
+    },
+    {
+      "signe": "Douze missions, trente objectifs et quatre quetes secondaires sont livres 'pour faire riche'.",
+      "cause": "Surcharge de jam sur PC 16 Go avec execution sequentielle : plus rien n'est verifie, et le handoff depasse 4000 tokens.",
+      "conduite": "MVP 1 a 10 missions selon le format, 1 a 5 objectifs par mission, max 12 ; le detail va sur disque, seul le chemin passe dans le handoff."
+    },
+    {
+      "signe": "La fiche demande 'quel est ton personnage prefere' ou relate une reponse utilisateur recue en session.",
+      "cause": "Contact direct avec l'humain : le Producteur est le seul a interroger l'utilisateur (WP4 p.20, pas de boucle de communication laterale).",
+      "conduite": "la question part en constraints.must_ask_producer (15 max par phase) ; le handoff ne mentionne jamais une echange avec l'utilisateur."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le contenu est dessine AVANT le placement : 01_missions.json sort avant 03_grid.json, et Level_Designer sert les zones d'objectif (l'espace vient au contenu, pas l'inverse).",
+    "Les ancrages sont semantiques (zone_id, actor_label, time en secondes) et jamais geometriques : c'est le rempart anti-hallucination de coordonnees (WP2 p.9).",
+    "Une scene contemplative est un arrete de pipeline, pas une dette : 0 mission active + 1 mission d'observation est une sortie valide si chaque objectif reste verifiable.",
+    "Zero mecanique fantome est un critere d'acceptation, pas une recommandation : tout dispositif cite doit figurer dans required_devices ou verse_modules.",
+    "Les artefacts amont non emis sont declares (artefacts_amont_absents) plutot que simules ; un champ UNKNOWN coute moins cher qu'une regle inventee.",
+    "Le texte des objectifs est une intention : le contenu definit le quoi et le quand, Writer_Scenariste (07) definit le comment c'est dit.",
+    "Le Producteur relit summary_short (200 caracteres max) et rien d'autre mot a mot : le reste est verifie par schema.",
+    "Les criteres d'acceptation sont choisis pour etre cochables par du code (WP4 p.20), donc aucun ne porte sur l'interet, l'emotion ou le fun."
+  ],
+  "chiffres_de_reference": {
+    "note": "Chiffres reels du run Corpo Plaza (ws_corpo_plaza), cites comme faits verifiables ; un ordre de grandeur de cadrage, pas une cible a copier sur un autre projet.",
+    "grid_dimensions_tiles_demandees": "23x23x1 (01_gdd.json)",
+    "grille_reelle_effective": "21x21 interieur, origin_tile [2,2,0], un seul z_index, edge_policy fall_zone, symmetric false / symmetry_axis null (03_grid.json)",
+    "zones_gdd": 9,
+    "connects_to": 12,
+    "requested_assets": 22,
+    "required_devices": "1 : Spawner_Plaza_01 (player_spawner_device) ; 04_devices.json = 1 device pose, fichier de 313 octets",
+    "gameplay_timeline_sec": "3 etapes : t = 0 s (apparition sud, vue vers le nord), t = 1 s (bassin, trois anneaux, deux kois visibles), t = 5 s (circulation libre entre les anneaux, couronne de tours)",
+    "verse_modules": "vide ([] ) : aucun script, donc aucune mission ne peut exiger un module Verse",
+    "tuile_cm": "512 x 512 x 384 (tile_size_cm de 03_grid.json)",
+    "machine": "PC 16 Go, un seul agent actif a la fois, execution sequentielle",
+    "gates_hitl": 4,
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "next_step_hint_max_caracteres": 400,
+    "missions_max": 12,
+    "objectifs_par_mission": "1 a 5",
+    "recompenses_par_mission": "1 a 3",
+    "questions_producteur_max_par_phase": 15,
+    "iterations_gate_max": 3,
+    "ppid_catalogue_estime": 100418,
+    "pid_catalogue_estime": 1960,
+    "catalogue_non_couverts": "UNKNOWN (aucune mesure officielle dans le depot)"
+  }
+}

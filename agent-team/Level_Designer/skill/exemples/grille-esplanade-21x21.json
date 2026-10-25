@@ -1,0 +1,97 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-009",
+  "from": "Level_Designer",
+  "to": ["Physics_Programmer"],
+  "artifact": "03_grid.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-02",
+  "summary_short": "Esplanade 21x21 sur carte 23x23, origine [2,2,0], bord fall_zone sans mur. Non-symetrie assumee (axis null) : entree unique sud, tour dominante nord, kois aeriens.",
+  "payload": {
+    "grid": {
+      "tile_size_cm": [512.0, 512.0, 384.0],
+      "symmetric": false,
+      "symmetry_axis": null,
+      "origin_tile": [2, 2, 0],
+      "edge_policy": "fall_zone",
+      "floors": [
+        {
+          "z_index": 0,
+          "matrix": [
+            ["V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V", "V"],
+            ["V", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "V"],
+            ["V", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "S1", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "V"],
+            ["V", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "V"],
+            ["V", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "O", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "V"]
+          ],
+          "_comment": "Matrice reelle tronquee pour le few-shot : lignes 0, 1, 4, 5 et 11 du fichier reel ; spawner S1 en [4,11], bassin O en [11,11], tout le reste de l'interieur est '.' bordes de 'V' (23 lignes x 23 colonnes)."
+        }
+      ],
+      "_comment": "Plateforme interieure 21 x 21 tuiles. Une seule entree sud, koi colores et tour dominante : pas de symetrie declaree."
+    },
+    "props_intent": [
+      {
+        "actor_label": "Basin_01",
+        "tile": [11, 11, 0],
+        "slot": "CENTER",
+        "face_towards": "CENTER",
+        "depth_plane": "jouable",
+        "zone_ref": "Zone_Center",
+        "notes": "Bassin central vitre, creux suggere en slice -1 ; l'empreinte attendue reste sous 55 % de la tuile."
+      },
+      {
+        "actor_label": "Ring_Inner_01",
+        "tile": [14, 12, 0],
+        "slot": "CENTER",
+        "face_towards": "CENTER",
+        "depth_plane": "bordure",
+        "zone_ref": "Zone_Center",
+        "notes": "Anneau concentrique tourne : anticiper les bounds rotatifs, marge d'une tuile avec les tours."
+      },
+      {
+        "actor_label": "Koi_Aerial_01",
+        "tile": [8, 11, 2],
+        "slot": "CENTER",
+        "face_towards": "SOUTH",
+        "depth_plane": "horizon",
+        "zone_ref": "Zone_North",
+        "notes": "Koi holographique aerien au-dessus de la place : niveau 2 porte par l'intention, pas par une matrice pleine."
+      }
+    ]
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "z_floor": -1,
+    "z_ceiling": 2,
+    "must_preserve": ["S1 en [4,11]", "O en [11,11]", "entree unique sud", "fall_zone sans mur de bord"],
+    "forbidden": [
+      "aucune coordonnee finale en cm dans ce handoff",
+      "aucun choix d'asset (palette = Lead_Programmer)",
+      "aucun chemin /Game/..."
+    ]
+  },
+  "golden_example_ref": "skill/exemples/grille-esplanade-21x21.json",
+  "acceptance": [
+    "grid_dimensions_declared",
+    "z_bounds_respected",
+    "symmetry_declared_or_assumed_none",
+    "edge_policy_declared",
+    "no_absolute_cm_by_llm",
+    "tiles_within_bounds",
+    "spawns_reachable",
+    "corridors_min_100cm",
+    "no_flat_map_3_levels"
+  ],
+  "next_step_hint": "Physics : validate-grid puis build-structure par lots de 10 sur la matrice complete du workspace. Verticalite portee par les props (bassin creux, anneaux, kois aeriens, tour dominante) : auditer les bounds rotatifs des anneaux. Non-symetrie assumee : 11_symmetry_report aura axis null, ne pas la vendre comme preuve.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN EXAMPLE - la forme attendue du livrable (03_grid.json reel du run Corpo Plaza, matrice tronquee)",
+    "pourquoi_il_passe": [
+      "dimensions declarees en tuiles (23x23, interieur 21x21) et origine [2,2,0] : aucun centimetre absolu calcule par le modele",
+      "symmetric: false + symmetry_axis: null ASSUME et ecrit dans summary_short - pas de fausse promesse de symetrie",
+      "edge_policy: fall_zone explicite ; lexique de cellules strict (V, ., S1, O)",
+      "props_intent ancres tile + slot + directions cardinales, empreinte et bounds rotatifs anticipes dans les notes",
+      "acceptance 100 % cochable par validate-grid / check-navigation ; matrice complete = fichier du workspace, pas le handoff"
+    ],
+    "verite_sur_la_verticalite": "la grille reelle ne porte qu'un seul z_index : les 3 niveaux exploitables du run (bassin en creux, mezzanine des anneaux, kois en niveau 2) sont portes par l'intention props. no_flat_map_3_levels est verifie par le validateur sur floors + props_intent ; l'exemple REJET montre la variante sans aucune intention verticale."
+  }
+}

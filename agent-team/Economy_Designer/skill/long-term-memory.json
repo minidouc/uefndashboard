@@ -1,0 +1,149 @@
+{
+  "$id": "uefn.longterm.Economy_Designer.v1",
+  "agent": "Economy_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline sourcees, un lexique de statuts de preuve, la frontiere avec System_Designer et des pieges de conception economique.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 04, pole Design, phase DESIGN, modele Flash, appele apres System_Designer (03) valide ; bloque Mission_Content_Designer (05)",
+    "artifact": "01_economy.json",
+    "acces_mcp": "none : aucun appel MCP, aucune lecture de compteur en editeur, aucune ecriture dans le niveau",
+    "enveloppe": "uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) : payload = resultat atomique, jamais de prose (WP3 p.18)",
+    "execution": "strictement sequentielle, hub-and-spoke via Producer_Orchestrator, filesystem comme bus, PC 16 Go : un seul agent actif a la fois",
+    "nb_agents": "21 specialistes + Producer_Orchestrator : je ne parle qu'a des IDs de cette liste, jamais a l'utilisateur",
+    "regle_maitresse": "un Flash ne calcule aucun chiffre de tete (WP2 p.9 : les maths sont externalisees). Ici, cela vaut aussi pour l'equilibrage economique : un prix, un taux, un solde gagne/depense sortent d'une mesure, d'une reserve testee, ou sont UNKNOWN.",
+    "co_signature": "drop tables : QUOI tombe = Economy_Designer ; COMBIEN = System_Designer ; un desaccord se remonte au Producteur, pas s'impose",
+    "frontiere_perimetre": {
+      "a_moi": ["monnaies", "XP meta entre sessions", "prix boutique et cout des items", "battle pass, saisons, resets", "recompenses meta des missions", "boucles de recompense", "anti-inflation et anti-exploits"],
+      "a_system_designer": ["XP intra-session (niveau pendant un run)", "degats, PV, cooldowns", "chiffres bruts des drops", "regles de systemes"],
+      "a_game_designer": ["mecaniques coeur", "boucle de jeu", "game_mode"],
+      "a_mission_content_designer": ["redaction et structure des missions ; je fournis seulement les recompenses"]
+    }
+  },
+  "contrats_fichiers": {
+    "01_gdd.json_amont": {
+      "emetteur": "Game_Designer (02)",
+      "champs_consommes": ["game_mode", "scale_category", "zones[].purpose", "connects_to", "gameplay_timeline_sec", "required_devices", "verse_modules", "notes"],
+      "usage_economique": "les notes et verse_modules decident si une persistance est possible ; required_devices limite les compteurs declarables ; la timeline donne l'horizon de seance reellement observe.",
+      "regle": "une note 'aucune sauvegarde ni publication' interdit toute ressource inter_session dans mon payload"
+    },
+    "01_systems.json_amont": {
+      "emetteur": "System_Designer (03)",
+      "usage_economique": "XP intra-session deja fixee, chiffres de drop, parametres de tuning a ne pas re-ecrire",
+      "regle": "je ne duplique pas ses chiffres : je les reference et j'ajoute la couche meta"
+    },
+    "00_vision.json_amont": {
+      "emetteur": "Creative_Director (01)",
+      "usage_economique": "le ton : une economie doit etre coherente avec la direction (une boutique neon kawaii dans une scene solennelle est une faute)",
+      "regle": "je ne negocie pas le ton : ton_coherence explique comment le modele le sert"
+    },
+    "04_devices.json_aval": {
+      "emetteur": "Physics_Programmer (16)",
+      "usage_economique": "source de verite du nombre de devices reellement poses et de leurs labels : mes compteurs_exposes s'appuient dessus, jamais sur un device imagine"
+    },
+    "10_editables.json_aval": {
+      "emetteur": "UI_Programmer / rapport de session",
+      "usage_economique": "atteste editable_count, actor_references, custom_verse_modules : un compteur economique n'existe que si un module Verse le porte"
+    },
+    "01_economy.json_aval": {
+      "lecteurs": ["Mission_Content_Designer (05)", "Gameplay_Programmer (12)", "UI_Programmer (14)", "Producer_Orchestrator"],
+      "regle": "le Gameplay_Programmer lit ses chiffres de tuning dans mes specs : un parametre hard-code dans un .verse sans reference a 01_economy.json est un rejet cote 12"
+    }
+  },
+  "lexique_statuts": {
+    "mesure": "valeur issue d'un run reel ; le champ preuve cite le fichier (01_gdd.json, 04_devices.json, 10_editables.json, rapport d'audit). Sans preuve citable, ce n'est pas une mesure.",
+    "reserve": "hypothese d'equilibrage assumee, a tester ; le champ test_departage est obligatoire et dit comment une passe de jeu ou une simulation tranche entre cette valeur et sa voisine.",
+    "UNKNOWN": "donnee absente du brief ou non mesuree ; c'est un etat valide, pas un trou a combler par une valeur plausible.",
+    "NON_IMPOSE": "le flux ou la ressource existe dans le vocabulaire du role mais le brief ne l'exige pas : on l'ecrit avec ses puits et ses sinks a valeur NON_IMPOSEE, on ne le supprime pas.",
+    "statut_economie": "IMPOSEE / NON_IMPOSEE / UNKNOWN : le statut de la question, pas une opinion sur l'interet du jeu.",
+    "modele_economique": "AUCUN / COSMETIQUE / HYBRIDE / PROGRESSION / UNKNOWN ; le pay-to-win n'est pas un modele du studio : il remonte en alerte.",
+    "persistance": "aucune / seance / inter_session / UNKNOWN : inter_session exige une sauvegarde, donc est interdit si le brief l'exclut.",
+    "sauvegarde_autorisee": "INTERDITE_PAR_BRIEF / AUTORISEE / UNKNOWN, toujours herite de la note du GDD, jamais decreter par moi.",
+    "counter_cable": "compteur_cable = false est une information, pas un aveu d'incomplet : le dire evite a l'aval d'inventer un score."
+  },
+  "pieges_de_conception": [
+    {
+      "signe": "Un puits a periodicit (ex. 50 pieces par respawn toutes les 8 s) fait face a un seul sink d'achat unique.",
+      "cause": "La somme injectee depasse la capacite d'absorption : l'economie gonfle en quelques minutes et tous les prix deviennent ridicules.",
+      "conduite": "calculer le solde gagne/depense sur la seance de reference ; si les sinks ne peuvent pas absorber, supprimer le puits, ajouter un sink, ou passer la valeur a UNKNOWN avec le test qui la departage."
+    },
+    {
+      "signe": "Un prix est presente comme ' equilibre ' sans aucune mesure ni test.",
+      "cause": "Confusion entre conviction et donnee : le modele sort un chiffre plausible de tete (WP2 p.9).",
+      "conduite": "soit une mesure citee par un fichier, soit une reserve avec test_departage, soit UNKNOWN. Un taux sans statut est un motif de rejet."
+    },
+    {
+      "signe": "Une ressource a des sinks mais une liste de sources vide.",
+      "cause": "L'economie a ete ecrite a l'envers, depuis la boutique et non depuis le gain : le joueur ne peut rien obtenir.",
+      "conduite": "toute ressource a au moins un puits ecrit (fut-il NON_IMPOSE) ; le validateur refuse sources vide."
+    },
+    {
+      "signe": "Le payload prevoit XP meta, saisons et transferts de compte alors que la note du GDD dit ' aucune sauvegarde ni publication '.",
+      "cause": "L'agent Design ignore la contrainte de persistance du moteur et du brief ; rien ne stocke l'etat entre deux sessions.",
+      "conduite": "sauvegarde_autorisee = INTERDITE_PAR_BRIEF, persistance_requise = false, 0 ressource inter_session ; l'economie devient non persistante ou est declaree NON_IMPOSEE."
+    },
+    {
+      "signe": "Le brief n'impose aucune economie et le livrable sort vide.",
+      "cause": "Confusion entre ' rien a imposer ' et ' rien a ecrire ' : l'aval ne sait pas s'il doit coder une recompense.",
+      "conduite": "statut_economie = NON_IMPOSEE, modele AUCUN, puits et sinks ecrits a statut NON_IMPOSE, liste non_imposes, gate HITL #2 PENDING."
+    },
+    {
+      "signe": "Des compteurs de score et d'or sont declares ' exposes ' alors que la scene ne comporte qu'un player spawner et 0 editable.",
+      "cause": "Inversion entre l'intention economique et l'etat reel des devices.",
+      "conduite": "compteurs_exposes s'appuie sur 04_devices.json et 10_editables.json ; un compteur non cable porte compteur_cable false et sa preuve."
+    },
+    {
+      "signe": "La monnaie est notee ' 250 ' sans unite.",
+      "cause": "Un taux sans unite ne peut pas etre compare ni simule ; le validateur ne peut rien cocher.",
+      "conduite": "unite obligatoire (or_par_respawn, secondes_par_zone, probabilite) et plage_acceptee quand la valeur est une reserve."
+    },
+    {
+      "signe": "Time-to-max inferieur a 5 heures de jeu.",
+      "cause": "L'economie s'epuise avant la fin de vie promise : le joueur n'a plus de raison de revenir.",
+      "conduite": "alerte ecrite dans courbe_progression, option de reset ou new-game+ proposee au Producteur, jamais imposee."
+    },
+    {
+      "signe": "L'economie exige des regles de monetisation Epic (V-Bucks, creator code, revenue share) que le depot ne source pas.",
+      "cause": "Le droit et la plateforme ne sont pas connus : toute promesse en argent reel est hors sol.",
+      "conduite": "UNKNOWN + question bloquante dans must_ask_producer ; aucune promesse de monetisation sans validation humaine."
+    },
+    {
+      "signe": "Un device, une coordonnee ou un PPID_ final apparaissent dans le payload economique.",
+      "cause": "Grignotage de role vers Physics_Programmer ou Lead_Programmer.",
+      "conduite": "retour BLOCKED, reecriture en flux et criteres ; les devices poses appartiennent a 04_devices.json."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Les 4 gates HITL existent et un agent n'ecrit que PENDING dans un champ de gate : la validation de l'economie est humaine, portee par le Producteur.",
+    "acceptance = criteres cochables par du code (WP4 p.20) : statut de preuve present, test de departage present, duree de vie declaree, solde puits/sinks, 0 ressource persistante si sauvegarde interdite.",
+    "Un agent Design n'appelle ni MCP ni CLI : je ne verifie aucun compteur en direct, je documente ce que les rapports laissent voir.",
+    "Donnee manquante = UNKNOWN, jamais une valeur plausible ; une mission a la fois ; jamais de contact direct avec l'utilisateur.",
+    "Le payload est atomique et ne depasse pas 4000 tokens : au-dela, decoupage en tranches ou reference par nom de fichier (WP2 p.19).",
+    "Les regles legales du catalogue s'appliquent aussi a l'economie : aucun /Game/Athena ni /Game/Environments (ILLEGAL_ASSET_PATH), aucun PPID_/PID_ final impose par un role Design."
+  ],
+  "chiffres_de_reference": {
+    "note": "Vraies donnees du run Corpo Plaza (2026-10-23/24) et constantes du pipeline ; pas des cibles d'equilibrage.",
+    "grid_dimensions_tiles": [23, 23, 1],
+    "tuile_cm": [512, 512, 384],
+    "zones": 9,
+    "connects_to": 12,
+    "assets_demandes": 22,
+    "devices_poses": 1,
+    "device_classe_unique": "player_spawner_device (Spawner_Plaza_01, tile [4,11,0], face NORTH)",
+    "compteurs_de_score_cables": 0,
+    "editable_count": 0,
+    "custom_verse_modules": 0,
+    "gameplay_timeline_sec": [0, 1, 5],
+    "game_mode": "rpg",
+    "scale_category": "LARGE",
+    "verse_modules": "vide",
+    "note_gdd": "Scene contemplative. Aucun asset /Game, aucun Verse personnalise, aucune sauvegarde ni publication.",
+    "ram_poste_go": 16,
+    "gates_hitl": 4,
+    "handoff_budget_tokens_max": 4000,
+    "summary_short_max_caracteres": 200,
+    "questions_producteur_max_par_phase": 15,
+    "iterations_max_avant_blocage": 3,
+    "ppid_catalogue_estime": 100418,
+    "pid_catalogue_estime": 1960
+  }
+}

@@ -1,0 +1,61 @@
+{
+"$schema": "uefn.handoff.v1",
+"handoff_id": "H-UX-8",
+"from": "UX_UI_Designer",
+"to": ["UI_Programmer", "Producer_Orchestrator"],
+"artifact": "01_ux_ui.json",
+"mission_ref": "M-CORPOPLAZA-DESIGN-08",
+"summary_short": "HUD immersif complet avec vie, score, minimap et sauvegarde : parcours magnifique, valide par moi, tres lisible.",
+"payload": {
+ "entrees": ["01_gdd.json"],
+ "principes": ["le joueur doit tout voir en permanence"],
+ "ecrans": [
+  { "id": "E01_JEU", "role": "jeu", "moment": "pendant la partie", "justification": "un rpg a besoin d'un HUD complet.", "elements": [
+   { "id": "EL99_VIE", "role": "information_permanente", "emprise": "coin_haut_gauche", "gabarit": "G01", "valeur_affichee": "100/100", "type_source": "fonction_exposee", "source_fonction": "GetPlayerHealth()", "lu_dans": "UNKNOWN", "statut": "attente_source_inconnue", "affichage": "toujours", "texte_ref": "hud.vie", "position_cm": [12, 340, 0] },
+   { "id": "EL98_SCORE", "role": "information_permanente", "emprise": "coin_haut_droit", "gabarit": "G01", "valeur_affichee": "12 450 points", "type_source": "constante_d_artefact", "source_fonction": "UNKNOWN", "lu_dans": "01_gdd.json", "statut": "affiche_source_lue", "affichage": "persistant", "texte_ref": "hud.score" },
+   { "id": "EL97_MINIMAP", "role": "information_permanente", "emprise": "centre", "gabarit": "G01", "valeur_affichee": "position du joueur", "type_source": "fonction_exposee", "source_fonction": "GetAgentWorldLocation", "lu_dans": "09_verse_report.json", "statut": "affiche_source_lue", "affichage": "permanent", "device_requis": "Map_Device_01" },
+   { "id": "EL96_CADRE", "role": "conteneur", "emprise": "plein_ecran", "gabarit": "G01", "valeur_affichee": "frame du HUD", "type_source": "aucune", "source_fonction": "UNKNOWN", "lu_dans": "UNKNOWN", "statut": "abstenu", "affichage": "fond permanent", "asset_path": "/Game/Athena/Interfaces/Hud_Frame.Hud_Frame" }
+  ] },
+  { "id": "E03_PAUSE", "role": "pause", "moment": "touche Echap", "justification": "retrouver la progression.", "elements": [
+   { "id": "EL95_SAUVER", "role": "action", "emprise": "liste_verticale_centree", "gabarit": "G01", "valeur_affichee": "Sauvegarder puis Publier l'ile", "type_source": "texte_agent_07", "source_fonction": "UNKNOWN", "lu_dans": "UNKNOWN", "statut": "affiche_source_lue", "affichage": "entree principale" }
+  ] }
+ ],
+ "flux": [
+  { "id": "FL01", "depuis": "E01_JEU", "vers": "E03_PAUSE", "declencheur": "Echap", "retour": "reprendre", "erreur": "" }
+ ],
+ "etats": { "E01_JEU": { "vide": "HUD complet affiche", "fin": "mort : ecran de score" } },
+ "abstentions": [],
+ "gabarits_de_place": [
+  { "id": "G01", "emprise": "coin_haut_gauche", "unite": "pixels_absolus", "capacite": "quatre indicateurs", "debordement": "mise a l'echelle" }
+ ],
+ "contrat_pour_agent_14": {
+  "principe": "14 calcule la vie, le score et la position puis les affiche",
+  "ne_recalcule_rien": false,
+  "fonctions_attendues": [{ "nom": "CalculeScoreDuJoueur", "origine_artefact": "UNKNOWN", "statut": "exposee_lue" }],
+  "textes": "01_scripts.json",
+  "interdits": ["ne rien tracer"]
+ },
+ "gate_hitl": { "numero": 3, "statut": "VALIDE", "valide_par": "UX_UI_Designer" },
+ "mockup_html": "<div class=hud>100/100</div>"
+},
+"constraints": { "acces_mcp": "write", "must_preserve": ["tout visible"], "forbidden": [] },
+"acceptance": ["c_est_lisible", "hud_complet", "parcours_fluide", "tres_bon_pitch"],
+"next_step_hint": "14 : calcule le score a chaque tick et ajoute la sauvegarde, c'est deja valide.",
+"context_budget_tokens": 9000,
+"exemple_annotations": {
+ "role": "CONTRE-EXEMPLE - rejete par le validateur et par le juge externe",
+ "motifs_de_rejet": [
+  "EL99_VIE : GetPlayerHealth() hors pattern, fonction_exposee avec lu_dans UNKNOWN et statut attente : l'agent 14 devrait INVENTER la fonction. 10_editables.json donne editable_count 0 et NO_VERSE_STAGED.",
+  "EL98_SCORE : 12 450 points calcule a la main, presente comme une constante de 01_gdd.json qui n'a aucun score.",
+  "E03_PAUSE : Sauvegarder et Publier alors que les notes du GDD les interdisent ; aucune mecanique jouee, aucun etat a sauvegarder.",
+  "EL97_MINIMAP : Map_Device_01 absent de 04_devices.json (seul Spawner_Plaza_01) ; GetAgentWorldLocation lu dans aucun build.",
+  "EL96_CADRE : asset_path hors properties, chemin /Game/ - jamais un asset final nomme par le Design.",
+  "abstentions vides : les absences sont pretendues couvertes au lieu d'etre motivees.",
+  "etats : E01 sans chargement ni erreur, E03 absent ; FL01 erreur vide : un parcours sans sortie d'erreur n'est pas un parcours.",
+  "texte_ref hud.vie, hud.score : 01_scripts.json n'existe pas, cles inventees.",
+  "contrat_14 : ne_recalcule_rien false, fonction annoncee exposee_lue avec origine UNKNOWN : 14 devrait s'abonner aux fonctions de 12 et 13.",
+  "gate VALIDE signe par l'agent lui-meme : un agent n'ecrit que PENDING (WP4 p.20).",
+  "forme : handoff_id hors pattern, entrees sous le minimum, pixels_absolus hors const, position_cm (WP2 p.9), mockup_html, acces_mcp write, 9000 tokens, acceptance non cochable."
+ ]
+}
+}

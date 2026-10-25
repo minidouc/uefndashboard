@@ -1,0 +1,49 @@
+{
+ "$schema": "uefn.handoff.v1",
+ "handoff_id": "H-POLISH-17",
+ "from": "Audio_Director",
+ "to": ["Composer", "Sound_Designer", "Producer_Orchestrator"],
+ "artifact": "13_audio_direction.json",
+ "mission_ref": "M-CORPOPLAZA-POLISH-17",
+ "summary_short": "Direction immersive : musique dynamique, ambiance -14 dB partout, SFX de combat, Audio Player pose au centre en 45511, 1536, 768.",
+ "payload": {
+  "reference_vision": {"source": "00_vision.json (vide)", "statut_source": "vision_lue", "ambiances_imposees": ["ville lointaine"], "signature_imposee": "nappe orchestrale en boucle", "place_du_silence": "aucune, le mix doit etre plein", "interdits_sonores_repris": []},
+  "palette_sonore": {"layers": [
+   {"id": "mus_dynamique", "role": "musique", "intention": "partition montante au contact d'un ennemi", "densite": "continue", "priorite_mix": 1, "statut": "NON_POSE", "conformite_decision": "conforme"},
+   {"id": "LAY-COMBAT", "role": "evenement", "intention": "impacts d'arme sur les kois holographiques", "densite": "continue", "priorite_mix": 2, "statut": "NON_POSE", "conformite_decision": "conforme"},
+   {"id": "LAY-AMB", "role": "ambience", "intention": "souffle de ville a -14 dB", "densite": "continue", "priorite_mix": 3, "statut": "NON_POSE", "conformite_decision": "conforme"},
+   {"id": "LAY-VOI", "role": "voix", "intention": "voix-off du guide sur 12 repliques", "densite": "ponctuelle", "priorite_mix": 1, "statut": "NON_POSE", "conformite_decision": "conforme"}
+  ], "emotions_cibles": ["immersive", "epique", "premium", "next-gen"]},
+  "cartographie_par_zone": [
+   {"rattachement_type": "coordonnees", "rattachement": "[45511.5, 1536.0, 768.0]", "intention_sonore": "ambience centree sur le bassin, rayon 2400 cm", "layers_actifs": ["LAY-AMB"], "volume_relatif": "principal", "statut": "NON_POSE"},
+   {"rattachement_type": "zone_id", "rattachement": "Zone_Centrale", "intention_sonore": "musique selon la proximite", "layers_actifs": ["mus_dynamique"], "volume_relatif": "principal", "statut": "NON_POSE"}
+  ],
+  "regles_de_mix": {"ordre_de_priorite": ["LAY-VOI", "mus_dynamique", "LAY-COMBAT"], "masquage": [{"dominant": "LAY-AMB", "masque": "LAY-SIG", "regle": "l'ambience ecrase tout sous -20 dB", "statut": "mesure"}], "silence_contractuel": "non applicable", "declencheurs_mecaniques": ["proximite ennemi", "degat recu", "mort du joueur"]},
+  "interdits": ["pas de dubstep"],
+  "mesures": [
+   {"id": "X1", "objet": "niveau ambience", "valeur": -14, "unite": "dB", "statut_preuve": "mesure"},
+   {"id": "X2", "objet": "niveau master", "valeur": -3, "unite": "decibelFS", "statut_preuve": "mesure"},
+   {"id": "M3", "objet": "couches", "valeur": "quatre", "unite": "layer", "statut_preuve": "UNKNOWN"}
+  ],
+  "faisabilite_creatif": {"statut_global": "VERIFIEE", "requetes_audio_menees": 12, "famille_assets_audio": "PPID_Harbor_Comp_BP_AudioPlayer_Loop_01", "piste_device": {"nom": "Audio Player", "provenance": "donne comme acquis", "statut": "NON_POSE"}, "commande_verification": "call-mcp audio_player --place", "consequence_si_introuvable": "on renomme un mesh visuel en asset audio"},
+  "abstentions_assumees": [],
+  "gate_hitl": {"numero": 4, "statut": "VALIDE_HUMAIN", "valide_par": "Audio_Director", "iterations": 5}
+ },
+ "constraints": {"acces_mcp": "uefn_write", "must_preserve": ["poser le device audio au centre"], "forbidden": ["aucun"]},
+ "acceptance": ["c'est atmospherique", "ca sonne epique", "no_flat_map_3_levels"],
+ "context_budget_tokens": 9000,
+ "next_step_hint": "Sound_Designer : poser PPID_Harbor_Comp_BP_AudioPlayer_Loop_01 aux coordonnees ; Gameplay ecrit le trigger de combat.",
+ "exemple_annotations": {
+  "role": "REJET - viole les regles, a ne jamais copier",
+  "motifs_de_rejet": [
+   "MOTIF CENTRAL : X1 et X2 donnent des niveaux en dB comme des mesures. Section 20 : session play-in-client non connectee, aucun niveau absolu mesure ; preuve fabriquee",
+   "rattachement en coordonnees et rayon 2400 cm : une intention se rattache a un zone_id ou un actor_label reel, jamais a un XYZ (WP2 p.9) ; Zone_Centrale n'existe pas dans les 9 zones",
+   "famille_assets_audio donnee comme un PPID_ verifie avec 12 requetes : 0 requete audio du run, les 49 visaient du visuel ; attendu A_VERIFIER, aucun PPID_ final",
+   "call-mcp audio_player --place est inventee : l'Audio Player vient de la spec agent 11 comme piste jamais testee ; un outil non verifie est UNKNOWN_TOOL_BLOCKED",
+   "mus_dynamique suppose un Verse reactif (verse_modules vide, NO_VERSE_STAGED) ; LAY-COMBAT et les 3 declencheurs violent la decision 4, declencheurs_mecaniques attendu vide",
+   "acces_mcp uefn_write et gate VALIDE_HUMAIN signe par l'agent en 5 iterations : l'agent Audio n'ecrit pas dans l'editeur, seulement PENDING",
+   "interdits a 1 element, abstentions vides (un ecart tu est une faute), 4 adjectifs non cochables, id mus_dynamique hors pattern, masquage cite LAY-SIG inexistant",
+   "acceptance non executable ; 9000 tokens au-dela du plafond ; handoff_id a 2 chiffres ; vision_lue sur un fichier absent ; next_step_hint qui premache coordonnees et MCP"
+  ]
+ }
+}

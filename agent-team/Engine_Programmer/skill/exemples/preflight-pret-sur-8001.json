@@ -1,0 +1,100 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-PREFLIGHT-001",
+  "from": "Engine_Programmer",
+  "to": ["Producer_Orchestrator", "Lead_Programmer", "Level_Designer", "Physics_Programmer", "Gameplay_Programmer", "AI_Programmer", "UI_Programmer"],
+  "artifact": "preflight_ok.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-00",
+  "summary_short": "Pont MCP relu sur 8001 (8000 OFFLINE code 2). RAM 12268/15515 Mo. Niveau claudetest lu par get_current_level. Pagination 200 relue. Harnais 122/122.",
+  "payload": {
+    "status": "READY",
+    "checked_at": "2026-10-23T21:38:12+00:00",
+    "mcp_port_active": 8001,
+    "mcp_endpoint": "http://127.0.0.1:8001/mcp",
+    "mcp_ports_tested": [
+      { "port": 8000, "result": "OFFLINE", "return_code": 2, "raw_message": "editeur injoignable sur http://127.0.0.1:8000/mcp" },
+      { "port": 8001, "result": "ONLINE", "return_code": 0, "raw_message": "ping PASSED ; six appels d'etat repondent entre 182 et 332 ms" }
+    ],
+    "editor_process": { "running": true, "name": "processus editeur serveur du pont 8001 (repond aux appels d'etat)" },
+    "ram_usage_mb": 12268,
+    "ram_total_mb": 15515,
+    "ram_usage_percent": 79.1,
+    "ram_seuil_alerte_percent": 85,
+    "active_level_name": "claudetest",
+    "active_level_path": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest",
+    "level_confirmed_by": "Producer_Orchestrator",
+    "session_status": "Disconnected",
+    "modal_windows_blocking": "UNKNOWN",
+    "pagination_cvar": {
+      "name": "ModelContextProtocol.PaginationPageSize",
+      "value_at_start": "0",
+      "value_written": "200",
+      "value_relayed": "200",
+      "set_returned_null": true
+    },
+    "verse_path_valid": true,
+    "workspace": {
+      "content_dir": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/__ExternalActors__/claudtest",
+      "verse_dir": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81",
+      "output_dir": "C:/Users/douco/Documents/Qoder/2026-10-23/ccaba4cb/ws_corpo_plaza",
+      "all_writable": true,
+      "workspace_inside_skill": false
+    },
+    "harness_offline": {
+      "command": "python script/tests/verify.py",
+      "status": "PASSED",
+      "passed": 122,
+      "total": 122,
+      "note": "validation des contrats internes seulement ; ne prouve ni l'editeur ni la connexion MCP"
+    },
+    "checks": [
+      { "check": "pont_mcp", "status": "OK", "evidence": "ping 8000 -> OFFLINE code 2 ; ping 8001 -> PASSED code 0 ; UEFN_MCP_URL retenu http://127.0.0.1:8001/mcp" },
+      { "check": "processus_et_ram", "status": "OK", "evidence": "GlobalMemoryStatusEx : Total_MB=15515, Free_MB=3247 -> 12268 Mo utilises (79,1 %), sous le seuil 85 %" },
+      { "check": "niveau_actif", "status": "OK", "evidence": "Scene.get_current_level -> '/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest', isError false, 316 ms ; nom interne confirme via le Producteur" },
+      { "check": "pagination_cvar", "status": "OK", "evidence": "GetCVarValue -> '0' ; SetCVarValue -> returnValue null ; RELURE GetCVarValue -> '200' (332/331/329 ms)" },
+      { "check": "arborescence_et_ecriture", "status": "OK", "evidence": "ListFiles (path '') -> paquet Verse du projet + __ExternalActors__/claudtest ; rapports deja ecrits dans ws_corpo_plaza, workspace hors dossier de la skill" },
+      { "check": "etat_session", "status": "NON_BLOQUANT", "evidence": "GetSessionStatus -> 'Disconnected' (332 ms) : lecture d'etat disponible ; ouverture de session = decision Producteur (gate HITL)" },
+      { "check": "harnais_hors_editeur", "status": "OK", "evidence": "python script/tests/verify.py -> 122/122 OK (references/mcp-routing.md cite encore 110/110 : caduc)" }
+    ],
+    "cleanup": { "performed": false },
+    "error_log": [],
+    "notes": "Preflight perime : a rejouer avant toute serie d'ecritures. Inconnus residuels assumes : fenetres modales (aucun outil MCP ne les liste) et pid/working set du process editeur (non consignes au journal)."
+  },
+  "constraints": {
+    "ram_seuil_alerte_percent": 85,
+    "must_preserve": ["niveau claudetest", "journal _mcp_calls.jsonl", "rapports 01 a 11 du workspace"],
+    "forbidden": [
+      "ne cree aucun asset final : je ne pose pas, je declare l'etat de la machine",
+      "ne modifie aucun fichier .verse",
+      "ne prend aucune decision de design",
+      "ne redemarre pas l'editeur et n'ouvre pas de session sans accord du Producteur",
+      "n'appelle jamais GetDynamicInputSchema hors session"
+    ]
+  },
+  "golden_example_ref": "skill/exemples/preflight-pret-sur-8001.json",
+  "acceptance": [
+    "bridge_ping_relu", "port_declared", "ram_measured", "level_name_from_tool",
+    "pagination_cvar_200", "session_state_read", "workspace_writable", "verse_path_valid",
+    "harness_offline_ok", "no_actor_written", "no_verse_written", "error_log_filled"
+  ],
+  "next_step_hint": "Lead_Programmer peut engager measure-palette sur 8001 (spawn temporaire, get_actor_bounds, destruction immediate). Aucun agent ne relance StartSession sans accord du Producteur ; RAM a 79 % : recontroler avant une vague de mesure.",
+  "context_budget_tokens": 2100,
+  "exemple_annotations": {
+    "role": "GOLDEN EXAMPLE - forme attendue de preflight_ok.json",
+    "provenance": [
+      "port, niveau, pagination, etat de session et durees d'appel : relus dans _mcp_calls.jsonl du run documente (2026-10-23/24, ws_corpo_plaza)",
+      "chiffres de RAM (15515 / 3247 / 12268 Mo) : mesure systeme faite pour ce paquet - le journal ne contient AUCUNE mesure de RAM ; un chiffre recopie de memoire aurait du etre rendu UNKNOWN",
+      "harness 122/122 : SKILL.md de la skill uefn_map_creator ; mcp-routing.md reste a 110/110, divergence signalee dans les regles d'engagement",
+      "GetSessionStatus 'Disconnected' : etat reellement observe pendant le preflight, rendu NON_BLOQUANT et non masque"
+    ],
+    "pourquoi_il_passe": [
+      "status READY : chaque case de checks porte une evidence = sortie d'outil relue, statut OK ou NON_BLOQUANT seulement",
+      "mcp_port_active = 8001 parce que 8001 a REPONDU ; le test du 8000 est conserve tel quel (code 2, message brut)",
+      "pagination : value_written '200' ET value_relayed '200' ; l'ecriture seule n'aurait pas suffi, set_returned_null dit que l'outil ne confirme pas",
+      "error_log vide exige par READY ; cleanup.performed false : aucun acteur touche. error_log_filled se lit comme 'le champ est declare' (obligatoire dans le schema), pas comme 'il contient des entrees' : avec status READY, une entree serait une contradiction.",
+      "modal_windows_blocking reste UNKNOWN : un inconnu declare vaut mieux qu'un 'NONE' invente ; la case correspondante est absente de checks au lieu d'etre maquillee en OK",
+      "acceptance : que des criteres cochables par du code ; summary_short 143 caracteres"
+    ],
+    "budget": "context_budget_tokens = 2100, mesure sur deux lectures. Lecture contrat : le handoff hors exemple_annotations fait 4672 caracteres (~1335 tokens a 3,5 car/token). Lecture few-shot : le fichier entier lu tel quel fait 7159 caracteres (~2045 tokens). 2100 couvre la pire des deux et reste sous le plafond 4000 ; les 1250 puis 1600 declares avant ne couvraient que la premiere."
+  }
+}

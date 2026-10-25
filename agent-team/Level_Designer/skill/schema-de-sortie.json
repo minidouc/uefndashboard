@@ -1,0 +1,283 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Level_Designer.v1",
+  "title": "Level_Designer - contrat du livrable 03_grid.json / 05_props.json (intention)",
+  "description": "Schema de sortie de l'agent Level_Designer (agent 09, pole Design, acces_mcp none). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte la grille congue (matrices par Z-Slice, politique de bord, symetrie declaree ou nulle assumee) et l'intention de repartition. Validable par un validateur Python, jamais par le modele.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Level_Designer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": ["03_grid.json", "05_props.json"]
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grid": { "$ref": "#/definitions/grid" },
+        "props_intent": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/prop_intent" },
+          "description": "Intention de repartition portee par 05_props.json : ancres et directions cardinales uniquement, jamais de taille mesuree ni de coordonnee finale en cm."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "z_floor", "z_ceiling", "must_preserve"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur." },
+        "z_floor": { "type": "number" },
+        "z_ceiling": { "type": "number" },
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "grid_dimensions_declared",
+          "no_flat_map_3_levels",
+          "z_bounds_respected",
+          "spawns_reachable",
+          "corridors_min_100cm",
+          "symmetry_declared_or_assumed_none",
+          "edge_policy_declared",
+          "no_absolute_cm_by_llm",
+          "tiles_within_bounds"
+        ]
+      },
+      "description": "Criteres 100 % cochables par un validateur Python (validate-grid, check-navigation), jamais par un jugement de LLM."
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "artifact": { "const": "03_grid.json" } },
+        "required": ["artifact"]
+      },
+      "then": { "properties": { "payload": { "required": ["grid"] } } }
+    },
+    {
+      "if": {
+        "properties": { "artifact": { "const": "05_props.json" } },
+        "required": ["artifact"]
+      },
+      "then": { "properties": { "payload": { "required": ["props_intent"] } } }
+    }
+  ],
+  "definitions": {
+    "grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tile_size_cm", "symmetric", "edge_policy", "origin_tile", "floors"],
+      "properties": {
+        "tile_size_cm": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" },
+          "description": "Pas declare (ex. [512.0, 512.0, 384.0]). Les dimensions de la carte se declarent en TUILES ; ce champ ne se recalcule pas en centimetres absolus de tete."
+        },
+        "symmetric": { "type": "boolean" },
+        "symmetry_axis": {
+          "enum": ["X", "Y", "R180", null],
+          "description": "Exige si symmetric = true. X = miroir des lignes (R_N <-> R_S) ; Y = miroir des colonnes (R_E <-> R_W) ; R180 = rotation avec echange S1 <-> S2. null = non-symetrie assumee : un 11_symmetry_report.json PASSED avec axis null ne prouve PAS la symetrie."
+        },
+        "origin_tile": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "integer" },
+          "description": "[tx, ty, tz] de la tuile ou commence l'interieur jouable ; au moins [2, 2, 0] pour eviter le volume par defaut Brush_0."
+        },
+        "edge_policy": {
+          "enum": ["fall_zone", "wall"],
+          "description": "fall_zone = aucun mur de bord (chute), wall = perimetre ferme. Toujours declare explicitement."
+        },
+        "floors": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/floor" },
+          "description": "Une matrice par Z-Slice. Jamais de map plate : au moins 3 niveaux de hauteur exploitables (matrices et/ou intention verticale declaree)."
+        },
+        "_comment": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "symmetric": { "const": true } },
+            "required": ["symmetric"]
+          },
+          "then": {
+            "required": ["symmetry_axis"],
+            "properties": { "symmetry_axis": { "enum": ["X", "Y", "R180"] } }
+          }
+        }
+      ]
+    },
+    "floor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["z_index", "matrix"],
+      "properties": {
+        "z_index": {
+          "type": "integer",
+          "description": "Indice de slice : -1 creux/bassin, 0 esplanade, 1 mezzanine, 2 objets aeriens. Doit rester dans [z_floor, z_ceiling] du handoff entrant."
+        },
+        "matrix": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/definitions/tile_code" }
+          },
+          "description": "Matrice de cellules par ligne/colonne. Uniquement le lexique de tuiles, jamais des coordonnees (x, y, z) en cm."
+        },
+        "_comment": { "type": "string" }
+      }
+    },
+    "tile_code": {
+      "enum": ["#", ".", "W", "P", "S1", "S2", "O", "R_N", "R_S", "R_E", "R_W", "T", "V"],
+      "description": "Legende : # sol avec murs de perimetre ; . sol libre ; W mur interieur plein ; P mur avec porte (>= 120 cm x 220 cm) ; S1/S2 sol avec Player Spawner equipe 1/2 ; O sol avec objectif principal ; R_N/S/E/W rampe montant vers le Nord/Sud/Est/Ouest ; T tremie ouverte (OPEN_STAIRWELL) ; V vide (aucun sol ni mur)."
+    },
+    "prop_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "tile", "slot"],
+      "properties": {
+        "actor_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "description": "Identifiant unique, sans espace : la cle reprise par Physics_Programmer et les programmeurs Verse."
+        },
+        "placement_mode": {
+          "enum": ["TILE_ANCHOR", "RELATIVE_TO_ACTOR"],
+          "description":"Pas de WORLD pour un agent Design : toute implantation reste ancree a la grille."
+        },
+        "tile": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "integer", "minimum": 0 },
+          "description": "Indice [r, c, z] dans la matrice, jamais une position en cm."
+        },
+        "slot": {
+          "enum": [
+            "CENTER",
+            "NORTH_EDGE",
+            "SOUTH_EDGE",
+            "EAST_EDGE",
+            "WEST_EDGE",
+            "CORNER_NE",
+            "CORNER_NW",
+            "CORNER_SE",
+            "CORNER_SW"
+          ],
+          "description": "Une des 9 ancres de tuile. EDGE/CORNER : verifier que l'objet ne reduit pas un couloir sous 100 cm."
+        },
+        "face_towards": {
+          "type": "string",
+          "description": "NORTH, EAST, SOUTH, WEST, CENTER, ou un actor_label cible. Directions cardinales uniquement, jamais un yaw numerique."
+        },
+        "relative_to": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "RELATIVE_TO_ACTOR : direction parmi IN_FRONT_OF, BEHIND, LEFT_OF, RIGHT_OF, ON_TOP_OF et ecart nominal. La conversion mathematique appartient au CLI."
+        },
+        "depth_plane": {
+          "enum": ["jouable", "bordure", "horizon"],
+          "description": "L'un des 3 plans de profondeur du level design."
+        },
+        "zone_ref": {
+          "type": "string",
+          "description": "zone_id de rattachement dans 01_gdd.json."
+        },
+        "mirror": { "type": "boolean" },
+        "on_floor": { "type": "boolean" },
+        "notes": { "type": "string", "maxLength": 400 }
+      }
+    }
+  }
+}

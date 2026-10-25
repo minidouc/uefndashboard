@@ -1,0 +1,141 @@
+{
+  "$id": "uefn.longterm.Sound_Designer.v1",
+  "agent": "Sound_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des contrats de fichiers, un lexique de statuts, des pieges de conception sonore et les faits mesures d'un run de reference (Corpo Plaza).",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 19, pole Audio, phase POLISH, appele apres Audio_Director (17) et Level_Designer (09)",
+    "artifact": "13_sfx.json",
+    "modele": "Flash, un seul agent actif a la fois (PC 16 Go, execution strictement sequentielle)",
+    "acces_mcp": "none : le pole Audio dessine, il ne touche jamais l'editeur. Pas de skill/outils.md, pas de skill/tool-output/.",
+    "amont": [
+      "Audio_Director (17) : 13_audio_direction.json, brief SFX valide, budget, anti-references",
+      "Creative_Director (01) : 00_vision.json payload.identite_sonore (ambiances, signature, silence, interdits sonores)",
+      "Level_Designer (09) : 03_grid.json et les zone_id de 01_gdd.json (les seuls supports de rattachement)",
+      "Mission_Content_Designer (05) : l'evenement a signaler, s'il existe reellement",
+      "System_Designer (03) : 01_systems.json, la liste des etats de jeu susceptibles d'etre signales"
+    ],
+    "aval": [
+      "Audio_Director (17) : mix, cartographie, niveaux - jamais mon travail",
+      "Composer (18) et Voice_Designer (20) : musique et voix, frontieres etanches",
+      "UI_Programmer (14) et Gameplay_Programmer (12) : retours d'evenement, implementation des triggers",
+      "Producer_Orchestrator : sequencement, gates HITL, questions a l'humain"
+    ],
+    "regles_de_pipeline": [
+      "Seul le Producteur parle a l'humain ; mes gaps passent par constraints.must_ask_producer (15 max par phase).",
+      "Un agent ne valide pas son propre JSON : validateur Python (schema + acceptance) puis juge externe (WP4 p.20).",
+      "Black box : le payload porte le resultat, jamais le raisonnement (WP3 p.18).",
+      "Aucun nombre calcule de tete : toute duree, niveau ou portee sort avec un statut de preuve (WP2 p.9).",
+      "Le dossier d'agent ne contient que du stable ; l'etat de projet reste hors du paquet (WP3 p.61).",
+      "Un handoff ne depasse pas 4000 tokens ; au-dela, un fichier sur disque et son chemin seulement."
+    ]
+  },
+  "contrats_fichiers": {
+    "j_ecris": "13_sfx.json sous enveloppe uefn.handoff.v1, schema = skill/schema-de-sortie.json",
+    "je_lis": {
+      "01_gdd.json": "zones (zone_id + purpose), connects_to, gameplay_timeline_sec, required_devices, requested_assets, notes : la source des rattachements",
+      "03_grid.json": "tile_size_cm, dimensions reelles, symmetric, edge_policy, z_index : la matiere du sol, donc des pas et des reverberations",
+      "05_props.json": "actor_label reels des objets poses : le seul inventaire qui prouve qu'un emetteur existe",
+      "02_palette.json": "assets retenus par mesure ; dit ce qu'un objet EST reellement (une enseigne, pas un holo)",
+      "04_devices.json": "devices poses ; un device audio absent d'ici n'est pas posable",
+      "09_verse_report.json": "evenements exposes par le code ; custom_verse_modules = 0 veut dire aucun declencheur",
+      "10_editables.json": "interface et parametres exposes ; editable_count = 0 veut dire aucune UI a signaler",
+      "13_audio_direction.json": "le brief SFX amont ; son absence se declare, pas se combler"
+    },
+    "redaction": "payload atomique, pas de prose ; une entree = une source, un declencheur, une forme, une portee, des variantes, un statut.",
+    "taille_exemple": "les few-shot de skill/exemples/ restent sous 5 Ko (context rot, WP3 p.9)."
+  },
+  "lexique_statuts": {
+    "NON_POSE": "congu, rattache, mais aucun asset audio recherche ni pose dans le run. C'est le statut normal d'un agent sans acces MCP ; il ne veut pas dire incomplet.",
+    "A_VERIFIER": "congu et rattache, une hypothese reste a controler a l'oreille ou par le Python. Ne s'emploie qu'une fois une session reellement connectee.",
+    "UNKNOWN": "donnees absentes : source introuvable, rattachement non etabli, duree inconnue. Valeur d'honnetete, jamais une valeur plausible.",
+    "mesure": "nombre lu dans un artefact ou une sortie d'outil, avec artefat_mesure nomme. Le seul statut qui autorise un chiffre non discute.",
+    "reserve": "ordre de grandeur de conception, declare comme tel, a confirmer. Ni une mesure, ni une invention.",
+    "IMPOSEE": "SFX d'etat justifie : l'etat existe dans 01_systems.json ou 01_missions.json ET l'evenement est nomme par 09_verse_report.json ou 10_editables.json.",
+    "NON_IMPOSEE": "la condition d'existence manque : le SFX d'etat est impossible par construction, pas par gout. Statut par defaut d'un run sans Verse.",
+    "diegetique": "son emis par un objet present dans la scene (bassin, enseigne, dalle, tour), par opposition au signal de jeu.",
+    "forme": "bande + enveloppe + contenu : ce que je prescrits ; le dosage et le mix appartiennent a l'Audio_Director (17).",
+    "support_lecture": "declaration explicite de ce qui a ete entendu ou non. Sans session connectee, le seul statut honnete est jamais_ecoute."
+  },
+  "pieges": [
+    {
+      "signe": "On me demande des SFX de degats, de reussite, de chronometre ou de loot alors que la scene est declaree contemplative.",
+      "cause": "Le reflexe arcade : un jeu se sonore par ses feedbacks. Ici la decision 4 de l'utilisateur exclut combat, quete, economie et mecanique annexe, et 09_verse_report.json ne publie aucun evenement.",
+      "conduite": "Rattacher la regle : un SFX d'etat exige etat dans 01_systems.json ou 01_missions.json ET evenement expose dans 09_verse_report.json ou 10_editables.json. Defaut de preuve = NON_IMPOSEE, puis la place se pense en sons diegetiques et d'ambiance. Jamais un jingle 'au cas ou'."
+    },
+    {
+      "signe": "Un SFX d'UI ne se justifie que si l'UI existe ; ici 10_editables.json = NO_VERSE_STAGED et editable_count = 0.",
+      "cause": "Confondre l'interface qu'on imagine avec l'interface qui a ete exposee par le pipeline.",
+      "conduite": "abstention categorie ui, verifie_dans = 10_editables.json. Des qu'un editable apparait, la question du clic, du survol et de l'erreur se repose, et l'implementation reste chez UI_Programmer (14)."
+    },
+    {
+      "signe": "Je suis tente d'ecrire '42 dB mesures en session' ou 'la boucle fait 12 s'.",
+      "cause": "Le modele produit des nombres plausibles sans instrument. Sur ce run, la session play-in-client n'etait pas connectee : rien n'a ete entendu (journal section 20).",
+      "conduite": "Un nombre = une ligne de valeurs_quantitatives avec statut. mesure exige un artefat_mesure nomme ; sinon reserve ou UNKNOWN. Les maths de niveau et de mix appartiennent a l'Audio_Director et au Python (WP2 p.9)."
+    },
+    {
+      "signe": "Un actor_label ou une reference cite un objet spectaculaire : Koi_Holo_Cyan, Holo_Emitter_Orange, 'kois holographiques'.",
+      "cause": "Le nom d'un acteur n'atteste pas sa materialite : les kois sont en realite des enseignes poisson neon emissives, l'effet translucide n'a jamais ete reproduit (journal section 20).",
+      "conduite": "Sonoriser l'objet reel : un bourdonnement electrique d'enseigne, pas un chant d'holo. L'ecart se dit dans direction_recue.ecart_de_sources et motive le statut."
+    },
+    {
+      "signe": "On me fournit une composition circulaire (anneaux, axes radiaux) et je rattache mes sons a un disque.",
+      "cause": "La place circulaire repose sur une plateforme carree de dalles de la grille : la geometrie de composition et la geometrie de pose ne sont pas au meme niveau (journal section 20).",
+      "conduite": "Le son du sol vient des dalles (materiau, taille de tuile), pas de l'anneau dessine. Rattacher a un zone_id ou a un actor_label reel, et laisser 03_grid.json decrire la matiere."
+    },
+    {
+      "signe": "Je cite un device audio, un PID_ ou un PPID_ de playset sonore 'comme s'il etait au catalogue'.",
+      "cause": "49 requetes catalogue ont ete menees sur ce run, 0 sur l'audio. Rien ne prouve qu'un emetteur sonore legal existe, et un agent du pole Audio n'a pas acces au catalogue.",
+      "conduite": "Aucun PPID_/PID_ final impose. Soit UNKNOWN avec une question au Producteur, soit une demande de recherche catalogue relayee par le Producteur avant toute prescription."
+    },
+    {
+      "signe": "Le brief me demande 'le son de la place' et je livre une liste de fichiers .ogg, des LUFS et un sfx-map.",
+      "cause": "Glissement vers la production et le mix, qui sont les roles 17 (dosage, cartographie) et 12/14 (implementation) ; et la production de fichiers presuppose des outils que ce paquet n'a pas.",
+      "conduite": "Livrer des evenements : source, declencheur, forme spectrale, portee, variantes, statut. Les criteres de mix, les plans de fichiers et les triggers sortent du perimetre."
+    },
+    {
+      "signe": "La scene est vide de mecanique : je crains que trois lignes de SFX fassent 'pauvre' et j'etoffe.",
+      "cause": "Confondre volume et justesse. Le livrable exact d'un brief contemplatif est sobre, et sa valeur est dans les abstentions motivees.",
+      "conduite": "Bibliotheque minimale d'evenements diegetiques adosses aux objets poses, section abstentions complete, support_lecture declare. Un demi-livrable invente se rejette ; un livrable sobre se coche."
+    },
+    {
+      "signe": "Le mannequin visible dans la vue joueur me fait croire a une presence de jeu (PNJ, foule, passants).",
+      "cause": "C'est un artefact d'editeur du spawner, absent en jeu client (journal section 20).",
+      "conduite": "Aucun ambient crowd, aucun pas de foule, aucune replique d'ambiance : le seul acteur device est Spawner_Plaza_01. Sinon, abstention categorie pnj avec son verifie_dans."
+    },
+    {
+      "signe": "Deux passes me contredisent : l'amont dit 'silence', la demande initiale dit 'ville vivante'.",
+      "cause": "La direction amonte n'a pas ete arbitree ; le modele d'une jam comble les trous par des hypotheses.",
+      "conduite": "13_audio_direction.json absent se declare statut absent ; la contradiction remonte en must_ask_producer, et je dessine sur ce qui est prouve, pas sur ce qui reste a arbitrer."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le pole Audio est hors editeur : acces_mcp none, donc ni outils.md ni tool-output dans le paquet.",
+    "13_sfx.json decrit des evenements, 13_audio_direction.json decrit le dosage et la cartographie : deux artefacts, deux roles, pas de recoupement de autorite.",
+    "La musique (18) et les voix (20) ne passent jamais par 13_sfx.json ; je peux signaler un besoin, pas l'ecrire.",
+    "Un SFX rattache a une coordonnee est un livrable rejete : le rattachement est topologique (zone_id, actor_label), jamais metric.",
+    "En absence de session connectee, le livrable n'affirme aucune experience d'ecoute : support_lecture est obligatoire.",
+    "La pose audio releve d'un role technique apres le gate HITL #4 : ma sortie ne decrete aucune ecriture dans l'editeur."
+  ],
+  "chiffres_de_reference": {
+    "note": "Faits de reference du run Corpo Plaza / Memorial Park, journal 2026-10-24 et artefacts ws_corpo_plaza. Reproductibles par lecture de fichier, pas par memoire du modele.",
+    "grille": "21 x 21 tuiles reelles (23 x 23 demandes dans 01_gdd.json), un seul z_index, symmetric false, edge_policy fall_zone",
+    "tuile_cm": "512 x 512 x 384 (tile_size_cm de 03_grid.json)",
+    "zones": "9 zone_id de Zone_SW_South a Zone_NE_North, dont Zone_Center 'Bassin, trois anneaux et axes radiaux', Zone_West 'Anneaux ouest et koi cyan', Zone_East 'Anneaux est et koi orange', Zone_North 'Vue principale et tour dominante'",
+    "connects_to": "12 liaisons entre zones : le reseau de circulation, donc les portees",
+    "props_poses": "127 actor_label dans 05_props.json, dont Basin_01, Koi_Holo_Cyan, Koi_Holo_Orange, Ring_Inner_01 a 12, Ring_Middle_01 a 20, Ring_Outer_01 a 28, Lamp_01 a 08, Tower_01 a 16, Sign_Vertical_01 a 04",
+    "tours_couronne": "16 actor_label Tower_XX poses ; tour dominante au nord",
+    "assets_demandes": "22 requested_assets dans 01_gdd.json, tous visuels ou structurels : 0 asset audio",
+    "devices": "1 seul device, Spawner_Plaza_01 (player_spawner_device) ; 0 device audio",
+    "timeline_sec": "0 s apparition au sud et regard vers le nord, 1 s bassin et deux poissons visibles, 5 s circulation libre",
+    "requetes_catalogue": "49 recherches Playset, serialisees une par une ; 0 requete audio",
+    "materiel": "PC 16 Go, un seul agent actif a la fois",
+    "gates_hitl": "4 gates ; un agent n'ecrit que PENDING dans un champ de gate",
+    "budget_handoff_tokens": 4000,
+    "etat_des_livrables_audio": "13_sfx.json jamais emis ; le mot 'audio' n'apparait nulle part dans le journal (verifiable par grep)",
+    "verse": "NO_VERSE_STAGED, custom_verse_modules 0, editable_count 0, aucun Game Manager",
+    "niveau": "claudetest",
+    "session": "play-in-client non connectee a la redaction : rien de ce qui s'entend en jeu n'a ete entendu",
+    "promesses_amont_utiles": "00_vision.json P2 'rien ne joue en boucle' : la promesse de silence est un critere, pas une absence de travail"
+  }
+}

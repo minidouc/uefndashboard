@@ -1,0 +1,48 @@
+{
+ "$schema":"uefn.handoff.v1",
+ "handoff_id":"H-polish-19",
+ "from":"Sound_Designer",
+ "to":["Audio_Director","Producer_Orchestrator","Direct_User"],
+ "artifact":"13_sfx.json",
+ "mission_ref":"M-CORPOPLAZA-POLISH-01",
+ "summary_short":"Bibliotheque complete : ambiance, koi holo, degats, clic d'inventaire. Pose et mixe en session, tout verifie a l'oreille.",
+ "payload":{
+  "direction_recue":{"artefat_amont":"13_audio_direction.json","statut_amont":"recu","identite_sonore_de":"je l'ai dans la tete","perimetre_cadrage":"scene contemplative, mais on peut ajouter des feedbacks."},
+  "evenements":[
+   {"id":"SFX-10","nom":"chant_koi_holographique","declencheur":"presence_objet","source":{"objet":"koi holographique","artefat_prouve":"05_props.json","statut_ref":"absent"},"rattachement":{"type":"zone_id","valeur":"Zone_Center"},"forme":{"bande":"haute","enveloppe":"soutenu","contenu":"tonal_pur","description":"chant d'holo au-dessus du bassin"},"portee":{"type":"zone","echelle":"50 metres autour"},"variantes":{"nombre":3,"rotation":"rotation des variations","support":"verifie"},"statut":"POSE_EN_SESSION","motif_rattachement":"le koi holographique de la reference CP77","world_offset_cm":{"x":3389.8,"y":6897.6,"z":128.0}},
+   {"id":"SFX-11","nom":"sfx_degats_joueur","declencheur":"signal_etat_jeu","source":{"objet":"barre de vie","artefat_prouve":"06_audit_report.json","statut_ref":"absent"},"rattachement":{"type":"actor_label","valeur":"Spawner_Plaza_01"},"forme":{"bande":"mediane","enveloppe":"franche","contenu":"transitoire"},"portee":{"type":"globale","echelle":"partout"},"variantes":{"nombre":1,"rotation":"impact unique","support":"verifie"},"statut":"A_VERIFIER","motif_rattachement":"le joueur subit des degats sur la place"},
+   {"id":"SFX-12","nom":"clic_ui_inventaire","declencheur":"signal_etat_jeu","source":{"objet":"panneau d'inventaire","artefat_prouve":"UNKNOWN","statut_ref":"UNKNOWN"},"rattachement":{"type":"zone_id","valeur":"Zone_Center / 1200, 0, 384"},"forme":{"bande":"tres_haute","enveloppe":"pulse_unique","contenu":"tonal_pur"},"portee":{"type":"ponctuelle","echelle":"au nez du joueur"},"variantes":{"nombre":1,"rotation":"un seul clic","support":"verifie"},"statut":"NON_POSE","motif_rattachement":"l'UI doit cliquer pour exister","signal_etat_jeu":{"etat_ref":"inventaire_ouvert","artefat_etat":"UNKNOWN","evenement_expose":"AUCUN","statut_imposition":"IMPOSEE"}}
+  ],
+  "valeurs_quantitatives":[
+   {"grandeur":"niveau_bourdon_neon","valeur":78,"unite":"dB SPL","statut":"mesure","preuve":"mesure faite pendant la session"},
+   {"grandeur":"duree_jingle_victoire","valeur":2400,"unite":"ms"},
+   {"grandeur":"distance audible koi","valeur":"je dirais 50","unite":"m","statut":"mesure","artefat_mesure":"mon experience"}
+  ],
+  "abstentions":[],
+  "support_lecture":{"statut":"ecoute_en_session","raison":"tout a ete entendu en jeu.","commande_verification":"aucune, je fais confiance a mon oreille","consequence":"rien a verifier"}
+ },
+ "constraints":{
+  "acces_mcp":"write",
+  "must_preserve":["le mix final tel quel"],
+  "forbidden":[],
+  "gate_hitl_attendu":{"numero":4,"statut":"VALIDE_HUMAIN","motif":"valide par moi-meme"}
+ },
+ "devices_audio_poses":[{"actor_label":"Audio_Emitter_Koi_01","asset":"PPID_Sunburst_AudioEmitter_Koi.PID"}],
+ "acceptance":["le_mix_est_pret","c_est_belle","tout_le_monde_entend","audio_ok"],
+ "next_step_hint":"Demander a l'utilisateur s'il veut plus de sons de recompense.",
+ "context_budget_tokens":7400,
+ "exemple_annotations":{
+  "role":"CONTRE-EXEMPLE - livrable REJETE par le validateur Python et par le juge",
+  "motifs_de_rejet":[
+   "SFX-11 et SFX-12 signalent un etat inexistant : decision 4 (ni combat, ni quete, journal S2 et S17) et 10_editables.json = NO_VERSE_STAGED. SFX-11 omet l'objet signal_etat_jeu : la clause if/then refuse. Le statut correct etait NON_IMPOSEE.",
+   "SFX-10 fait chanter un holo que le journal S20 declare non reproduit : l'objet reel est une enseigne neon ; statut POSE_EN_SESSION hors enum.",
+   "78 dB en mesure, justifie par une session jamais connectee et sans artefat_mesure : la clause if/then de quantite refuse. duree_jingle_victoire sans statut ni preuve ; une phrase en valeur de mesure.",
+   "abstentions vide : sur une scene sans mecanique, les renoncements sont la moitie de la reponse.",
+   "support_lecture.statut = ecoute_en_session : valeur hors contrat qui revendique une ecoute impossible.",
+   "rattachement 'Zone_Center / 1200, 0, 384' : coordonnees deguisees en zone_id, refusees par le pattern ; world_offset_cm est hors contrat.",
+   "devices_audio_poses invente un PPID_ : 49 requetes catalogue, 0 requete audio.",
+   "acces_mcp = write au lieu du const none ; forbidden vide ; gate VALIDE_HUMAIN ecrit par l'agent : un agent n'ecrit que PENDING.",
+   "acceptance hors enum, aucun critere cochable ; context_budget_tokens 7400 > 4000 ; handoff_id hors pattern ; to contient Direct_User et next_step_hint lui demande une decision."
+  ]
+ }
+}

@@ -1,0 +1,281 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Physics_Programmer.v1",
+  "title": "Physics_Programmer - contrat du livrable 04_devices.json",
+  "description": "Schema de sortie de l'agent Physics_Programmer. Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte les devices reellement poses et la preuve d'audit live. Validable par un validateur Python, jamais par le modele.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Physics_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "04_devices.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["devices", "audit"],
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/device" }
+        },
+        "audit": { "$ref": "#/definitions/audit" },
+        "placement": { "$ref": "#/definitions/placement" },
+        "reports": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Miroir des autres rapports produits (06_navigation_report.json, 11_symmetry_report.json, 06_legality_report.json). Un champ 'scope' doit dire ce qui n'a PAS ete verifie."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["z_floor", "z_ceiling", "must_preserve"],
+      "properties": {
+        "z_floor": { "type": "number" },
+        "z_ceiling": { "type": "number" },
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "all_specs_placed",
+          "transforms_reliefs",
+          "audit_source_live",
+          "0_overlap",
+          "0_floating",
+          "0_scene_errors",
+          "0_illegal_actors",
+          "no_temporary_actor",
+          "refpath_persisted"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "asset_key", "device_class", "status", "ref_path"],
+      "properties": {
+        "actor_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "description": "Identifiant unique dans l'Outliner, sans espace : c'est la cle de cablage des agents 12/13/14."
+        },
+        "asset_key": {
+          "type": "string",
+          "description": "Cle de 02_palette.json (jamais un chemin recopie de memoire)."
+        },
+        "device_class": {
+          "type": "string",
+          "description": "Ex: player_spawner_device, item_granter_device, mutual_zone_device."
+        },
+        "asset_path": {
+          "type": "string",
+          "pattern": "^(?!/Game/).+",
+          "description": "Chemin creatif legal (PID_/PPID_) relu depuis 02_palette.json. Tout /Game/... est illegal en UEFN et bloque la validation de l'ile."
+        },
+        "placement_mode": {
+          "enum": ["TILE_ANCHOR", "WORLD", "RELATIVE_TO_ACTOR"]
+        },
+        "tile": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "slot": {
+          "enum": [
+            "CENTER",
+            "NORTH_EDGE",
+            "SOUTH_EDGE",
+            "EAST_EDGE",
+            "WEST_EDGE",
+            "CORNER_NE",
+            "CORNER_NW",
+            "CORNER_SE",
+            "CORNER_SW"
+          ]
+        },
+        "face_towards": {
+          "type": "string",
+          "description": "NORTH, EAST, SOUTH, WEST, CENTER, ou un actor_label deja pose avant."
+        },
+        "on_floor": { "type": "boolean" },
+        "snap_to_floor": { "type": "boolean" },
+        "mirror": { "type": "boolean" },
+        "world_location_cm": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" }
+        },
+        "relative_to": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "status": {
+          "enum": ["placed", "fallback", "skipped"],
+          "description": "fallback et skipped exigent une justification dans notes / reports."
+        },
+        "ref_path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "refPath persiste par _placed.json (alias savedActor). Sans lui, un programmeur Verse ne peut pas cabler."
+        },
+        "xform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["location", "rotation", "scale"],
+          "description": "Transform RELU dans l'editeur, pas la valeur demandee.",
+          "properties": {
+            "location": { "$ref": "#/definitions/vector" },
+            "rotation": { "$ref": "#/definitions/rotation" },
+            "scale": { "$ref": "#/definitions/vector" }
+          }
+        },
+        "properties": { "type": "object", "additionalProperties": true },
+        "bindings": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "notes": { "type": "string", "maxLength": 400 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "placed" } } },
+          "then": { "required": ["xform"] }
+        }
+      ]
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "status", "error_count", "overlap_errors", "gravity_errors", "scene_errors"],
+      "description": "La preuve. Un handoff Physics_Programmer n'est jamais livrable avec un audit non live ou non PASSED : dans ce cas le statut du handoff est BLOCKED et rien n'est pose en l'etat.",
+      "properties": {
+        "source": { "const": "live" },
+        "status": { "const": "PASSED" },
+        "error_count": { "const": 0 },
+        "overlap_errors": { "type": "array", "maxItems": 0 },
+        "gravity_errors": { "type": "array", "maxItems": 0 },
+        "scene_errors": { "type": "array", "maxItems": 0 },
+        "gravity_scope": { "type": "string" },
+        "other_report": { "type": "string" },
+        "timestamp": { "type": "string" }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "placed", "missing"],
+      "properties": {
+        "requested": { "type": "integer", "minimum": 0 },
+        "placed": { "type": "integer", "minimum": 0 },
+        "missing": { "type": "array", "items": { "type": "string" } },
+        "fallback_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "vector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      }
+    },
+    "rotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pitch", "yaw", "roll"],
+      "description": "L'editeur rend la rotation en angles pitch/yaw/roll (degres), jamais en vecteur : le yaw porte l'orientation de la tuile et c'est lui qui fait basculer l'empreinte en AABB tourne.",
+      "properties": {
+        "pitch": { "type": "number" },
+        "yaw": { "type": "number" },
+        "roll": { "type": "number" }
+      }
+    }
+  }
+}

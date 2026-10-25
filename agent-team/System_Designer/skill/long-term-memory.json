@@ -1,0 +1,129 @@
+{
+  "$id": "uefn.longterm.System_Designer.v1",
+  "agent": "System_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des contrats de fichiers reels, un lexique de statuts et des pieges de conception de systemes.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 03, pole Design, phase DESIGN, modele Flash, appele juste apres Game_Designer (02) dont le GDD est le pivot amont",
+    "artifact": "01_systems.json (une seule sortie ; tables, formules et gaps vivent dans le payload ou sur disque, pas dans le dossier de l'agent)",
+    "execution": "sequentielle stricte : un seul agent actif a la fois, PC 16 Go, orchestration hub-and-spoke par Producer_Orchestrator, bus filesystem",
+    "amont_direct": ["01_gdd.json (Game_Designer)", "00_vision.json (Creative_Director)"],
+    "aval": ["Mission_Content_Designer (05)", "Economy_Designer (04)", "Level_Designer (09)", "Gameplay_Programmer (12)", "UI_Programmer (14)", "Producer_Orchestrator"],
+    "frontiere_de_role": [
+      "System_Designer = comment la machine fonctionne et dans quel ordre les etats basculent, y compris pendant la session",
+      "Economy_Designer (04) = ce que le joueur gagne et depense entre les sessions",
+      "Mission_Content_Designer (05) = le contenu : objectifs, recompenses, texte de quete",
+      "Level_Designer (09) = l'espace : tuiles, floors, zones, connects_to",
+      "Game_Designer (02) = la boucle de jeu elle-meme : le role suivant ne la redefinit pas"
+    ],
+    "generator_critic": "non pivot : le Generator-Critic est reserve a Creative_Director, Game_Designer et Lead_Programmer ; ma sortie passe au validateur Python, pas a un etage de critique interne",
+    "regles_de_pipeline": [
+      "Seul le Producteur parle a l'humain ; mes gaps partent en constraints.must_ask_producer (15 max par phase).",
+      "Je ne valide pas mon propre JSON : validateur Python + juge externe (WP4 p.20).",
+      "Black box : le payload porte le resultat, jamais le raisonnement (WP3 p.18).",
+      "Aucune coordonnee calculee par un modele : le Python chiffre (WP2 p.9).",
+      "Une mecanique sans condition d'observation n'est pas livre : elle reste une intention.",
+      "Donnee manquante = UNKNOWN + question, jamais une valeur plausible."
+    ]
+  },
+  "contrats_fichiers": {
+    "01_gdd.json_champs_consommes": ["game_mode", "scale_category", "grid_dimensions_tiles", "zones", "connects_to", "gameplay_timeline_sec", "required_devices", "verse_modules", "notes", "status"],
+    "00_vision.json_champs_consommes": ["non_negotiables", "anti_references", "promesses", "ecarts_assumes", "cibles_jam"],
+    "sorties_en_aval": {
+      "05_missions.json": "Mission_Content_Designer consomme mes etats et mes gards ; 0 quete tant que declare_aucune_mecanique = true",
+      "04_economy.json": "Economy_Designer co-signe les quantites de recompense ; le choix de ce qui tombe ne m'appartient pas",
+      "03_grid.json": "Level_Designer doit rendre franchissables les couples connects_to que SYS02 suppose",
+      "06-14 (Verse)": "les programmeurs consomment besoin_vers et api_vers ; api_vers = UNKNOWN veut dire 'verifie avant de coder', pas 'code cette API'"
+    },
+    "enveloppe": "uefn.handoff.v1 : 12 champs obligatoires, acceptance = criteres cochables par code, context_budget_tokens <= 4000",
+    "hors_dossier_agent": "project-state.json, handoff/*.json, 01_systems.json ecrit, logs de trajectoire : tout cela vit dans le dossier du projet (WP3 p.61)"
+  },
+  "lexique_statuts": {
+    "aucun_systeme": "aucune regle d'etat active, pas meme une contrainte de lecture. mecanics doit alors etre vide.",
+    "regles_de_presence_seules": "des regles tiennent sans module Verse (apparition, circulation, lecture d'une signature). C'est une sortie legale complete, pas un demi-livrable.",
+    "systemes_de_jeu_actifs": "au moins une mecanique avec boucle complete : entree, transition, sortie, effet mesurable.",
+    "besoin_vers_aucun": "tenu par un device ou le moteur seul ; rien a ecrire en Verse.",
+    "besoin_vers_module_requis": "sans module Verse la regle ne tourne pas ; a confirmer en phase TECHNIQUE avant tout engagement.",
+    "api_vers_UNKNOWN": "la capacite est probable mais son nom et sa signature ne sont pas prouves dans la doc Verse lue. S'ecrit UNKNOWN ; un nom invente est une faute.",
+    "gravite_bloquante": "je ne peux pas rendre sans arbitrage : remontee au Producteur, livrable conditionnel.",
+    "gravite_consentie": "ecart connu et accepte, inscrit dans le livrable et chez le role aval qui doit le porter.",
+    "co_signe_avec": "valeur partagee avec un autre role (quantites avec 04, objectifs avec 05) : je chiffre, il decide la nature.",
+    "ILLEGAL_ASSET_PATH": "tout chemin /Game/... hors catalogue Creatif (PPID_ / PID_) : motif de rejet immediate d'une regle."
+  },
+  "pieges_de_conception": [
+    {
+      "signe": "Une mecanique est decrite en adjectifs ('immersif', 'epoustouflant', 'fluide') et l'observation dit 'ressenti du playtest'.",
+      "cause": "Aucun critere binaire : ni validateur ni juge ne peut dire tenu ou non tenu, donc la regle n'existe pas pour l'aval.",
+      "conduite": "refuser la sortie. Ecrire observation.preuve (rapport, capture, fait de session) et observation.critere en once falsifiable ; a defaut UNKNOWN + question."
+    },
+    {
+      "signe": "Un etat est declare ('quete_demarree') avec transitions vides, ou une transition qui revient au meme etat.",
+      "cause": "L'etat est une etiquette, pas une machine : rien ne dit quand il bascule ni ce que ca change.",
+      "conduite": "toute etat porte au moins une transition de / a / quand ; sinon la regle est reclassee en invariant ou supprimee."
+    },
+    {
+      "signe": "Une regle s'appuie sur une API Verse nommee avec assurance (un Teleport, un SpawnWave, un Game Manager) alors que verse_modules est vide.",
+      "cause": "Confusion entre 'le moteur peut le faire' et 'cette API existe avec ce nom dans la version installee'.",
+      "conduite": "api_vers = UNKNOWN tant que Lead_Programmer (11) ne l'a pas verifiee ; besoin_vers = module_requis et la question part au Producteur."
+    },
+    {
+      "signe": "Le GDD dit game_mode rpg et ses notes disent scene contemplative sans sauvegarde.",
+      "cause": "game_mode sert parfois d'etiquette de gabarit, pas d'intention de jeu ; les systemes heritent alors d'une ambition personne n'a validee.",
+      "conduite": "ne pas choisir a la place de l'humain : contradictions_amont avec gravite bloquante + must_ask_producer, et livrable rendu en regles de presence seules."
+    },
+    {
+      "signe": "Une table de tuning apparait (TTK, degats, XP) pour une scene ou declare_aucune_mecanique est true.",
+      "cause": "Le role est un matheux : il chiffre meme quand rien n'est declenchable, et produit des chiffres sans source que l'aval prend pour foi.",
+      "conduite": "tuning.parametres vide avec philosophie qui explique l'absence ; coherence oblige une ligne, fut-elle 'sans objet' ; interdiction des placeholders null et TBD."
+    },
+    {
+      "signe": "Une dependance de device est citee (Game_Manager_01, une zone de declenchement) sans trace dans 01_gdd.required_devices.",
+      "cause": "Le systeme suppose un objet que ni le GDD ni la grille ne declarent ; list-editables repond NO_VERSE_STAGED et le montage echoue.",
+      "conduite": "dependances_devices avec source obligatoire (01_gdd.required_devices, 03_grid.json) ou UNKNOWN ; un actor_label sans espace, repris tel quel."
+    },
+    {
+      "signe": "Un effet promet un rendu qui n'existe qu'en reprenant du contenu interne du jeu hote.",
+      "cause": "La reference creative depasse le catalogue Creatif ; la validation d'ile echoue au lancement de session.",
+      "conduite": "hors_portee avec statut hors_portee_legale, alternative legale decrite, et ecart a inscrire chez le role amont qui a promis (01 ou 00)."
+    },
+    {
+      "signe": "Plus de 7 mecaniques a chiffrer pour une scene de jam.",
+      "cause": "Le GDD est trop ambitieux pour 16 Go et une seule session ; chaque fiche supplementaire est plus creuse.",
+      "conduite": "alerte au Producteur avec proposition de MVP chiffre, le reste en stretch declare ; ne pas livrer 8 fiches superficielles."
+    },
+    {
+      "signe": "Un handoff de systemes part en direct vers Gameplay_Programmer sans passer le hub.",
+      "cause": "Confusion de canal : le bus filesystem orchestre par le Producteur est le seul vecteur, sinon les boucles de communication se forment (WP4 p.20).",
+      "conduite": "to peut citer l'aval, mais l'acheminement et l'arbitrage restent au Producer_Orchestrator ; jamais de contact utilisateur."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "01_systems.json n'a pas ete emis pendant la run corpo-plaza : le perimetre a ete tenu au seul geometrique ; le golden du paquet est reconstitue depuis 01_gdd.json et le journal, et le dit.",
+    "Ecrire 'aucune mecanique' est une sortie complete : 08_wiring_report.json PASSED en mode allow-empty en est la preuve, pas un echec.",
+    "Le perimetre du run interdit Verse personnalise, Game Manager, sauvegarde, publication et cleanup : mes systemes ne peuvent rien promettre qui en depend.",
+    "Les chiffres de tuning ne se copie pas depuis un jeu famous sans justification ligne a ligne.",
+    "La progression entre sessions appartient a Economy_Designer (04), jamais a moi ; en l'absence de sauvegarde autorisee, memoire = aucune.",
+    "Un parametre non reglable en Verse est marque reglable_en_vers = non : il sera fige a la compilation, et l'aval doit le savoir avant de promettre un ajustement."
+  ],
+  "chiffres_de_reference": {
+    "note": "Chiffres reels du run corpo-plaza relus dans 01_gdd.json et le journal 2026-10-24 ; ce sont des faits d'observation, pas des cibles.",
+    "carte_grid_dimensions_tiles": "23 x 23 x 1",
+    "tailleTuile_cm": "512 x 512 x 384",
+    "zones": 9,
+    "paires_connects_to": 12,
+    "requested_assets": 22,
+    "required_devices": "1 (Spawner_Plaza_01, player_spawner_device)",
+    "gameplay_timeline_sec": "0 s apparition au sud regard nord ; 1 s bassin + 3 anneaux + 2 koi visibles ; 5 s circulation libre et couronne observable",
+    "verse_modules": "vide []",
+    "list_editables_reel": "NO_VERSE_STAGED (aucun .verse dans workspace/verse/)",
+    "acteurs_legaux_en_session": "582 (valid_actors), illegal_count 0",
+    "mechaniques_d_jeu_dans_le_run": 0,
+    "materiel": "PC 16 Go, un seul agent actif a la fois",
+    "gates_hitl": 4,
+    "plafond_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "mechanics_max_par_livrable": 7,
+    "questions_producteur_max_par_phase": 15,
+    "iterations_max_avant_blocke": 3
+  }
+}

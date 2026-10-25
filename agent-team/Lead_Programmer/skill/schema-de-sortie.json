@@ -1,0 +1,399 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Lead_Programmer.v1",
+  "title": "Lead_Programmer - contrat du livrable 02_palette.json",
+  "description": "Schema de sortie de l'agent Lead_Programmer (agent 11, note sous le nom Lead_Tech_Director dans les docs de pipeline). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md), identique a la maquette Physics_Programmer : memes champs obligatoires, additionalProperties false, motif de handoff_id, summary_short <= 200, context_budget_tokens <= 4000, golden_example_ref et exemple_annotations optionnels, enum des 21 destinataires. Seule adaptation assumee : dans constraints, le trio z_floor / z_ceiling / must_preserve de la maquette est propre au constructeur de scene ; ici seul forbidden est obligatoire (les deux autres restent acceptes et documentes). Le payload porte LA palette : assets mesures, legalite des chemins, blocages, et verse_architecture. Validable par un validateur Python, jamais par le modele. Une taille recitee de memoire ou une entree sans mesure reelle est un faux positive : le schema l'interdit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Lead_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": ["02_palette.json"]
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "_comment",
+        "assets",
+        "counts",
+        "legality",
+        "blocked_assets",
+        "verse_architecture",
+        "level_state_after"
+      ],
+      "properties": {
+        "_comment": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Entete heritee du fichier : ce que measure-palette ecrit et ce qu'il faut ne pas ecrire a la main. Doit rester present, sinon le fichier perd sa chaine de provenance."
+        },
+        "requested_coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requested", "delivered"],
+          "properties": {
+            "requested": { "type": "integer", "minimum": 0 },
+            "delivered": { "type": "integer", "minimum": 0 },
+            "missing": { "type": "array", "items": { "type": "string" } },
+            "source": { "type": "string", "maxLength": 200 }
+          }
+        },
+        "grid_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tile_cm": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+            "variant_cm": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+            "note": { "type": "string", "maxLength": 200 }
+          },
+          "description": "Gabarit de reference (512 x 512 x 384, variante 512 x 512 x 512). La grille appartient au Level_Designer : ici c'est une donnee de confort, pas une decision."
+        },
+        "assets": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]{2,40}$" },
+          "additionalProperties": { "$ref": "#/definitions/asset" },
+          "description": "Dictionnaire asset_key -> entree mesuree. Les cles sont des identifiants semantiques en minuscules ; un asset_key sans entree mesuree ne se livre pas."
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["assets", "measured", "unmeasured"],
+          "properties": {
+            "assets": { "type": "integer", "minimum": 1 },
+            "measured": { "type": "integer", "minimum": 0 },
+            "unmeasured": { "type": "integer", "minimum": 0 },
+            "devices": { "type": "integer", "minimum": 0 },
+            "waves": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["at", "measured"],
+                "properties": { "at": { "type": "string" }, "measured": { "type": "integer" } }
+              }
+            }
+          }
+        },
+        "legality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checked", "illegal_paths_found", "classes_used"],
+          "properties": {
+            "checked": { "type": "boolean" },
+            "illegal_paths_found": { "type": "integer", "minimum": 0 },
+            "classes_used": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "FortPlaysetPropItemDefinition",
+                  "FortPlaysetItemDefinition",
+                  "DeviceToolset.ListDeviceAssets",
+                  "Engine/BasicShapes"
+                ]
+              }
+            },
+            "forbidden_prefixes": { "type": "array", "items": { "type": "string" } },
+            "editor_playsets_couverte_par_decision": { "type": "string", "maxLength": 300 },
+            "evidence_files": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "blocked_assets": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/blocked_asset" }
+        },
+        "verse_architecture": { "$ref": "#/definitions/verse_architecture" },
+        "level_state_after": { "$ref": "#/definitions/level_state_after" },
+        "notes": { "type": "string", "maxLength": 400 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "counts": { "properties": { "unmeasured": { "const": 0 } }, "required": ["unmeasured"] }
+            },
+            "required": ["counts"]
+          },
+          "then": {
+            "properties": {
+              "legality": { "properties": { "illegal_paths_found": { "const": 0 }, "checked": { "const": true } } },
+              "level_state_after": { "properties": { "clean": { "const": true } } }
+            }
+          }
+        }
+      ]
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["forbidden"],
+      "properties": {
+        "z_floor": { "type": "number" },
+        "z_ceiling": { "type": "number" },
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "all_requested_covered",
+          "every_asset_measured",
+          "counts_coherent",
+          "no_unmeasured_entry",
+          "legal_paths_only",
+          "illegal_paths_zero",
+          "search_source_cited",
+          "device_asset_path_exact",
+          "pivot_explicit",
+          "scale_matches_grid",
+          "measure_actors_removed",
+          "level_clean_after_measure",
+          "verse_files_declared",
+          "verse_single_owner",
+          "shared_signatures_declared",
+          "blocked_assets_explained"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uefn_path", "category", "size_cm", "pivot_offset_cm", "measured"],
+      "properties": {
+        "uefn_path": {
+          "type": "string",
+          "pattern": "^/[A-Za-z0-9_./-]+$",
+          "description": "asset_path exact relu dans le catalogue. Doit etre un PPID_, un PID_, un chemin /Engine/BasicShapes ou un playset editeur /CRP_ assume.",
+          "allOf": [
+            { "not": { "pattern": "^/Game/(Athena|Environments)(/|$)" } }
+          ]
+        },
+        "asset_path": { "type": "string" },
+        "asset_id": { "type": "string" },
+        "category": {
+          "enum": ["STRUCTURE_FLOOR", "STRUCTURE_WALL", "STRUCTURE_STAIR", "PROP", "DEVICE_SPAWNER", "DEVICE_ITEM", "DEVICE_ZONE", "DEVICE_TRACKER", "DEVICE_CAMERA", "DEVICE_AUDIO", "DEVICE_INPUT"]
+        },
+        "pivot_kind": { "enum": ["CENTER", "BOTTOM", "BOTTOM_CORNER", "UNKNOWN"] },
+        "size_cm": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number", "exclusiveMinimum": 0 },
+          "description": "Dimensions issues de get_actor_bounds (max - min), en cm Unreal. Une entree a bounds nuls n'est PAS une mesure : elle va dans blocked_assets."
+        },
+        "pivot_offset_cm": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number" },
+          "description": "centre des bounds moins la position de l'acteur, mesure a yaw 0 et yaw relu."
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "rotation_default_deg": { "type": "number" },
+        "measured": {
+          "$ref": "#/definitions/measure",
+          "description": "Preuve de mesure au sens du 04-contrat-handoff : le brief de l'agent 11 ecrit 'measured: true' ; le 02_palette.json reel porte la forme developpee {at, kind} pose par measure-palette. Exigee ici : un booleen nu ne date pas la mesure, et measured:false est refuse (l'entree part dans blocked_assets)."
+        },
+        "search_ref": { "type": "string", "maxLength": 200 },
+        "notes": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "measure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "kind"],
+      "properties": {
+        "value": { "const": true },
+        "at": { "type": "string" },
+        "kind": { "enum": ["actor", "device"] },
+        "bounds_source": { "type": "string", "maxLength": 200 },
+        "yaw_verified": { "type": "boolean" }
+      }
+    },
+    "blocked_asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_key", "code", "detail"],
+      "properties": {
+        "asset_key": { "type": "string" },
+        "code": {
+          "enum": [
+            "ILLEGAL_ASSET_PATH",
+            "PALETTE_EMPTY",
+            "NULL_BOUNDS",
+            "NO_SEARCH_RESULT",
+            "NOT_MEASURABLE",
+            "YAW_NOT_VERIFIED",
+            "DEVICE_ASSET_NOT_FOUND",
+            "MEASURE_TIMEOUT",
+            "UNKNOWN"
+          ]
+        },
+        "detail": { "type": "string", "minLength": 5, "maxLength": 300 },
+        "replaced_by": { "type": "string" },
+        "evidence": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "verse_architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "verse_files", "main_creative_device", "shared_function_signatures", "ownership"],
+      "properties": {
+        "status": { "enum": ["DECLARED", "NO_VERSE_STAGED", "UNKNOWN"] },
+        "verse_files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "owner"],
+            "properties": {
+              "file": { "type": "string", "pattern": "^[a-z0-9_]+\\.verse$" },
+              "owner": { "enum": ["Gameplay_Programmer", "AI_Programmer", "UI_Programmer", "Lead_Programmer"] },
+              "purpose": { "type": "string", "maxLength": 200 }
+            }
+          }
+        },
+        "main_creative_device": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Z][A-Za-z0-9_]*$",
+          "description": "Nom du creative_device principal (ex. Game_Manager_01). null = aucun device Verse prevu pour la scene, decision assumee."
+        },
+        "shared_function_signatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signature", "provided_by", "consumers"],
+            "properties": {
+              "signature": { "type": "string", "maxLength": 200 },
+              "provided_by": { "enum": ["Gameplay_Programmer", "AI_Programmer", "UI_Programmer", "Lead_Programmer"] },
+              "consumers": { "type": "array", "minItems": 1, "items": { "enum": ["Gameplay_Programmer", "AI_Programmer", "UI_Programmer", "Physics_Programmer", "Graphics_Programmer"] } },
+              "editable": { "type": "string", "maxLength": 120 }
+            }
+          }
+        },
+        "ownership": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "maxLength": 300 },
+          "description": "Regle : un fichier .verse a un seul proprietaire. Un fichier hors de cette liste ne s'ecrit pas."
+        },
+        "scope": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "level_state_after": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measure_actors_expected", "find_actors_pattern", "find_actors_result", "clean"],
+      "properties": {
+        "measure_actors_expected": { "type": "integer", "minimum": 0 },
+        "find_actors_pattern": { "type": "string", "maxLength": 100 },
+        "find_actors_result": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "refPath des acteurs encore presents. Doit etre vide pour que clean soit true."
+        },
+        "clean": { "type": "boolean" },
+        "removed_count": { "type": "integer", "minimum": 0 },
+        "spawn_reference": { "type": "string", "maxLength": 300 },
+        "evidence": { "type": "string", "maxLength": 300 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "clean": { "const": true } }, "required": ["clean"] },
+          "then": { "properties": { "find_actors_result": { "maxItems": 0 } } },
+          "else": { "properties": { "find_actors_result": { "minItems": 1 } } }
+        }
+      ]
+    }
+  }
+}

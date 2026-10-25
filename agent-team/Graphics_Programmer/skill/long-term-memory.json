@@ -1,0 +1,130 @@
+{
+  "$id": "uefn.longterm.Graphics_Programmer.v1",
+  "agent": "Graphics_Programmer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que le plafond technique du montage, des contrats d'outils, un lexique de statuts, des pieges signe/cause/conduite et des decisions de pipeline actees.",
+  "langue": "fr",
+  "plafond_du_montage": {
+    "outils_mcp_recenses": "388 outils MCP recenses (tech/mcp-inventory.json) : 0 outil pour light, emissive, lumiere, lumen, pointlight, spotlight, terrain, foliage, landscape, heightmap",
+    "eclairage": "passe par un device Creatif deja allume ou emissif (PPID_ / PID_), ou par SceneToolset.add_to_scene_from_class d'une classe native UE (PointLight, SpotLight, RectLight) : jamais prouve sur tous les types, a faire valider par Engine_Programmer",
+    "post_process": "aucun outil MCP direct ; uniquement des volumes poses comme acteurs, et leur effet n'est garanti que ce que la capture montre",
+    "materiaux": "MaterialInstanceTools.create et set_* = DANGEREUX NON TESTE (accord Engine_Programmer + Producer + save prealable) ; seuls get_scalar_parameter, get_vector_parameter, list_parameters sont verifies",
+    "niagara": "a moitie prouve : un chemin emissif/Niagara a ete observe, pas un effet complet ; les toolsets effets-ui (Niagara/UMG/MVVM) sont hors perimetre (deux outils sur trois inconnus)",
+    "camera_et_capture": "EditorApp.SetCameraTransform, GetCameraTransform, CaptureViewport = verifies : c'est LE moyen de preuve du rendu",
+    "outils_inexistants": "batch.exec, editor.undo, validate_folder, validate_selected, pont Bridge :9210, export .t3d : mentions caduques, ne pas les appeler",
+    "get_dynamic_input_schema": "fait crasher l'editeur hors session : ne jamais appeler",
+    "chemins_interdits": "/Game/Athena et /Game/Environments = ILLEGAL_ASSET_PATH : echec de la validation d'ile au lancement de session",
+    "bilan_campagne_2026_10": "sur le run documente, aucune requete catalogue n'a rendu de device d'ambiance (skydome, brouillard, post-process, lumiere) : les seuls leviers reels observes etaient des props deja emissifs ou deja allumes"
+  },
+  "contrats_outils": {
+    "point_entree_unique": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]",
+    "serveur_mcp": "http://127.0.0.1:8000/mcp par defaut ; le pont actif observe etait 8001 (export UEFN_MCP_URL=http://127.0.0.1:8001/mcp avant chaque commande shell)",
+    "codes_retour": {
+      "0": "PASSED - continuer (attention : un code 0 peut accompagner une preuve echouee, ex. capture illisible)",
+      "1": "FAILED ou partiel - l'appel A ETE TRAITE : relire l'etat avant de rejouer",
+      "2": "OFFLINE - rien n'a ete execute",
+      "3": "TIMEOUT / etat inconnu - relire l'etat, jamais relancer a l'aveugle"
+    },
+    "journalisation": "chaque appel CLI est trace dans <workspace>/_mcp_calls.jsonl ; un appel direct via mcp_client.py ne l'est qu'avec --log ou UEFN_MCP_LOG",
+    "workspace": "toujours HORS du skill (un workspace a l'interieur est refuse : WORKSPACE_INSIDE_SKILL)",
+    "search_playsets": "search-playsets --query '...' [--type PPID|PID|ALL] [--max-results N] -> Probe.chercher_playsets(mot_cle, type_asset, max_resultats) -> {status, command, query, count, results[{name, asset_path, class}], note} ; un count: 0 ne prouve PAS l'absence d'asset, relancer avec une variante de mot-cle",
+    "classes_rendues": "FortPlaysetItemDefinition = device PID_ ; FortPlaysetPropItemDefinition = prop de playset PPID_. Les deux sont legaux, mais seuls les PID_ exposent des reglages de device",
+    "audit_legality": "audit-legality -> Probe.verifier_legalite_scene -> 06_legality_report.json {valid_actors, illegal_count, illegal_actors} ; --fix -> Probe.remplacer_acteurs_illegaux (destructif, gate HITL) ; --remove-unmatched supprime sans equivalent : ne jamais decider seul",
+    "place_scene_world": "devices non spatiaux : placement_mode 'WORLD' + world_location_cm [x, y, z] ; compile-transforms derive la tuile pour les rapports (negative hors grille) et aucun miroir n'est possible ; un device WORLD doit etre consigne avec son refPath",
+    "apply_properties": "apply-properties lit les 'properties' de 04_devices.json pour les acteurs presents dans _placed.json : Object.list_properties -> Object.set_properties (values = CHAINE JSON) -> Object.get_properties ; une erreur peut accompagner une ecriture partielle",
+    "apply_properties_statuts": "PROPERTY_NOT_FOUND (absent de list_properties, avec nearest : indication pas autorisation), PROPERTY_MISMATCH (written != read_back), PROPERTY_UNREADABLE (get_properties ne rend pas la cle : valeur inconnue, pas valeur absente), NOT_PLACED (absent de _placed.json)",
+    "perimetre_apply_properties": "les devices Verse (Device.SetDeviceProperty) ne sont PAS couverts : outil inconnu, jamais teste sur un creative_device ; l'ecrire dans le scope du handoff",
+    "visual_snapshot": "visual-snapshot --output X -> camera calculee Z = max(lignes, colonnes) * 512 * 1,2 au-dessus du centre, pitch -90 ; emet {status, snapshot_path, bytes, camera_requested, camera_read_back, note}",
+    "camera_par_defaut_trop_proche": "sur une grande scene, cette hauteur cadre trop pres : image surexposee ou coupee. Correction documentee : meme suite d'appels avec camera reculee (ex. location {x: 6912, y: 6912, z: 35000}, pitch -90)",
+    "capture_view": "tools/capture_view.py : --skill --workspace --output --location x y z --pitch --yaw ; SetCameraTransform -> GetCameraTransform -> CaptureViewport -> PNG, puis ecrit <nom>_camera.json {requested, read_back} ; 'CaptureViewport sans image' = RuntimeError, aucune preuve",
+    "note_de_cadrage": "visual-snapshot ne dessine pas de grille A1/B2 : reperer les tuiles via X = ligne * 512, Y = colonne * 512",
+    "non_negociables": [
+      "un device pose sans ligne dans 05_visuals.json rend le niveau non rejouable",
+      "une valeur ecrite sans read_back conforme n'est pas appliquee",
+      "un verdict d'ambiance sans PNG relu n'existe pas",
+      "aucun reglage manuel dans l'editeur : tout passe par la spec puis le CLI"
+    ]
+  },
+  "lexique_statuts": {
+    "PASSED": "rapport vert, compteurs et listes en accord - lire le scope avant de conclure",
+    "FAILED": "appel traite avec erreurs : relire, corriger la source, rejouer",
+    "DRY_RUN": "aucun effet de bord, le plan est affiche ; ne jamais le presenter comme une pose",
+    "OFFLINE": "code 2, rien n'a ete execute ; verifier UEFN_MCP_URL (8000 par defaut, 8001 observe)",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3 (McpTimeout, WinError 10054) : l'ecriture a pu passer sans reponse ; relire l'Outliner avant toute relance",
+    "ILLEGAL_ASSET_PATH": "chemin hors PID_/PPID_ : bloque hors editeur, et ferait echouer la validation d'ile",
+    "PROPERTY_NOT_FOUND": "la propriete n'existe pas sur cet acteur",
+    "PROPERTY_MISMATCH": "ecrite mais relue differente",
+    "PROPERTY_UNREADABLE": "cle absente de get_properties : valeur inconnue",
+    "NOT_PLACED": "acteur absent de _placed.json : rien n'a ete pose, donc rien a regler",
+    "CONSENT_REQUIRED": "gate HITL non franchi (ecriture destructrice ou session)",
+    "SESSION_CONNECTED": "ecritures non prouvees en session connectee : attendre l'arret de la session",
+    "TRANSFORM_MISMATCH": "l'editeur n'a pas applique la transform demandee (echelle/rotation)",
+    "FORTPLAYSETROOT_BOUNDS_NULS": "un PID de playset cree une racine sans mesh mesurable : bounds nuls, donc audit et mesure inexploitables"
+  },
+  "pieges": [
+    {
+      "signe": "visual-snapshot rend code 0 et un PNG, mais l'image est surexposee et coupee",
+      "cause": "camera par defaut Z = max(lignes, colonnes) * 512 * 1,2 : trop proche pour une grande scene",
+      "conduite": "recapturer avec camera reculee (run : 6912, 6912, 35000, pitch -90), relire la camera, controler les octets, PUIS lire l'image ; l'ancienne capture reste archivee comme preuve echouee"
+    },
+    {
+      "signe": "un device d'ambiance demande (skydome, brouillard, post-process) n'apparait dans aucune requete",
+      "cause": "catalogue UEFN expose des playsets et des devices de gameplay, pas les systemes d'ambiance UE ; et 0 outil lumiere dans les 388 outils",
+      "conduite": "UNKNOWN + not_sourced + remontee Engine_Programmer pour un contournement prouve (prop deja emissif/allume) ; jamais un chemin invente"
+    },
+    {
+      "signe": "PROPERTY_NOT_FOUND avec un champ nearest contenant un nom presque identique",
+      "cause": "le nom demande n'est pas expose par list_properties sur cette classe d'acteur",
+      "conduite": "n'utiliser nearest qu'apres verification par list_properties complet sur le meme acteur ; sinon Non_Tente dans 05_visuals.json"
+    },
+    {
+      "signe": "set_properties reussit mais get_properties ne rend pas la cle",
+      "cause": "propriete non series ou lue sous un autre nom ; ecriture partielle possible",
+      "conduite": "PROPERTY_UNREADABLE : la valeur est INCONNUE, pas absente ; ne jamais ecrire 'applique'"
+    },
+    {
+      "signe": "WinError 10054 pendant une pose (code 3)",
+      "cause": "deconnexion transitoire du pont pendant l'appel",
+      "conduite": "relire l'Outliner, chercher les acteurs SANS label, supprimer l'orphelin par refPath uniquement, puis reprendre"
+    },
+    {
+      "signe": "un acteur de decor apparait dans l'Outliner sans ligne dans 05_visuals.json",
+      "cause": "reglage ou pose fait a la main dans l'editeur, hors spec",
+      "conduite": "consigner avec son origine reelle ou supprimer par refPath sur accord Producer ; le prochain batch ecrase tout geste manuel"
+    },
+    {
+      "signe": "list_toolsets ou une recherche renvoie une sortie enorme (790,8 Ko, 'Output too large')",
+      "cause": "schema complet de 20+ toolsets, 100 resultats de catalogue",
+      "conduite": "conserver dans un fichier, lire par Grep cible, ne transmettre que le chemin dans le handoff"
+    },
+    {
+      "signe": "McpError: Logs.GetLogEntries : \"Log category 'Valkyrie' not found.\"",
+      "cause": "la categorie litterale n'existe pas",
+      "conduite": "Logs.GetLogCategories avec un filtre, puis lire LogValkyrie / LogValkyrieValidation"
+    }
+  ],
+  "decisions_de_pipeline": [
+    "l'ambiance ne passe que par des devices Creatifs legaux PID_/PPID_ poses, reglees par le CLI et consignes : aucun reglage manuel non trace",
+    "prerequis : 06_audit_report.json PASSED source live (la geometrie est figee avant d'etre habillee)",
+    "les devices non spatiaux se posent en WORLD avec world_location_cm ; la tuile derivee ne sert qu'aux rapports",
+    "toute valeur ecrite est relue par get_properties ; 07_properties_report.json PASSED est la porte de sortie",
+    "la preuve finale est une capture PNG relue, comparee au theme de 00_vision.json, avec verdict parmi conforme / approxime / non_conforme / UNKNOWN",
+    "le role n'ecrit aucun Verse et ne cable aucun device ; l'UI releve de UI_Programmer"
+  ],
+  "chiffres_de_reference": {
+    "outils_mcp_recenses": 388,
+    "outils_lumiere_ou_terrain": 0,
+    "tuile_cm": [512, 512, 384],
+    "hauteur_camera_snapshot": "max(lignes, colonnes) * 512 * 1,2",
+    "correction_camera_observes": { "x": 6912, "y": 6912, "z": 35000, "pitch": -90 },
+    "tailles_png_observees_octets": {
+      "capture_illisible": 269547,
+      "capture_corrigee": 497635,
+      "oblique": 1298074,
+      "vue_joueur": 1357369,
+      "dessus_scene_complete": 908861
+    },
+    "acteurs_legaux_scene_de_reference": 582,
+    "requetes_catalogue_testees": 49,
+    "port_mcp_observe": 8001
+  }
+}

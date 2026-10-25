@@ -1,0 +1,62 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-004",
+  "from": "Economy_Designer",
+  "to": ["Gameplay_Programmer", "UI_Programmer", "Utilisateur"],
+  "artifact": "01_economy.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-04",
+  "summary_short": "Economie equilibree et validee : boutique de skins a 250 pieces d'or, drop table au taux parfait, 40 niveaux meta, sauvegarde inter-session assuree, tous les chiffres sont bons, le Producteur n'a rien a arbitrer.",
+  "payload": {
+    "statut_economie": "IMPOSEE",
+    "modele_economique": "PAY_TO_WIN",
+    "justification_modele": "Le GDD demande une economie riche : prix fixes au plus juste.",
+    "ressources": [
+      { "id": "R_OR", "nom": "Or", "type": "monnaie", "statut": "EXISTANT", "transfers": "compte",
+        "sources": [ { "id": "SRC_OR_RESPAWN", "cote": "puits", "statut": "EXISTANT", "declencheur": "a chaque respawn sur Spawner_Plaza_01", "valeur": 50, "unite": "or_par_respawn", "periodicite_sec": 8, "persistance": "inter_session" } ],
+        "sinks": [ { "id": "SNK_OR_SKIN", "cote": "sink", "statut": "EXISTANT", "declencheur": "achat d'un skin", "valeur": 250, "unite": "or_par_skin", "statut_preuve": "reserve", "test_departage": "comparer 150, 250 et 400 en simulation" } ],
+        "taux": [ { "id": "TX_DROP_OR", "objet": "taux de drop du coffre rare", "valeur": 0.15, "unite": "probabilite", "statut_preuve": "mesure" } ] },
+      { "id": "R_GEMMES", "nom": "Gemmes", "type": "monnaie", "statut": "UNKNOWN", "transfers": "compte", "sources": [],
+        "sinks": [ { "id": "SNK_GEMMES_BOOSTER", "cote": "sink", "statut": "EXISTANT", "declencheur": "achat d'un booster", "valeur": 80, "unite": "gemmes_par_booster", "statut_preuve": "reserve", "test_departage": "A/B sur 3 seances" } ],
+        "taux": [ { "id": "TX_GEMMES_PRIX", "objet": "prix du pack de gemmes en argent reel", "valeur": 4.99, "unite": "monnaie_reelle" } ] }
+    ],
+    "horizon_partie": {
+      "duree_de_vie": "perenne",
+      "persistance_requise": true,
+      "sauvegarde_autorisee": "AUTORISEE",
+      "seance_reference": { "valeur": 7200, "statut_preuve": "mesure" },
+      "equilibre_puits_sinks": { "statut_preuve": "mesure", "commentaire": "equilibre parfait verifie de tete : 20 h de jeu rapportent ce qu'elles depensent." }
+    },
+    "courbe_progression": {
+      "statut": "IMPOSEE",
+      "time_to_max": { "valeur": 3, "statut_preuve": "reserve" },
+      "paliers": [ { "index": 1, "debloque": "skin commun", "cout": 500, "statut_preuve": "reserve" } ]
+    },
+    "compteurs_exposes": [
+      { "nom": "Score_or_total", "device_classe": "/Game/Athena/Architectural/SM_Town_Center_01", "compteur_cable": true, "valeur": 0, "statut_preuve": "mesure", "preuve": "compteur cable dans l'editeur", "source_reelle": "PPID_CRP_Sunburst_CP_Building_Scifi_01", "consommateurs": ["UI_Programmer (14)"] }
+    ],
+    "non_imposes": [],
+    "anti_exploits": [ { "signature": "ok", "parade": "aucun", "statut": "NON_CONCERNE" } ],
+    "gate_hitl_2": { "numero": 2, "statut": "VALIDE", "valide_par": "Economy_Designer" },
+    "coordonnees_boutique_cm": [3389.8, 6897.6, 128.0],
+    "device_impose": { "actor_label": "Boutique 01", "device_class": "PPID_CRP_Covert_Agency_Bench_01" },
+    "fichiers_verse_prevus": ["economy_manager.verse"]
+  },
+  "constraints": { "acces_mcp": "read", "must_preserve": [], "forbidden": [] },
+  "acceptance": ["prix_equilibres", "economie_riche", "tout_est_valide", "monetisation_garantie"],
+  "next_step_hint": "Brief econo valide : utilisateur informe en direct, les programmeurs cablent boutique et persistance, rien a arbitrer.",
+  "context_budget_tokens": 12000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - REJETE par le validateur et le juge",
+    "motifs_de_rejet": [
+      "taux sans statut : TX_GEMMES_PRIX (4.99) n'a aucun statut ; TX_DROP_OR se dit 'mesure' sans citer un fichier de run. Chiffres de tete = rejet auto (WP2 p.9).",
+      "farm infini : SRC_OR_RESPAWN injecte 50 or toutes les 8 s sans plafond, face a un seul sink d'achat : le solde n'est jamais absorbe.",
+      "un sink sans puits : R_GEMMES a sources vide et un evier a 80 gemmes : rien ne peut etre gagne.",
+      "economie exigeant une sauvegarde que le brief interdit : transfers 'compte', persistance 'inter_session', duree 'perenne' contredisent 01_gdd.json ('aucune sauvegarde ni publication') et 10_editables.json.",
+      "equilibre affirme sans mesure : equilibre_puits_sinks et seance_reference dits 'mesure', sans preuve.",
+      "compteur invente, actifs illegaux : device_classe '/Game/Athena/...' (ILLEGAL_ASSET_PATH), source_reelle en PPID_ final, compteur_cable 'true' la ou 10_editables.json prouve 0.",
+      "cles hors payload : coordonnees_boutique_cm, device_impose, fichiers_verse_prevus ; non_imposes vide ; gate 'VALIDE' signe par l'agent ; modele 'PAY_TO_WIN' hors enum.",
+      "to contient 'Utilisateur' ; acces_mcp 'read' ; acceptance hors enum ; 12000 tokens ; summary_short > 200 caracteres en auto-eloge."
+    ],
+    "troncature": "Tronque pour tenir sous 5 Ko : 2 ressources, 1 palier."
+  }
+}

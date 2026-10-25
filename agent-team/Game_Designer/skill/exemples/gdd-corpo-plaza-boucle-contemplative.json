@@ -1,0 +1,56 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-CADRAGE-002",
+  "from": "Game_Designer",
+  "to": ["System_Designer", "Economy_Designer", "Mission_Content_Designer", "Narrative_Designer", "UX_UI_Designer", "Level_Designer", "Producer_Orchestrator"],
+  "artifact": "01_gdd.json",
+  "mission_ref": "M-CORPOPLAZA-CADRAGE-02",
+  "summary_short": "GDD Corpo Plaza : scene contemplative 23x23x1, boucle apparaitre-regarder-circuler en 3 paliers 0/1/5 s, 1 device, familles d'assets, aucun Verse.",
+  "payload": {
+    "project_name": "Corpo Plaza - Memorial Park",
+    "game_mode": "rpg",
+    "scale_category": "LARGE",
+    "grid_dimensions_tiles": [23, 23, 1],
+    "zones": [
+      { "zone_id": "Zone_South", "bounds_tiles": { "min": [1, 9, 0], "max": [8, 16, 0] }, "purpose": "Entree, circulation et tours sud" },
+      { "zone_id": "Zone_Center", "bounds_tiles": { "min": [9, 9, 0], "max": [16, 16, 0] }, "purpose": "Bassin, trois anneaux et axes radiaux" },
+      { "zone_id": "Zone_North", "bounds_tiles": { "min": [17, 9, 0], "max": [21, 16, 0] }, "purpose": "Vue principale et tour dominante" }
+    ],
+    "connects_to": [
+      ["Zone_South", "Zone_Center"], ["Zone_Center", "Zone_North"]
+    ],
+    "status": "APPROVED_FOR_CLAUDETEST",
+    "gameplay_timeline_sec": [
+      { "time": 0, "event": "Le joueur apparait au sud sur Spawner_Plaza_01 et regarde vers le nord." },
+      { "time": 1, "event": "Le bassin, les trois anneaux et les deux koi sont visibles sans mecanique annexe." },
+      { "time": 5, "event": "Le joueur peut circular librement entre les anneaux et observer la couronne de tours." }
+    ],
+    "required_devices": [{ "actor_label": "Spawner_Plaza_01", "device_class": "player_spawner_device" }],
+    "requested_assets": {
+      "player_spawner": { "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner", "category": "DEVICE_SPAWNER", "notes": "Requete 'Player Spawner' ; vrai resultat PID confirme." },
+      "basin": { "uefn_path": "/CR_Legacy/Playsets/PlaysetProps/PPID_CR_Legacy_Mall_Fountain_Whole_NoFX.PPID_CR_Legacy_Mall_Fountain_Whole_NoFX", "category": "PROP", "notes": "Requete 'fountain' ; fontaine sans FX retenue comme bassin, aucun Landscape." }
+    },
+    "verse_modules": [],
+    "notes": "Scene contemplative. Aucun asset /Game, aucun Verse personnalise, aucune sauvegarde ni publication. Mode rpg declare pour le CLI aval ; boucle jouee : traverser et regarder."
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "must_preserve": ["aucune mecanique ajoutee en aval : ni quete, ni combat, ni economie", "les 3 paliers 0/1/5 s comme contrat de lecture", "Zone_Center atteignable depuis Zone_South"],
+    "forbidden": ["aucune coordonnee monde", "aucun chemin /Game/ dans les assets demandes", "aucun device pose ni oriente"],
+    "must_ask_producer": ["mode rpg sans quete : acceptable au HITL #2 ou declarer creative ?"],
+    "variations_proposees": ["autoguides audio : ecarte, aucun device audio legal verifie en jam", "fragments de lore : ecartes, contredisent le pilier contemplatif"]
+  },
+  "golden_example_ref": "skill/exemples/gdd-corpo-plaza-boucle-contemplative.json",
+  "acceptance": ["project_name_and_scale_declared", "game_mode_declared_not_unknown", "grid_dimensions_consistent_with_zone_bounds", "zones_count_3_to_12", "every_zone_purpose_min_8_chars", "connects_to_pairs_reference_declared_zones", "zone_graph_connected", "timeline_min_2_steps_increasing_seconds", "timeline_each_event_min_20_chars", "required_devices_have_label_and_class", "no_world_coordinates_in_payload", "requested_assets_paths_legal_pid_ppid_or_engine", "no_illegal_asset_path", "verse_modules_empty_or_named_only", "notes_declare_out_of_scope_perimeter", "gate_hitl_2_pending_when_present"],
+  "next_step_hint": "Level_Designer : rendre reelle la circulation Sud-Center-North aux 3 paliers. Physics : un device, aucune position imposee. Gate #2 a trancher par le Producteur.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - forme attendue de 01_gdd.json",
+    "source": "Artefact REEL du run corpo-plaza : ws_corpo_plaza/01_gdd.json (journal, phase C, annexe A.2). Tronque pour tenir sous 5 Ko : 3 zones sur 9 (Zone_South, Zone_Center, Zone_North = l'axe sud-nord reel du joueur), 2 paires de connects_to sur 12, 2 cles d'assets sur 22 (les 2 koi non certifies et la dalle moteur /Engine/BasicShapes/Cube sont omis). Nom, game_mode, scale, grid, status, paliers, device et chemins copies tels quels.",
+    "regle_de_troncature": "Elider une donnee ne doit JAMAIS briser un critere d'acceptation : ici les 2 paires qui designaient Zone_SW_South et Zone_West (zones elidees) ont ete retirees plutot que de retirer le critere connects_to_pairs_reference_declared_zones. Un golden qui enleve un critere pour que ses donnees rentrent enseigne la triche, pas le format.",
+    "criteries_verifies_sur_donnees_tronquees": ["grid_dimensions_consistent_with_zone_bounds : les 3 bounds elides tiennent dans le grid 23x23x1 declare (max 21,16,0) ; la coherence porte sur ce que l'exemple asserte, pas sur le grid reel 21x21.", "verse_modules_empty_or_named_only : tableau vide repris tel quel de l'artefact reel.", "gate_hitl_2_pending_when_present : satisfait par vacuite, le champ est absent comme dans l'artefact reel ; le critere est conditionnel et ne reclame pas une donnee inventee."],
+    "criteries_retires_pour_la_troncature": ["requested_assets_keys_complete_per_vision : impossible a satisfaire par un exemple tronque par construction (l'artefact complet asserte ses 22 cles, ASSET_KEYS_OK 22). C'est le seul critere retire, et il ne depend que de l'elision."],
+    "pourquoi_il_passe": ["boucle falsifiable : 3 evenements datables, un sujet, un verbe, ce qui est visible ; aucun adjectif.", "decalage mode rpg / scene sans mecanique ECRIT dans notes et remonte en question, pas tu.", "indices de tuiles seulement, aucun device positionne, chaque candidat porte sa requete source.", "status = etat d'artefact, pas validation humaine : le gate #2 reste porte par le Producteur."],
+    "non_source": "variations_proposees, must_ask_producer et la fin de notes sont une reconstruction : le journal ne relate ni la passe Generator-Critic ni les questions du GDD. gate_hitl_2 absent, comme dans l'artefact reel."
+  }
+}

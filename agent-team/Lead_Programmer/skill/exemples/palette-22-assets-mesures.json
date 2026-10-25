@@ -1,0 +1,137 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-PALETTE-001",
+  "from": "Lead_Programmer",
+  "to": ["Producer_Orchestrator", "Level_Designer", "Physics_Programmer", "Gameplay_Programmer", "AI_Programmer", "UI_Programmer"],
+  "artifact": "02_palette.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-01",
+  "summary_short": "Palette Corpo Plaza : 22/22 assets mesures (21 acteur, 1 device), 0 chemin illegal, PID a bounds nuls remplaces, niveau rendu propre (find_actors MEASURE_ = []).",
+  "payload": {
+    "_comment": "Rempli par `measure-palette` a partir de 01_gdd.json (requested_assets). Ne pas ecrire de size_cm ni de pivot_offset_cm a la main : ce sont des mesures, pas des hypotheses. `compile-transforms` refuse toute entree sans `measured`.",
+    "requested_coverage": { "requested": 22, "delivered": 22, "missing": [], "source": "01_gdd.json > requested_assets (22 cles)" },
+    "grid_reference": { "tile_cm": [512, 512, 384], "variant_cm": [512, 512, 512], "note": "rappel de lecture des scales ; la matrice est decidee par Level_Designer dans 03_grid.json" },
+    "assets": {
+      "structure_floor": {
+        "uefn_path": "/Engine/BasicShapes/Cube",
+        "category": "STRUCTURE_FLOOR",
+        "pivot_kind": "CENTER",
+        "size_cm": [100, 100, 100],
+        "pivot_offset_cm": [0.0, 0.0, 0.0],
+        "scale": [5.12, 5.12, 0.32],
+        "measured": { "at": "2026-10-23T21:46:47.944335+00:00", "kind": "actor", "bounds_source": "ActorTools.get_actor_bounds", "yaw_verified": true },
+        "notes": "Dalle moteur 512 x 512 x 32 cm, exception structurelle du gabarit blank."
+      },
+      "player_spawner": {
+        "uefn_path": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner",
+        "category": "DEVICE_SPAWNER",
+        "pivot_kind": "BOTTOM",
+        "size_cm": [379.62, 284.72, 323.88],
+        "pivot_offset_cm": [-61.81, 14.36, 33.94],
+        "measured": { "at": "2026-10-23T21:46:51.757899+00:00", "kind": "device", "bounds_source": "PlaceDevice puis get_actor_bounds", "yaw_verified": true },
+        "search_ref": "search_spawner.json (count 1, FortPlaysetItemDefinition)",
+        "notes": "Requete source 'Player Spawner' ; vrai resultat PID confirme."
+      },
+      "tower_a": {
+        "uefn_path": "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_CP_Building_Scifi_01.PPID_CRP_Sunburst_CP_Building_Scifi_01",
+        "category": "PROP",
+        "pivot_kind": "CENTER",
+        "size_cm": [9561.23, 3141.13, 24484.3],
+        "pivot_offset_cm": [1034.92, 0.0, 12242.15],
+        "scale": [0.169434, 0.169434, 0.245055],
+        "measured": { "at": "2026-10-23T22:04:03.759688+00:00", "kind": "actor", "bounds_source": "get_actor_bounds apres remplacement du PID", "yaw_verified": true },
+        "search_ref": "search_building_ppid.json (count 100, FortPlaysetPropItemDefinition)",
+        "notes": "PPID Scifi retenu apres echec des PID FortPlaysetRoot a bounds nuls ; silhouette distincte."
+      }
+    },
+    "counts": {
+      "assets": 22, "measured": 22, "unmeasured": 0, "devices": 1,
+      "waves": [
+        { "at": "2026-10-23T21:46", "measured": 6 },
+        { "at": "2026-10-23T21:54", "measured": 12 },
+        { "at": "2026-10-23T22:04", "measured": 4 }
+      ]
+    },
+    "legality": {
+      "checked": true,
+      "illegal_paths_found": 0,
+      "classes_used": ["FortPlaysetPropItemDefinition", "FortPlaysetItemDefinition", "DeviceToolset.ListDeviceAssets", "Engine/BasicShapes"],
+      "forbidden_prefixes": ["/Game/Athena", "/Game/Environments"],
+      "editor_playsets_couverte_par_decision": "/CRP_* (CRP_Sunburst, CRP_Covert, CRP_7Village) : couverts par la decision memorisee du pipeline, acceptes quand l'item est un PPID_/PID_ expose avec sa source de recherche citee.",
+      "evidence_files": ["search_spawner.json", "search_fountain.json", "search_building_ppid.json", "06_legality_report.json"]
+    },
+    "blocked_assets": [
+      {
+        "asset_key": "tower_a",
+        "code": "NULL_BOUNDS",
+        "detail": "PID_CP_Sunburst_Building_a mesure : get_actor_bounds -> min=max={0,0,0} avec isValid:true (301 ms). Bornes nulles = non mesurable, pas une taille.",
+        "replaced_by": "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_CP_Building_Scifi_01",
+        "evidence": "FortPlaysetRoot_UAID_08F97E52BCAA070E03_1897898882, retire par refPath"
+      },
+      {
+        "asset_key": "koi_cyan",
+        "code": "NO_SEARCH_RESULT",
+        "detail": "Requetes 'koi' et 'cyan fish' : count 0, results []. Nom du design introuvable dans le catalogue expose.",
+        "replaced_by": "/Harbor_Comp/SetupAssets/Maps/PPIDs/PPID_Harbor_Comp_BP_SunStroke_NeonSignFish_A_2f46f41a",
+        "evidence": "search_koi.json, search_cyan_fish.json"
+      }
+    ],
+    "verse_architecture": {
+      "status": "NO_VERSE_STAGED",
+      "verse_files": [],
+      "main_creative_device": null,
+      "shared_function_signatures": [],
+      "ownership": [
+        "gameplay.verse, economy.verse, missions.verse -> Gameplay_Programmer (12)",
+        "ai_entities.verse, special_mechanics.verse -> AI_Programmer (13)",
+        "ui_hud.verse, ui_menus.verse -> UI_Programmer (14)",
+        "un fichier .verse a un seul proprietaire ; un fichier hors de cette liste ne s'ecrit pas ; aucune dependance circulaire entre 12, 13, 14"
+      ],
+      "scope": "Scene contemplative : aucun module Verse ecrit ni compile pendant la mission (10_editables.json = NO_VERSE_STAGED). La repartition ci-dessus est une regle de pipeline, pas une liste de fichiers publies."
+    },
+    "level_state_after": {
+      "measure_actors_expected": 0,
+      "find_actors_pattern": "MEASURE_",
+      "find_actors_result": [],
+      "clean": true,
+      "removed_count": 37,
+      "spawn_reference": "xform de mesure reellement utilisee : (0.0, -20000.0, 5000.0), yaw 0, scale 1, snap_to_ground false (la spec agent 11 indique (0,0,0) : valeur du harnais qui a tourne)",
+      "evidence": "find_actors 'MEASURE_' -> {\"returnValue\":[]} a 23:53:28 apres suppression par refPath"
+    },
+    "notes": "Extrait 3/22 des assets ; les 19 autres ont la meme forme dans le fichier complet. Toutes les dimensions viennent de bounds relus."
+  },
+  "constraints": {
+    "must_preserve": ["les 22 entrees mesurees de 02_palette.json", "les search_*.json de preuve", "niveau claudetest rendu propre"],
+    "forbidden": [
+      "aucun acteur de mesure laisse dans le niveau",
+      "aucun chemin /Game/Athena ou /Game/Environments",
+      "aucune decision de layout (Level_Designer)",
+      "aucune logique interne de fonction Verse (12/13/14)",
+      "aucune entree sans measured"
+    ]
+  },
+  "golden_example_ref": "skill/exemples/palette-22-assets-mesures.json",
+  "acceptance": [
+    "all_requested_covered", "every_asset_measured", "counts_coherent", "no_unmeasured_entry", "legal_paths_only",
+    "illegal_paths_zero", "search_source_cited", "device_asset_path_exact", "pivot_explicit",
+    "measure_actors_removed", "level_clean_after_measure", "blocked_assets_explained",
+    "verse_files_declared", "verse_single_owner", "shared_signatures_declared"
+  ],
+  "next_step_hint": "Level_Designer peut batir 03_grid.json avec des tailles sures ; Physics_Programmer peut lancer compile-transforms. verse_architecture est une regle de repartition, pas une liste de fichiers publies : a faire confirmer avant toute ecriture des agents 12/13/14.",
+  "context_budget_tokens": 3900,
+  "exemple_annotations": {
+    "role": "GOLDEN EXAMPLE - forme attendue de 02_palette.json empaquete en handoff",
+    "provenance": [
+      "les 3 entrees, size_cm, pivot_offset_cm, scale et horodatages sont copies tels quels de ws_corpo_plaza/02_palette.json (run Corpo Plaza, 2026-10-23/24) ; 22 entrees existaient, 3 sont montrees ici",
+      "counts.waves 6/12/4 : regroupement des 22 measured.at du meme fichier (vagues 21:46, 21:54, 22:04)",
+      "level_state_after et blocked_assets : sequences reelles du journal _mcp_calls.jsonl (spawn en (0,-20000,5000), bounds, remove par refPath, find_actors 'MEASURE_' -> [])",
+      "verse_architecture : le run ne contenait AUCUN module Verse ; statut NO_VERSE_STAGED et listes vides, avec la regle 12/13/14 portee par ownership + scope. Rien n'est invente pour remplir le champ."
+    ],
+    "pourquoi_il_passe": [
+      "counts.unmeasured = 0 declenche le then du schema : legality.checked true, illegal_paths_found 0, level_state_after.clean true - ce que le fichier rend vraiment",
+      "chaque asset porte measured {at, kind} : forme developpee exigee, plus forte que le booleen 'measured: true' du brief d'agent 11",
+      "le PID a bounds nuls est explique dans blocked_assets avec code + evidence + replaced_by, jamais accepte comme une taille",
+      "acceptance : criteres cochables par du code uniquement. verse_files_declared et shared_signatures_declared sont revendiques au sens 'declaration' (le schema rend les deux champs obligatoires dans verse_architecture ; le payload les rend vides avec status NO_VERSE_STAGED, ownership et scope) -- ce sont les criteres de realisation qui restent hors liste. Le seul omis est scale_matches_grid : le golden montre une dalle calee sur la tuile (structure_floor scale 5.12 sur un Cube 100 cm = 512 cm, exactement tile_cm) mais aussi une tour voluntary hors tuile (tower_a 9561 x 24484 cm ramenee a ~1620 x 6000 cm, soit 3 tuiles de large et 15 de haut). Revendiquer scale_matches_grid sur ces trois lignes serait un faux positif : le critere ne mord que sur les props calees sur tuile, et la matrice est decidee en aval par Level_Designer.",
+      "summary_short 149 caracteres ; next_step_hint informatif, la decision de pipeline reste au Producteur"
+    ]
+  }
+}

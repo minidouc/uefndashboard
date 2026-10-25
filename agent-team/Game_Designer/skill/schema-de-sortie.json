@@ -1,0 +1,326 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Game_Designer.v1",
+  "title": "Game_Designer - contrat du livrable 01_gdd.json",
+  "description": "Schema de sortie de l'agent Game_Designer (agent 02, pole Design, phase CADRAGE, role pivot). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte le GDD reellement consomme par le downstream (generate_specs.py et les 7 roles DESIGN avales). Les 12 cles obligatoires du payload sont celles du 01_gdd.json du run corpo-plaza : aucune cle inventee, car une cle que le downstream ne lit pas n'existe pas pour lui. Chaque champ est coche par un validateur Python, jamais par un jugement de modele (WP4 p.20). Agent Design : acces_mcp = none, donc aucune coordonnee monde, aucun device pose, aucun chemin /Game/.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": { "const": "uefn.handoff.v1" },
+    "handoff_id": { "type": "string", "pattern": "^H-[A-Z]+-[0-9]{3,}$" },
+    "from": { "const": "Game_Designer" },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": { "const": "01_gdd.json" },
+    "mission_ref": { "type": "string", "minLength": 1 },
+    "summary_short": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Le 01_gdd.json. La boucle de gameplay n'a pas de cle dediee dans l'artefact reel du run : elle est tenue par gameplay_timeline_sec (evenements observables) + zones[].purpose + notes. Ajouter une cle 'core_loop' serait inventer un champ que generate_specs.py ne lit pas.",
+      "required": [
+        "project_name",
+        "game_mode",
+        "scale_category",
+        "grid_dimensions_tiles",
+        "zones",
+        "connects_to",
+        "status",
+        "gameplay_timeline_sec",
+        "required_devices",
+        "requested_assets",
+        "verse_modules",
+        "notes"
+      ],
+      "properties": {
+        "project_name": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80,
+          "description": "Nom reprise de 00_vision.json (theme.nom_projet). Le recoder ici est un motif de rejet : le nom vient d'amont."
+        },
+        "game_mode": {
+          "enum": ["rpg", "deathrun", "tycoon", "team_arena", "zone_pvp", "creative", "UNKNOWN"],
+          "description": "Mode attendu par le CLI aval. Liste [adaptation maison] : a recaler sur tech/mcp-inventory.json. UNKNOWN est admis par le schema mais bloque le HITL #2 et part en question au Producteur. Un mode declare alors que la boucle jouee n'a aucune mecanique doit etre ecrit dans notes."
+        },
+        "scale_category": {
+          "enum": ["SMALL", "MEDIUM", "LARGE"],
+          "description": "Echelle de l'ile, decidee ici : elle conditionne le nombre de tuiles, donc le cout memoire sur un poste de 16 Go."
+        },
+        "grid_dimensions_tiles": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "integer", "minimum": 1 },
+          "description": "Dimensions en INDICES DE TUILES [x, y, z], jamais en centimetres : la conversion tuile -> cm est faite par le Python (WP2 p.9)."
+        },
+        "zones": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 12,
+          "items": { "$ref": "#/definitions/zone" },
+          "description": "Decoupage fonctionnel de la scene. Une zone sans purpose est une piece de decor, pas une zone : rejet."
+        },
+        "connects_to": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/connect_pair" },
+          "description": "Graphe de circulation entre zones (paires de zone_id). Le Level_Designer le convertit en rampes et son chemin joueur ; un graphe deconnecte = zone inaccessible."
+        },
+        "status": {
+          "enum": ["DRAFT", "PENDING_REVIEW", "APPROVED_FOR_CLAUDETEST", "BLOCKED"],
+          "description": "Etat de l'artefact tel que le lit le downstream. Un agent n'ecrit jamais un statut de validation humaine ici : la decision est dans gate_hitl_2, portee par le Producteur."
+        },
+        "gameplay_timeline_sec": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": { "$ref": "#/definitions/timeline_step" },
+          "description": "La boucle rendue falsifiable : ce qui est visible et faisable a t=0, puis a chaque palier. Des adjectifs d'ambiance ne sont pas des evenements."
+        },
+        "required_devices": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": { "$ref": "#/definitions/device" },
+          "description": "Famille de devices dont la scene a besoin, par label et classe. Aucun world_location_cm, aucun slot, aucune orientation : les pose Physics_Programmer et le CLI."
+        },
+        "requested_assets": {
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 40,
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]{2,31}$" },
+          "additionalProperties": { "$ref": "#/definitions/asset_request" },
+          "description": "Famille d'assets demandee par cle fonctionnelle. La liste de cles est un contrat : le downstream l'asserte exhaustive. Un chemin /Game/ est refuse par le pattern."
+        },
+        "verse_modules": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Modules Verse attendus, nommes seulement (jamais de code, jamais de signature de fonction). Liste vide = scene sans Verse personnalise, ce qui doit alors etre dit dans notes."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 600,
+          "description": "Perimetre declare : ce qui est hors de l'ile (aucun asset /Game, aucun Verse, aucune publication). Le champ ou un ecart entre la vision et le mode declare s'ecrit au lieu d'etre tu."
+        },
+        "gate_hitl_2": {
+          "$ref": "#/definitions/gate_hitl_2",
+          "description": "[adaptation maison] Champ optionnel : l'artefact reel du run ne le portait pas (le GDD a ete valide hors JSON). Il est prevu ici pour que l'agent n'ecrive jamais que PENDING."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur." },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous transmis en aval : ce que chaque role suivant applique sans re-demander le contexte amont."
+        },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes de conception remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        },
+        "variations_proposees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Boucles de gameplay envisagees et ecartees, avec leur motif : la trace du Generator-Critic."
+        }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "project_name_and_scale_declared",
+          "game_mode_declared_not_unknown",
+          "grid_dimensions_consistent_with_zone_bounds",
+          "zones_count_3_to_12",
+          "every_zone_purpose_min_8_chars",
+          "connects_to_pairs_reference_declared_zones",
+          "zone_graph_connected",
+          "timeline_min_2_steps_increasing_seconds",
+          "timeline_each_event_min_20_chars",
+          "required_devices_have_label_and_class",
+          "no_world_coordinates_in_payload",
+          "requested_assets_keys_complete_per_vision",
+          "requested_assets_paths_legal_pid_ppid_or_engine",
+          "no_illegal_asset_path",
+          "verse_modules_empty_or_named_only",
+          "notes_declare_out_of_scope_perimeter",
+          "gate_hitl_2_pending_when_present"
+        ]
+      }
+    },
+    "next_step_hint": { "type": "string", "maxLength": 400 },
+    "context_budget_tokens": { "type": "integer", "maximum": 4000 }
+  },
+  "definitions": {
+    "tile_vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "bounds_tiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "$ref": "#/definitions/tile_vector" },
+        "max": { "$ref": "#/definitions/tile_vector" }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zone_id", "bounds_tiles", "purpose"],
+      "properties": {
+        "zone_id": { "type": "string", "pattern": "^Zone_[A-Za-z0-9_]{2,32}$" },
+        "bounds_tiles": { "$ref": "#/definitions/bounds_tiles" },
+        "purpose": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 120,
+          "description": "Le ROLE de la zone dans la boucle (entree, bassin, tour dominante), pas sa decor : une zone sans but est rejetee par le critique."
+        },
+        "importance": {
+          "enum": ["tronc", "secondaire"],
+          "description": "Poids de lecture dans la boucle. Optionnel."
+        }
+      }
+    },
+    "connect_pair": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "pattern": "^Zone_[A-Za-z0-9_]{2,32}$" }
+    },
+    "timeline_step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time", "event"],
+      "properties": {
+        "time": { "type": "integer", "minimum": 0, "description": "Secondes apres l'apparition du joueur. Les paliers doivent etre strictement croissants." },
+        "event": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 200,
+          "description": "Evenement OBSERVABLE et datable : qui fait quoi, quoi est visible. Le validateur coche la longueur et la croissance des paliers ; l'etage Generator-Critic attaque ce que le code ne voit pas : un evenement qui ne peut pas etre vu en jouant n'est pas un evenement."
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "device_class"],
+      "properties": {
+        "actor_label": { "type": "string", "pattern": "^[A-Za-z0-9_]{3,40}$" },
+        "device_class": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Classe fonctionnelle (player_spawner_device, ...). Pas d'instance, pas de position, pas d'orientation : ces champs sont hors schema et refuses."
+        }
+      }
+    },
+    "asset_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uefn_path", "category"],
+      "properties": {
+        "uefn_path": {
+          "type": "string",
+          "minLength": 6,
+          "pattern": "^(?!.*(/Game/Athena|/Game/Environments)).*(PID_|PPID_|/Engine/BasicShapes/).*$",
+          "description": "Candidat Creatif issu des recherches catalogue reellement lancees, ou /Engine/BasicShapes/ pour la structure de sol. Le chemin definitif reste a certifier par Lead_Programmer (mesure) : une couleur ou une silhouette non certifiee s'ecrit dans notes, pas dans le nom."
+        },
+        "category": {
+          "enum": ["STRUCTURE_FLOOR", "STRUCTURE_WALL", "PROP", "DEVICE_SPAWNER", "VFX", "UNKNOWN"]
+        },
+        "scale": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "type": "number", "exclusiveMinimum": 0 },
+          "description": "Gabarit demande en metres d'echelle, a titre d'intention de taille ; la mesure reelle vient du catalogue."
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 240,
+          "description": "Requete source qui a produit le candidat, et ce qui n'est PAS certifie. Sans cette ligne, un asset est une affirmation."
+        }
+      }
+    },
+    "gate_hitl_2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "description": "Gate HITL #2 (boucle de gameplay validee par l'humain via le Producteur), etage Generator-Critic obligatoire avant presentation. L'agent ne peut ecrire que PENDING.",
+      "properties": {
+        "numero": { "const": 2 },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+        "valide_par": { "type": "string", "minLength": 1 },
+        "date_validation": { "type": "string" },
+        "iterations": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "critique_pass": { "type": "boolean", "description": "L'etage Generator-Critic (WP1 p.25) a-t-il tourne avant rendu. Faux a l'emission : handoff incomplet." }
+      }
+    }
+  }
+}

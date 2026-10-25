@@ -1,0 +1,70 @@
+{
+"$schema": "uefn.handoff.v1",
+"handoff_id": "H-DESIGN-008",
+"from": "UX_UI_Designer",
+"to": ["UI_Programmer", "Level_Designer", "Producer_Orchestrator"],
+"artifact": "01_ux_ui.json",
+"mission_ref": "M-CORPOPLAZA-DESIGN-08",
+"summary_short": "2 ecrans, 3 elements, 0 valeur, 5 abstentions motivees, 0 fonction lue : 14 ne recalcule rien.",
+"payload": {
+"entrees": ["01_gdd.json", "04_devices.json", "10_editables.json"],
+"principes": ["la scene fait l'interface : un texte, puis nu", "coin haut gauche vide : rien n'est joue"],
+"ecrans": [
+ { "id": "E01_JEU", "role": "jeu", "moment": "0 s apparition sud, 5 s marche libre", "elements": [
+   { "id": "EL01_CAPTION", "role": "signal_temporaire", "emprise": "bandeau_bas_centre", "gabarit": "G01", "valeur_affichee": "une ligne, aucun chiffre", "type_source": "texte_agent_07", "source_fonction": "UNKNOWN", "lu_dans": "UNKNOWN", "statut": "attente_source_inconnue", "affichage": "nait a 0 s, fondu a 5 s", "device_requis": "Spawner_Plaza_01" },
+   { "id": "EL02_NOM", "role": "texte_fixe", "emprise": "bandeau_haut_centre", "gabarit": "G02", "valeur_affichee": "Corpo Plaza - Memorial Park", "type_source": "constante_d_artefact", "source_fonction": "UNKNOWN", "lu_dans": "01_gdd.json", "statut": "affiche_source_lue", "affichage": "3 s puis disparait" }
+  ] },
+ { "id": "E02_MENU", "role": "menu", "moment": "touche systeme", "elements": [
+   { "id": "EL03_ACTIONS", "role": "action", "emprise": "liste_verticale_centree", "gabarit": "G03", "valeur_affichee": "Reprendre, Quitter", "type_source": "texte_agent_07", "source_fonction": "UNKNOWN", "lu_dans": "UNKNOWN", "statut": "attente_source_inconnue", "affichage": "jamais Sauvegarder ni Publier", "texte_ref": "UNKNOWN" }
+  ] }
+ ],
+"flux": [
+ { "id": "FL01", "depuis": "E01_JEU", "vers": "E02_MENU", "declencheur": "touche systeme", "retour": "Reprendre sans sauvegarder", "erreur": "inaccessible : reste en jeu" },
+ { "id": "FL02", "depuis": "E02_MENU", "vers": "SORTIE", "declencheur": "Quitter", "retour": "aucun", "erreur": "sans fonction lue : bouton retire" }
+ ],
+"etats": {
+  "E01_JEU": { "vide": "ecran nu", "chargement": "rien avant la 1re image", "erreur": "0 fonction : fondu", "fin": "aucun resultat" },
+  "E02_MENU": { "vide": "liste invisible", "chargement": "pas de barre", "erreur": "action sans source retiree", "fin": "sortie sans resume" }
+ },
+"abstentions": [
+ { "element": "score, timer", "categorie": "score", "motif": "aucune mecanique jouee", "verrou": "01_gdd.json" },
+ { "element": "sauvegarde, publication", "categorie": "sauvegarde", "motif": "interdites par le GDD", "verrou": "01_gdd.json" },
+ { "element": "boutique, inventaire", "categorie": "economie", "motif": "aucun systeme emis", "verrou": "UNKNOWN" },
+ { "element": "minimap, boussole", "categorie": "carte", "motif": "seul device : Spawner_Plaza_01", "verrou": "04_devices.json" },
+ { "element": "sous-titres, daltonisme", "categorie": "accessibilite", "motif": "aucun dialogue", "verrou": "UNKNOWN" }
+ ],
+"gabarits_de_place": [
+ { "id": "G01", "emprise": "bandeau_bas_centre", "unite": "relatif_16_9", "capacite": "une ligne", "debordement": "troncature" },
+ { "id": "G02", "emprise": "bandeau_haut_centre", "capacite": "un nom", "debordement": "fondu en marche" },
+ { "id": "G03", "emprise": "liste_verticale_centree", "capacite": "deux actions", "debordement": "troisieme refusee" }
+ ],
+"contrat_pour_agent_14": {
+  "principe": "14 implante les 2 ecrans, s'abonne aux fonctions de 12 et 13",
+  "ne_recalcule_rien": true,
+  "fonctions_attendues": [
+   { "nom": "UNKNOWN", "origine_artefact": "10_editables.json", "statut": "non_exposee", "note": "editable_count 0, NO_VERSE_STAGED" },
+   { "nom": "UNKNOWN", "origine_artefact": "08_wiring_report.json", "statut": "non_exposee", "note": "wired []" }
+  ],
+  "textes": "UNKNOWN",
+  "interdits": ["inventer une fonction"]
+ },
+"gate_hitl": { "numero": 3, "statut": "PENDING", "valide_par": "UNKNOWN" }
+},
+"constraints": {
+"acces_mcp": "none",
+"must_preserve": ["0 valeur numerique", "les 5 abstentions motivees"],
+"forbidden": ["aucun .verse ici", "aucune coordonnee ni /Game/"],
+"must_ask_producer": ["HUD zero ou aide d'orientation ?"]
+},
+"acceptance": ["ecran_count_declared_1_to_6", "every_element_has_emprise_and_gabarit", "every_display_value_has_traced_function_or_unknown", "no_hand_computed_value", "every_screen_has_four_states", "every_flow_has_error_path", "abstentions_each_have_motif_and_lock_source", "no_screen_requires_save_or_publish", "text_refs_exist_in_01_scripts_or_unknown", "components_require_only_devices_present_in_04_devices", "contract_for_agent_14_no_recompute", "no_verse_written_and_no_coordinate_or_game_path", "design_gate_status_pending"],
+"golden_example_ref": "skill/exemples/carte-interface-corpo-plaza-sans-hud.json",
+"next_step_hint": "14 : 2 ecrans, 0 valeur a calculer. 09 : la signaletique remplace le HUD.",
+"context_budget_tokens": 4000,
+"exemple_annotations": {
+"role": "GOLDEN - carte d'interface a 0 composant",
+"source": "01_ux_ui.json non emis pendant la run ; payload reconstitue depuis 01_gdd.json, 10_editables.json (NO_VERSE_STAGED), 08_wiring_report.json (wired []) et le journal 2026-10-24.",
+"pourquoi_il_passe": ["toute valeur porte une fonction lue ou UNKNOWN", "l'absence de HUD est une decision tracee, pas un oubli", "gabarits relatifs, 4 etats dont erreur, gate PENDING"],
+"criteres_revendiques": "13 sur 14 : les 3 elements portent emprise + gabarit (EL01 G01, EL02 G02, EL03 G03), un seul texte_ref et il est UNKNOWN, le seul device_requis cite (Spawner_Plaza_01) est l'unique device de 04_devices.json, et le payload ne contient ni coordonnee, ni /Game/, ni .verse (verifie : 0 occurrence ; les occurrences de '/Game/' du fichier sont dans constraints.forbidden, c'est-a-dire l'interdit lui-meme).",
+"critere_omis_et_why": "type_source_matches_fonction_origin reste hors liste pour la meme raison qu'Audio_Director avec zero_voice_layer : deux lectures valides du code. Ici EL01 et EL03 declarent type_source = texte_agent_07 alors que source_fonction et lu_dans valent UNKNOWN, avec statut attente_source_inconnue. Lecture 'intention + drapeau d'attente' -> le critere tient ; lecture 'le type doit correspondre a l'origine reellement relue' -> il echoue, et le golden devrait passer type_source = UNKNOWN. A trancher dans le validateur Python (WP4 p.20), pas ici."
+}
+}

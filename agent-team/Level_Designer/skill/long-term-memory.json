@@ -1,0 +1,111 @@
+{
+  "$id": "uefn.longterm.Level_Designer.v1",
+  "agent": "Level_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des conventions de grille, un lexique de matrices, le vocabulaire des ancres et des pieges de layout documentes.",
+  "langue": "fr",
+  "conventions_grille": {
+    "tuile_cm": [512.0, 512.0, 384.0],
+    "note": "La valeur declaree dans 03_grid.json (tile_size_cm) fait foi ; un etage de hauteur de mur complete peut utiliser un pas Z de 512. Ne jamais supposer.",
+    "origine_minimale": [2, 2, 0],
+    "brosse_0": "Chaque niveau UEFN contient un volume par defaut Brush_0 autour de [-128..+128 cm] : decaler l'origine d'au moins 2 tuiles pour eviter toute collision fantome.",
+    "unites_de_travail": "tuiles et z_index uniquement ; les centimetres absolus, les yaws et les (x, y, z) appartiennent au CLI et au Physics_Programmer (WP2 p.9).",
+    "largeur_min_couloir_cm": 100,
+    "hauteur_min_libre_cm": 200,
+    "porte_min_cm": [120, 220],
+    "saut_max_cm": 190,
+    "sprint_saut_max_cm": 550,
+    "capsule_joueur_cm": {"diametre": 84.0, "hauteur": 192.0},
+    "empreinte_max_par_tuile": "environ 55 % de l'espacement : au-dela, les bounds rotatifs font overlap a la pose.",
+    "tolerance_penetration_cm": 5.0
+  },
+  "lexique_matrices": {
+    "legende_cellules": {
+      "#": "sol avec murs sur les bords exterieurs de la carte",
+      ".": "sol libre",
+      "W": "mur interieur plein",
+      "P": "mur avec ouverture de porte (largeur >= 120 cm, hauteur >= 220 cm)",
+      "S1": "sol contenant un Player Spawner equipe 1",
+      "S2": "sol contenant un Player Spawner equipe 2",
+      "O": "sol contenant un Objectif principal",
+      "R_N": "escalier / rampe montant vers le Nord",
+      "R_S": "escalier / rampe montant vers le Sud",
+      "R_E": "escalier / rampe montant vers l'Est",
+      "R_W": "escalier / rampe montant vers l'Ouest",
+      "T": "tremie ouverte (OPEN_STAIRWELL, aucun sol pose a cet etage)",
+      "V": "vide (aucun sol ni mur)"
+    },
+    "z_slices": "une matrice par z_index : -1 creux/bassin, 0 esplanade, 1 mezzanine, 2 objets aeriens. Jamais de map plate : au moins 3 niveaux de hauteur exploitables.",
+    "plans_de_profondeur": ["jouable", "bordure", "horizon"],
+    "axes_cardinaux_xyz": "+X = Nord, -X = Sud, +Y = Est, -Y = Ouest, +Z = Haut. Dans les JSON : directions cardinales et relations seulement."
+  },
+  "ancres_et_orientations": {
+    "slot_9_ancres": ["CENTER", "NORTH_EDGE", "SOUTH_EDGE", "EAST_EDGE", "WEST_EDGE", "CORNER_NE", "CORNER_NW", "CORNER_SE", "CORNER_SW"],
+    "usage_ancres": "CENTER pour l'objet qui doit regner au milieu de la tuile (bassin, spawner) ; EDGE pour coller au bord sans empieter sur la tuile voisine (attention au couloir restant) ; CORNER pour les piles, poteaux et couvertures d'angle. EDGE/CORNER touchent le bord de tuile : verifier que le couloir ne passe pas sous 100 cm.",
+    "face_towards": ["NORTH (yaw 0)", "EAST (yaw 90)", "SOUTH (yaw 180)", "WEST (yaw 270)", "CENTER (atan2 automatique vers le centre de tuile ou d'arene)", "<actor_label> (atan2 vers l'acteur nomme)"],
+    "relations_relatives": ["IN_FRONT_OF", "BEHIND", "LEFT_OF", "RIGHT_OF", "ON_TOP_OF"],
+    "relative_to_actor": "Distance centre-a-centre = Half_A(U) + gap_cm + Half_B(U) selon le vecteur U de la relation ; formule appliquee par le CLI, jamais calculee par l'agent Design."
+  },
+  "symetrie": {
+    "modes": {
+      "X": "miroir sur les lignes, [r, c] <-> [rows-1-r, c] (Nord <-> Sud) ; R_N <-> R_S",
+      "Y": "miroir sur les colonnes, [r, c] <-> [r, cols-1-c] (Est <-> Ouest) ; R_E <-> R_W",
+      "R180": "rotation 180 degres, [r, c] <-> [rows-1-r, cols-1-c], avec echange S1 <-> S2 : mode des arenes versus en diagonale"
+    },
+    "regles": [
+      "symmetric: true exige symmetry_axis parmi X, Y ou R180 ; sinon validate-grid renvoie SYMMETRY_AXIS_UNSUPPORTED.",
+      "En X/Y, S1 et S2 sont tenus pour equivalents : l'echange des equipes n'est verifie qu'en R180 (avertissement SYMMETRY_SCOPE).",
+      "Une case posee SUR le plan de symetrie doit etre son propre miroir (#, ., P, O, T, V), sinon SYMMETRY_ON_AXIS.",
+      "Un acteur volontairement unique (decor, enseigne) porte mirror: false des deux cotes de sa paire, sinon MIRROR_PARTNER_MISSING."
+    ]
+  },
+  "politiques_bord": {
+    "fall_zone": "aucun mur de bord : le joueur tombe ; la carte ne doit rien contenir d'indispensable en bordure.",
+    "wall": "perimetre ferme par des murs ; box 100 % close possible sur plusieurs etages.",
+    "conduite": "Toujours declarer edge_policy dans 03_grid.json ; son absence est un motif de rejet, pas un defaut implicite."
+  },
+  "pieges": [
+    {
+      "signe": "Un audit live explose les overlaps apres rotation d'objets (anneaux, enseignes, tours) alors que la carte parait bien espacee.",
+      "cause": "Les AABB sont alignees aux axes : un objet tourne occupe |taille_x*cos| + |taille_y*sin| en X/Y. La taille 'theorique' non tournee n'est pas la taille subie.",
+      "conduite": "Anticiper des le layout : empreinte <= ~55 % de la tuile pour tout objet destine a tourner, prevoir une tuile de marge autour des pieces maitresses."
+    },
+    {
+      "signe": "11_symmetry_report.json affiche PASSED avec axis: null et checked_pairs: 0.",
+      "cause": "03_grid.json ne declare pas symmetry_axis : le controle n'a jamais eu lieu.",
+      "conduite": "Ce PASSED n'est PAS une preuve de symetrie. Soit declarer symmetric + symmetry_axis, soit assumer axis: null et l'ecrire noir sur blanc dans summary_short."
+    },
+    {
+      "signe": "Un couloir dessine 'largement' en tuiles devient infranchissable une fois poses les props bordant les tuiles.",
+      "cause": "Les props an cres EDGE/CORNER reduisent le passage libre ; MIN_CORRIDOR_WIDTH = 100 cm est un minimum subi apres rotation, pas une intuition.",
+      "conduite": "Prevoir la marge en nombre de tuiles, jamais en centimetres restants de tete ; check-navigation le verifiera."
+    },
+    {
+      "signe": "La carte rendue n'a qu'un seul z_index et aucun objet vertical.",
+      "cause": "Map plate : l'interdit dur du role, nee d'un empressement a livrer la matrice de l'esplanade.",
+      "conduite": "Deux ou trois Z-Slices minimum ou une intention verticale explicite (bassin -1, mezzanine 1, aerien 2) avant tout handoff."
+    },
+    {
+      "signe": "Une entree unique bloque le flux des missions ou cree un cul-de-sac.",
+      "cause": "Le graphe connects_to du GDD n'a pas etre reporte dans la matrice (cases V ou W de trop).",
+      "conduite": "Verifier chaque couple connects_to par un chemin de cellules praticables ; assumer une entree unique seulement si c'est une decision de design ecrite."
+    },
+    {
+      "signe": "L'aire de jeu colle a l'origine [0, 0].",
+      "cause": "Brush_0 (volume par defaut [-128..+128 cm]) provoque des collisions fantomes.",
+      "conduite": "origin_tile >= [2, 2, 0] par construction."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le Level_Designer ne parle pas a l'editeur : aucun MCP, aucune coordonnee finale ; la resolution 3D est faite par le Python cote Technique (WP2 p.9, variante A du template).",
+    "L'aval du layout est le Physics_Programmer (16) qui pose et audite ; Lead_Programmer (11) fournit la palette mesuree ; Audio_Director (17) consomme les zones sonores.",
+    "Les criteres d'acceptation d'un handoff de grille sont cochables par validate-grid / check-navigation, jamais par un jugement de LLM.",
+    "Les corrections d'overlap ne se font pas dans l'editeur : elles reviennent dans MES matrices et intentions, sur mission du Producer.",
+    "Un livrable volumineux (matrice complete) reste un fichier du workspace ; le handoff n'en porte que la declaration et le chemin."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur observes sur une run de place urbaine (carte 23x23 tuiles, interieur 21x21 = 441 dalles, 127 props, 582 acteurs legaux, 91 overlaps nes des bounds rotatifs avant correction). Ce sont des echelles, pas des cibles.",
+    "arene_minimale_1v1": "8x8 tuiles avec pad central et rampes face-a-face",
+    "box_fight": "4x6 ou 6x6 close sur 2 etages (768 cm sous plafond)",
+    "temps_traverse_reference": "2611 cm entre spawns d'une arene 8x8, soit ~2.9 s de sprint"
+  }
+}

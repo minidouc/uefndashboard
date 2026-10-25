@@ -1,0 +1,93 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-BUILD-014",
+  "from": "UI_Programmer",
+  "to": ["Producer_Orchestrator", "Lead_Programmer"],
+  "artifact": "10_editables.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-08",
+  "summary_short": "Corpo Plaza : 0 module Verse d'interface demande par 01_gdd.json (verse_modules vide). Build relue Disconnected 0 diagnostic, 10_editables = 0 editable, 08_wiring = 0 binding (allow-empty).",
+  "payload": {
+    "screens": [],
+    "consumed_functions": [],
+    "verse_build": {
+      "report": "09_verse_report.json",
+      "status": "PASSED",
+      "session": "Disconnected",
+      "diagnostics_count": 0,
+      "error_diagnostics": [],
+      "success_line": "[2026.10.23-22.52.32:067][154]VerseBuild: Version terminee -- ligne localisee verbatim dans skill/tool-output/verse-scan-et-verse-write.md section 4",
+      "timestamp": "2026-10-23T22:52:27.448400+00:00",
+      "scope": "build du contenu Verse deja monte dans le projet, relance par verse-build ; aucun fichier ecrit par cet agent"
+    },
+    "editables": {
+      "report": "10_editables.json",
+      "status": "PASSED",
+      "editable_count": 0,
+      "actor_references": 0,
+      "parameters": 0,
+      "without_target": [],
+      "wiring_errors": [],
+      "mapping": [],
+      "live": {
+        "custom_verse_modules": 0,
+        "game_manager_created": false,
+        "tool_result": "NO_VERSE_STAGED -- non applicable a cette scene sans module personnalise (verbatim dans skill/tool-output/wire-devices-editables.md section 1)"
+      },
+      "scope": "Aucun Verse personnalise et aucun @editable Corpo Plaza par decision de design. Aucun fichier Verse ecrit, aucun --apply, aucun Game_Manager_01 cree."
+    },
+    "wiring": {
+      "report": "08_wiring_report.json",
+      "status": "PASSED",
+      "error_count": 0,
+      "wired": [],
+      "errors": [],
+      "not_placed": [],
+      "scope": "aucun binding Direct Event declare (--allow-empty : logique cablee en Verse ou carte sans cablage)."
+    },
+    "not_sourced": [
+      "02_palette.json ne contient que _comment et assets : section verse_architecture absente -> liste des fichiers .verse autorises UNKNOWN",
+      "aucun 01_ux_ui.json de UX_UI_Designer dans le workspace de reference : spec HUD/menu UNKNOWN",
+      "aucun 09_verse_report.json / 10_editables.json amont des agents 12 et 13 : aucune fonction publique exposee, donc abonnement impossible"
+    ]
+  },
+  "constraints": {
+    "authorized_files": [],
+    "must_preserve": ["Spawner_Plaza_01"],
+    "forbidden": [
+      "aucun fichier .verse d'un autre agent modifie",
+      "aucune valeur de score ou d'or recalculee dans ui_hud.verse",
+      "aucun acteur deplace dans la scene 3D",
+      "aucun Game_Manager_01 cree sans demande amont"
+    ],
+    "session_state_required": "Disconnected"
+  },
+  "golden_example_ref": "skill/exemples/interface-absente-0-editables-auditee.json",
+  "acceptance": [
+    "verse_build_passed",
+    "session_disconnected",
+    "success_line_recente",
+    "aucun_fichier_autre_agent_touche",
+    "aucune_valeur_recalculee",
+    "editables_listes",
+    "aucun_acteur_deplace"
+  ],
+  "next_step_hint": "Rien a cabler cote interface sur cette carte : 01_gdd.json porte 'Scene contemplative. Aucun asset /Game, aucun Verse personnalise'. Les rapport 09/10/08 sont rendus tels que relus, scopes inclus. Si une mission ulterieure demande un HUD, screens devra etre non vide avec un element par valeur exposee et verifiee par verse-grep.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN EXAMPLE - la forme attendue du livrable quand la carte ne demande aucune interface Verse",
+    "donnees_reelles": [
+      "verse_build : 09_verse_report.json du run du 2026-10-23 22:52 (session Disconnected, diagnostics_count 0, ligne VerseBuild horodatee 22.52.32)",
+      "editables : 10_editables.json rendu localement apres l'echec attendu NO_VERSE_STAGED de list-editables --live (ANNEXE B ligne 8 du journal)",
+      "wiring : 08_wiring_report.json reel de wire-devices --allow-empty (22:38:32)",
+      "not_sourced : 02_palette.json (cles _comment, assets) et 01_gdd.json (verse_modules []) relus dans le workspace"
+    ],
+    "pourquoi_il_passe": [
+      "aucune ecriture annoncee sans fichier : files_written est absent, donc aucun read_back_matches invente",
+      "screens vide MAIS justifie (verse_modules: [] + not_sourced), pas presente comme un succes d'implementation",
+      "les trois scopes des rapports reels sont repris mot pour mot : ce qui n'est pas couvert reste ecrit",
+      "summary_short = faits atomiques et comptes relus, aucune auto-evaluation, moins de 200 caracteres",
+      "acceptance = uniquement des criteres cochables par code. Trois criteres de realisation restent volontairement hors acceptance parce que le payload dit le contraire : fichiers_dans_whitelist et read_back_matches (aucun fichier .verse ecrit par cet agent -- screens [] et verse_build.scope 'aucun fichier ecrit par cet agent', donc rien a mettre dans la whitelist ni a relire) et wiring_relu_sur_cible (wiring.wired [] : rien n'a ete relu car rien n'etait cable). Ce sont les seuls omis ; les criteres que le payload montre sont tous revendiques."
+    ],
+    "limite_a_ne_pas_confondre": "ce cas n'est PAS une exemption permanente : des que 01_gdd.json declare un module ou que UX_UI_Designer rend un 01_ux_ui.json, un screens vide devient un livrable incomplet et le handoff passe BLOCKED (voir regles-engagement.md section 3)."
+  }
+}

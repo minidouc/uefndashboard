@@ -1,0 +1,66 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-CADRAGE-002",
+  "from": "Game_Designer",
+  "to": ["Level_Designer", "Producer_Orchestrator"],
+  "artifact": "01_gdd.json",
+  "mission_ref": "M-CORPOPLAZA-CADRAGE-02",
+  "summary_short": "GDD valide : boucle immersive, epoustouflante, ultra jouable, tout le monde va adorer, 12 zones magnifiques, j'ai verifie moi-meme que c'est coherent.",
+  "payload": {
+    "project_name": "Corpo Plaza - Memorial Park",
+    "game_mode": "UNKNOWN",
+    "scale_category": "IMMENSE",
+    "grid_dimensions_tiles": [23, 23],
+    "zones": [
+      { "zone_id": "Zone_Center", "bounds_tiles": { "min": [9, 9, 0], "max": [16, 16, 0] }, "purpose": "jolie" },
+      { "zone_id": "Zone_Nord", "bounds_tiles": { "min": [17, 9] }, "purpose": "" }
+    ],
+    "connects_to": [
+      ["Zone_Centre", "Center"],
+      ["Zone_Center", "Zone_Center"]
+    ],
+    "status": "VALIDE_HUMAIN",
+    "gameplay_timeline_sec": [
+      { "time": -1, "event": "ambiance epoustouflante" },
+      { "time": 5, "event": "le joueur ressent la grandeur du lieu" },
+      { "time": 2, "event": "c'est beau" }
+    ],
+    "required_devices": [
+      { "actor_label": "Spawner Plaza 01", "device_class": "spawner", "world_location_cm": [3389.81, 6897.64, 128.0], "face_towards": "NORTH" }
+    ],
+    "requested_assets": {
+      "Promenade": { "uefn_path": "/Game/Athena/Architectural/Environments/SM_Town_Center_01.SM_Town_Center_01", "category": "DECOR" },
+      "koi_cyan": { "uefn_path": "/PPID_Harbor_Comp_BP_SunStroke_NeonSignFish_A", "category": "PROP", "notes": "c'est le poisson holographique" }
+    },
+    "verse_modules": ["func OnBegin() -> void { self.Jump(); }"],
+    "core_loop": "explorer, kiffer, revenir",
+    "raisonnement": "J'ai d'abord pense a une quete de memoire puis je me suis dit que contemplatif etait plus vendeur, donc j'ai garde les deux."
+  },
+  "constraints": {
+    "acces_mcp": "read",
+    "must_preserve": [],
+    "forbidden": []
+  },
+  "acceptance": ["boucle_immersive", "zones_belles", "experience_memorable", "tout_est_coherent"],
+  "next_step_hint": "Level_Designer et les programmeurs peuvent demarrer : le GDD est valide, le Producteur n'a rien a arbitrer.",
+  "context_budget_tokens": 8500,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - livrable REJETE par le validateur Python puis par l'etage Generator-Critic (WP1 p.25)",
+    "statut_de_la_source": "Contrefacon assemblee a partir des motifs de rejet documentes (04-contrat-handoff.md regles 1/4/6, WP4 p.20, fiche v0.1 section 7 'rejet automatique', controle ASSET_KEYS_OK du journal A.2). Jamais emis pendant le run corpo-plaza : les donnees justes, elles, viennent de l'artefact reel.",
+    "motifs_de_rejet": [
+      "gameplay_timeline_sec : 'ambiance epoustouflante', 'le joueur ressent la grandeur', 'c'est beau' = adjectifs, pas evenements observables ; times -1 / 5 / 2 non croissants.",
+      "zones : 2 zones (min 3), purpose 'jolie' (sous les 8 caracteres) et purpose vide. Une zone sans role dans la boucle est un decor : Level_Designer ne peut en tirer ni rampe ni chemin joueur.",
+      "bounds_tiles de Zone_Nord : 2 composantes au lieu de 3 ; grid_dimensions_tiles 2 valeurs ; scale_category 'IMMENSE' hors enum ; game_mode 'UNKNOWN' = question au Producteur, pas une sortie de CADRAGE.",
+      "connects_to : 'Zone_Centre' n'est declare dans zones (orthographe francaise la ou les ids sont en anglais), 'Center' hors pattern ^Zone_, une paire relie une zone a elle-meme : graphe inverifiable.",
+      "status = 'VALIDE_HUMAIN' ecrit par l'agent : les statuts de validation humaine appartiennent a la main de l'humain, porte par le Producteur. Auto-validation = motif WP4 p.20.",
+      "required_devices[0] : label avec espace (pattern), world_location_cm = coordonnees monde (cle hors schema), face_towards = pose de device. Un agent Design ne place rien dans l'editeur.",
+      "requested_assets.Promenade : /Game/Athena/... = ILLEGAL_ASSET_PATH, refuse par le pattern ; category 'DECOR' hors enum ; cle 'Promenade' hors pattern minuscule. koi_cyan : chemin tronque sans requete source, 'poisson holographique' pretendu alors que le run a conclu 'introuvable'.",
+      "verse_modules contient du code Verse : le Game_Designer nomme des modules, il n'ecrit aucune ligne (12-14).",
+      "cles hors payload : core_loop (le downstream ne la lit pas) et raisonnement (output only, WP3 p.18).",
+      "notes absent : le perimetre hors scope (aucun /Game, aucun Verse, aucune publication) n'est plus declare.",
+      "constraints.acces_mcp = 'read' alors que le const exige 'none' ; must_preserve et forbidden vides : aucun garde-fou transmis.",
+      "acceptance hors enum, 4 criteres non cochables par du code ; context_budget_tokens 8500 > 4000 ; golden_example_ref absent ; summary_short en auto-evaluation ; next_step_hint declare le gate #2 ferme.",
+      "scale et memoire : une scene 'IMMENSE' avec quete, exploration et rebond n'est pas tenable sur un poste de 16 Go en jam ; la contrainte technique n'a pas ete lue avant de fixer le GDD."
+    ]
+  }
+}

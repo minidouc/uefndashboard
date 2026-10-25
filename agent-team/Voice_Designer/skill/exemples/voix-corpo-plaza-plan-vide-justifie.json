@@ -1,0 +1,145 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-013",
+  "from": "Voice_Designer",
+  "to": ["Audio_Director", "UI_Programmer", "AI_Programmer", "Producer_Orchestrator"],
+  "artifact": "13_voice.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-20",
+  "summary_short": "Plan de voix : 0 locuteur, 0 replique. Signaletique lue, non entendue. Support NON_VERIFYE.",
+  "payload": {
+    "distribution": {
+      "statut": "AUCUNE",
+      "motif": "Aucun locuteur : 1 device dans 01_gdd.json (le spawner joueur), scene sans mecanique annexe, donc 0 replique.",
+      "nb_locuteurs_attendus": 0,
+      "nb_repliques_a_distribuer": 0,
+      "preuves": [
+        "01_gdd.json required_devices = 1 : Spawner_Plaza_01 (player_spawner)",
+        "01_gdd.json verse_modules = [] : scene contemplative, aucun Verse",
+        "journal 2.4 : 0 combat, 0 quete, 0 economie, 0 mecanique annexe"
+      ]
+    },
+    "locuteurs": [],
+    "intentions_de_lecture": [
+      {
+        "cle_ligne": "ui_hud.memorial_card",
+        "statut_ligne": "UNKNOWN",
+        "preuve_ligne": "UNKNOWN",
+        "mode_reception": "LECTURE_SILENCIEUSE",
+        "locuteur_ref": "AUCUN",
+        "lecture_conforme": "pose longue, souffle bas, deux phrases detachees",
+        "lecture_hors_ton": "annonceur de gala, montee dramatique",
+        "motif_hors_ton": "le promotionnel contredit le silence voulu (journal, decision 4) ; 00_vision.json n'a jamais ete emis pendant la run",
+        "duree": {"valeur": "UNKNOWN", "statut": "NON_MESUREE"}
+      },
+      {
+        "cle_ligne": "voix.replique_pnj_01",
+        "statut_ligne": "UNKNOWN",
+        "preuve_ligne": "UNKNOWN",
+        "mode_reception": "UNKNOWN",
+        "locuteur_ref": "AUCUN",
+        "lecture_conforme": "distribuable avec un locuteur declare dans 01_gdd.json",
+        "lecture_hors_ton": "voix d'un survivant invente de la tour nord",
+        "motif_hors_ton": "aucun personnage dans le pipeline : caster un invente est interdit"
+      }
+    ],
+    "repere_diction": {
+      "langue": "fr",
+      "registre": "laconique et recueilli : 1 a 2 phrases, aucun superlatif",
+      "interdits": ["voix off de bande-annonce", "ton commercial"],
+      "source_amont": "00_vision.json theme.ton + 01_scripts.json ton_reference : aucun des deux emis pendant la run, donc registre pose comme regle a appliquer, pas comme lecture verifiee",
+      "statut": "A_APPLIQUER"
+    },
+    "signalitique_in_world": {
+      "statut": "LUE_PAS_ENTENDUE",
+      "decision": "Memorial Park se lit, non dit : 0 voix pour les panneaux",
+      "motif": "aucun haut-parleur et 0 Verse : le silence est la decision 4"
+    },
+    "regles_de_sous_titrage": {
+      "statut_applicabilite": "CONDITIONNELLE",
+      "preuve_existence_ui": "10_editables.json editable_count 0 ; 08_wiring_report.json wired = []",
+      "synchronisation": "AUCUNE_VOIX",
+      "max_caracteres_par_ligne": 80,
+      "regles": ["carte = cle de l'amont quand 01_scripts.json sera emis : reprise telle quelle, pas de reecriture", "sans voix, ancre = ecran, pas un timing"],
+      "duree_affichage": {"valeur": "RESERVE", "statut": "A_RECALER_APRES_ENREGISTREMENT"}
+    },
+    "support_lecture": {
+      "statut": "NON_VERIFYE",
+      "commande_verification": "search-playsets --type PID \"audio voice\" par Lead_Programmer",
+      "famille": "AUDIO_VOIX",
+      "requetes_catalogue_famille_audio": 0,
+      "preuve_de_recherche": "49 requetes catalogue, 0 en famille audio",
+      "note_de_session": "journal 20 : play-in-client non connecte"
+    },
+    "abstentions": [
+      {"sujet": "musique et ambiances", "motif": "couche de 17 et 18", "renvoi_vers": "Audio_Director"},
+      {"sujet": "mix, LUFS, EQ", "motif": "le mix suit la distribution", "renvoi_vers": "Audio_Director"},
+      {"sujet": "reecriture des lignes", "motif": "cles et textes a 07", "renvoi_vers": "Writer_Scenariste"},
+      {"sujet": "triggers et sous-titres", "motif": "implementation Verse", "renvoi_vers": "UI_Programmer"}
+    ]
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "must_preserve": ["distribution AUCUNE sans locuteur en amont", "reference par cle, jamais texte recopie"],
+    "forbidden": ["aucun contact utilisateur", "aucune coordonnee, /Game/, PID_ final", "aucune voix posee ou entendue"],
+    "must_ask_producer": ["une voix diegetique est-elle souhaitee malgre le silence (decision 4) ?"],
+    "statut_session": "PLAY_IN_CLIENT_NON_CONNECTE"
+  },
+  "golden_example_ref": "skill/exemples/voix-corpo-plaza-plan-vide-justifie.json",
+  "acceptance": [
+    "distribution_aucune_backed_by_traceable_evidence",
+    "every_locuteur_grounded_in_gdd_or_devices_or_plan_says_AUCUN",
+    "every_referenced_string_key_exists_upstream_or_is_UNKNOWN",
+    "no_duration_presented_as_measured",
+    "lecture_support_status_declared",
+    "no_play_in_session_listen_claim",
+    "diction_reference_has_in_tone_and_off_tone_pair",
+    "no_locuteur_invented_beyond_pipeline",
+    "no_line_text_copied_or_rewritten",
+    "subtitle_rules_declared_against_ui_evidence",
+    "coherent_with_no_side_mechanics",
+    "no_coordinate_asset_path_or_final_pid",
+    "acces_mcp_none_and_no_user_contact",
+    "missing_data_marked_UNKNOWN_not_invented",
+    "in_world_signage_reading_mode_declared"
+  ],
+  "next_step_hint": "17 : voix = silence decide. 14 : sous-titres si UI. 13 : aucun PNJ a faire parler.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - 13_voice.json d'une scene sans locuteur",
+    "source": "Reconstitue depuis 01_gdd, 10_editables, 08_wiring, journal 2/17/20.",
+    "pourquoi_il_passe": [
+      "plan vide et motive : AUCUNE + 3 preuves tracables, locuteurs = []",
+      "le reste se decide : signalitique, diction, sous-titres CONDITIONNELLE",
+      "support NON_VERIFYE, commande de verification, 0 ecoute revendiquee"
+    ],
+    "regle_de_troncature": "15 criteres sur 16 revendiques. Le seul omis est nomme avec ses deux lectures ci-dessous ; aucun critere n'a ete retire pour faire rentier la troncature. Ce qui est tronque : 2 intentions de lecture, 4 abstentions, 0 locuteur (le cas reel est vide).",
+    "criteres_revendiques": [
+      "distribution_aucune_backed_by_traceable_evidence : statut AUCUNE + 3 preuves citees artefact par artefact (01_gdd.json required_devices = 1, verse_modules = [], journal 2.4)",
+      "every_locuteur_grounded_in_gdd_or_devices_or_plan_says_AUCUN : locuteurs = [] et les deux intentions portent locuteur_ref AUCUN ; la regle if/then du schema (AUCUNE => maxItems 0 et pas de mode VOIX) est satisfaite",
+      "every_referenced_string_key_exists_upstream_or_is_UNKNOWN : les 2 cles sont marquees statut_ligne UNKNOWN avec preuve_ligne UNKNOWN ; 01_scripts.json n'a jamais ete emis pendant la run, donc aucune cle ne peut etre assertee EXISTANTE",
+      "no_locuteur_invented_beyond_pipeline : 0 VOI-* cree ; la seule evocation d'un survivant de la tour nord est explicitement refusee dans motif_hors_ton",
+      "no_line_text_copied_or_rewritten : le payload ne porte que des cles (ui_hud.memorial_card, voix.replique_pnj_01) et des descriptions de ton ; 0 replique recopiee",
+      "no_duration_presented_as_measured : duree = UNKNOWN / NON_MESUREE et duree_affichage = RESERVE / A_RECALER_APRES_ENREGISTREMENT ; 0 valeur de duree assertee mesuree",
+      "lecture_support_status_declared : support_lecture porte statut NON_VERIFYE, famille, 0 requete audio sur 49, commande de verification et note de session",
+      "no_play_in_session_listen_claim : statut_session PLAY_IN_CLIENT_NON_CONNECTE, signalitique LUE_PAS_ENTENDUE, forbidden 'aucune voix posee ou entendue'",
+      "diction_reference_has_in_tone_and_off_tone_pair : chaque intention porte lecture_conforme + lecture_hors_ton + motif_hors_ton ; repere_diction porte langue, registre et 2 interdits",
+      "subtitle_rules_declared_against_ui_evidence : regles_de_sous_titrage statut CONDITIONNELLE adossee a deux preuves lues (10_editables.json editable_count 0, 08_wiring_report.json wired = [])",
+      "coherent_with_no_side_mechanics : 0 voix, 0 trigger revendique, synchronisation AUCUNE_VOIX ; les 4 abstentions renvoient musique et mix a 17/18, les textes a 07, l'implementation a 14",
+      "no_coordinate_asset_path_or_final_pid : 0 occurrence de 'PID_', 'PPID_' ou '/Game/' dans le payload (verifiee par comptage) ; la chaine 'PID' n'apparait que dans la commande de verification et dans constraints.forbidden comme interdiction",
+      "acces_mcp_none_and_no_user_contact : constraints.acces_mcp = 'none' ; forbidden porte 'aucun contact utilisateur' ; le contact passe par must_ask_producer",
+      "missing_data_marked_UNKNOWN_not_invented : 4 donnees manquantes nommees plutot que comblees (preuve_ligne x2, mode_reception, duree, duree_affichage, statut support)",
+      "in_world_signage_reading_mode_declared : signalitique_in_world statut LUE_PAS_ENTENDUE + decision 'se lit, non dit' + mode_reception LECTURE_SILENCIEUSE pour la carte"
+    ],
+    "critere_omis_et_why": {
+      "code": "gate_fields_only_PENDING",
+      "probleme": "Le schema de Voice_Designer n'expose aucun champ de gate : constraints.properties ne contient que acces_mcp, must_preserve, forbidden, must_ask_producer, statut_session et langues_couvertes, et le payload n'a pas de champ gate.",
+      "lecture_a": "Tout champ de gate present vaut PENDING : le golden est satisfait par vacuite (0 champ de gate declare), mais revendiquer un critere vide n'a aucune valeur de controle.",
+      "lecture_b": "Un gate doit etre declare : le golden est en defaut, et aucun golden ne peut le satisfaire tant que le schema n'a pas de champ gate, donc le critere est orphelin.",
+      "conduite": "Non revendique et signale pour arbitrage : soit le Producteur supprime le code de l'enum, soit le champ gate_hitl_attendu (statut const PENDING, comme chez les autres agents Design) est ajoute au schema et a ce golden. Le canal HITL reellement utilise ici est must_ask_producer."
+    },
+    "reparation_faite_plutot_qu_un_retrait": [
+      "statut_ligne passe de NON_EMISE a UNKNOWN sur les 2 intentions : NON_EMISE asserte que la cle etait prevue par 07, preuve absente ; le critere exige EXISTANTE ou UNKNOWN",
+      "source_amont du repere_diction et regles de sous-titrage reformulees pour declarer que 00_vision.json et 01_scripts.json n'ont jamais ete emis pendant la run"
+    ]
+  }
+}

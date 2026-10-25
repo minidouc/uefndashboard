@@ -1,0 +1,82 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-PALETTE-002",
+  "from": "Lead_Programmer",
+  "to": ["Producer_Orchestrator", "Physics_Programmer"],
+  "artifact": "02_palette.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-01",
+  "summary_short": "Palette boulee : tous les assets sont rentres avec leurs dimensions habituelles, la scene est prete, on a garde les tours du projet precedent qui font la bonne taille.",
+  "payload": {
+    "_comment": "Rempli manuellement par le Lead a partir des gabarits habituels du catalogue.",
+    "counts": { "assets": 3, "measured": 3, "unmeasured": 0 },
+    "legality": {
+      "checked": false,
+      "illegal_paths_found": 0,
+      "classes_used": ["FortPlaysetPropItemDefinition"],
+      "note_rapide": "les chemins /Game/ marchent tres bien dans l'editeur, la validation d'ile verra"
+    },
+    "blocked_assets": [],
+    "assets": {
+      "structure_floor": {
+        "uefn_path": "/Engine/BasicShapes/Cube",
+        "category": "STRUCTURE_FLOOR",
+        "size_cm": [512, 512, 384],
+        "pivot_offset_cm": [0, 0, 0],
+        "scale": [1, 1, 1],
+        "measured": true,
+        "notes": "la dalle fait la taille d'une tuile, comme toujours"
+      },
+      "Tower_A": {
+        "uefn_path": "/Game/Athena/Architectural/Windows/Window_A_Destructible_01.Window_A_Destructible_01",
+        "category": "PROP",
+        "size_cm": [300, 300, 1200],
+        "pivot_offset_cm": [0, 0, 600],
+        "measured": true,
+        "notes": "reprise des notes du projet precedent, rien a re-mesurer"
+      },
+      "banc_marbre": {
+        "uefn_path": "/CRP_Covert/SetupAssets/Maps/PPIDs/PPID_CRP_Covert_Apollo_Agency_Bench_01.PPID_CRP_Covert_Apollo_Agency_Bench_01",
+        "category": "PROP",
+        "measured": false,
+        "notes": "dimensions pas prises, on mettra a l'oeil dans l'editeur"
+      }
+    },
+    "verse_architecture": {
+      "status": "DECLARED",
+      "verse_files": [
+        { "file": "Game_Manager_01.verse", "owner": "Gameplay_Programmer", "purpose": "tout le gameplay et l'UI" },
+        { "file": "ui_hud.verse", "owner": "AI_Programmer", "purpose": "hud des pnj" }
+      ],
+      "main_creative_device": "game_manager",
+      "shared_function_signatures": [],
+      "ownership": ["tout le monde peut ecrire dans un fichier existant si la fonction manque"]
+    },
+    "level_state_after": {
+      "measure_actors_expected": 0,
+      "find_actors_pattern": "MEASURE_",
+      "find_actors_result": ["/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest.claudtest:PersistentLevel.Mall_Fountain_Whole_NoFX_C_UAID_08F97E52BCAA070E03_1454350865"],
+      "clean": true,
+      "note": "un acteur de mesure reste, il ne gene personne dans un coin"
+    }
+  },
+  "constraints": { "forbidden": ["ne pas bloquer la production pour une histoire de mesure"] },
+  "acceptance": ["palette_complete", "assets_identifies", "scene_prenable", "dimensions_habituelles"],
+  "next_step_hint": "Physics_Programmer peut poser la scene, les tailles sont fiables.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - rejecte par le schema et par les regles d'engagement, ne jamais l'imiter",
+    "motifs_de_rejet": [
+      "structure_floor size_cm [512,512,384] : c'est la TAILLE DE LA TUILE, pas la mesure de l'asset. Le Cube moteur mesure 100 x 100 x 100 et s'ecrit scale [5.12, 5.12, 0.32] (02_palette.json reel). Confondre les deux pose 441 cubes geants.",
+      "measured: true en booleen nu : le schema exige {at, kind}. Sans horodatage on ne peut pas dire si la mesure est de cette campagne ; 'comme toujours' n'est pas une mesure.",
+      "/Game/Athena/... dans uefn_path : interdit (FortValidator_FortExposedAssets echoue a la validation d'ile) meme si l'editeur l'affiche. Le code attendu est ILLEGAL_ASSET_PATH ; 'la validation d'ile verra' remplace une preuve par un pari.",
+      "banc_marbre avec measured:false et une taille 'a l'oeil plus tard' : size_cm et pivot_offset_cm sont obligatoires dans assets, et compile-transforms refuse deja ces entrees. Une entree non mesuree va dans blocked_assets avec un code.",
+      "cle d'asset Tower_A : le motif ^[a-z][a-z0-9_]{2,40}$ est exige ; une cle en CamelCase casse toutes les references aval (03_grid.json, 05_props.json).",
+      "counts announces 3 measured / 0 unmeasured alors qu'une entree est measured:false : comptes incoherents avec le contenu, le validateur ne peut pas les retrouver.",
+      "legality.checked false avec illegal_paths_found 0 : un '0' sans controle n'est pas une absence d'illegalite. counts.unmeasured = 0 impose legality.checked = true dans le schema.",
+      "level_state_after.clean true alors que find_actors_result contient encore un acteur MEASURE : le schema impose la liste vide quand clean est true, et la regle du role interdit de laisser un acteur dans le niveau. Un orphelin de mesure fausse l'audit live et la legalite d'un autre role (dans le run reel : 40 minutes de relecture + suppression par refPath).",
+      "verse_architecture : Game_Manager_01.verse ne respecte pas le motif ^[a-z0-9_]+\\.verse$ ; ui_hud.verse attribue a AI_Programmer alors que l'UI est le role 14 ; 'tout le gameplay et l'UI' dans un seul fichier cree le chevauchement que la section doit empecher ; main_creative_device 'game_manager' contredit la convention PascalCase (Game_Manager_01) ; statut DECLARED avec shared_function_signatures vide.",
+      "acceptance subjective (palette_complete, dimensions_habituelles) : hors enum et non cochable par du code. Attendu : every_asset_measured, legal_paths_only, measure_actors_removed, search_source_cited, verse_single_owner.",
+      "summary_short en auto-evaluation ('la scene est prete') et next_step_hint prescriptif : output-only, la decision de passer a la pose appartient au Producteur."
+    ]
+  }
+}

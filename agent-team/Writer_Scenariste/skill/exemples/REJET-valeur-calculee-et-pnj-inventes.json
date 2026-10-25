@@ -1,0 +1,46 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-007",
+  "from": "Writer_Scenariste",
+  "to": ["UI_Programmer", "Voice_Designer", "Producer_Orchestrator"],
+  "artifact": "01_scripts.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-07",
+  "summary_short": "Textes superbes et valides par moi-meme : l'UI n'a qu'a copier mes chaines avec les chiffres.",
+  "payload": {
+    "lignes": [
+      { "cle": "ui_menus.menu_title", "destination": "menu", "locuteur": "systeme_ui", "texte": "Bienvenue a Corpo Plaza ! Le meilleur parc memorial de Night City !", "longueur_cm_estimate": 142, "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "UNKNOWN" },
+      { "cle": "ui_hud.zone_nord_label", "destination": "hud", "locuteur": "PNJ du kiosque a [3389.81, 6897.64, 128.0]", "texte": "Dirigez-vous vers la tour nord situee a 3389,81 cm.", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "UNKNOWN" },
+      { "cle": "ui_hud.scor_line", "locuteur": "systeme_ui", "texte": "Il vous reste 4 minutes 37, score actuel : 1250 points.", "longueur_cm_estimate": "UNKNOWN", "statut": "REDIGE", "variables_inline_declarees": [] },
+      { "cle": "ui_menus.island_name", "destination": "menu", "locuteur": "systeme_ui", "texte": "NIGHT CITY MEMORIAL - EDITION PREMIUM 2077", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "UNKNOWN" },
+      { "cle": "voix.replique_gardien_koi", "destination": "voix", "locuteur": "Gardien des kois", "texte": "Approche : les kois te livreront le secret de la fondation Arasaka.", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "invente par le scenario" },      { "cle": "voix.replique_pnj_01", "destination": "voix", "locuteur": "PNJ_01", "texte": "Bark de combat : Tiens bon, on tient la position !", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "UNKNOWN" },
+      { "cle": "lore.memorial.dedique", "destination": "panneau_in_world", "locuteur": "systeme_ui", "texte": "Fonde en 2069 pour celebrer les 200 employes tombes lors du siege de la tour.", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "aucun 01_lore.json emis" }
+    ],
+    "inventaire_par_ecran": [
+      { "ecran": "ecran_menu", "cles": ["ui_menus.menu_title"] },
+      { "ecran": "carton_memorial", "cles": ["lore.memorial.dedique"] }
+    ],
+    "contraintes_de_place": { "max_caracteres_par_chaine": 80, "max_chaines_par_ecran": 4, "gabarit_source": "UNKNOWN" },
+    "ton_reference": {
+      "registre": "epique, promotionnel, 'ca doit faire premium'",
+      "exemple_correct": { "cle": "ui_hud.memorial_card", "texte": "Bienvenue a Corpo Plaza, la plus belle place cyberpunk !" },
+      "exemple_hors_ton": { "cle": "ui_hud.memorial_card", "texte": "En memoire. Traversez lentement." },
+      "motif_hors_ton": "j'ai inverse : la version lyrique passe, la sobre est jugee mauvaise"
+    }
+  },
+  "constraints": { "acces_mcp": "write", "must_preserve": [], "forbidden": [] },
+  "acceptance": ["c_est_bien_ecrit", "ton_magnifique", "l_ui_va_adorer", "tout_est_valide_par_le_writer"],
+  "next_step_hint": "UI_Programmer : colle mes chaines dans game_manager_corpo.verse, y compris les chiffres que j'ai calcules. J'ai deja valide mon JSON.",  "context_budget_tokens": 7200,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - 01_scripts.json REJETE par le validateur Python et le critique externe",
+    "source": "Motifs ancores dans 03-parametrage-agents.md (4/5), 04-contrat-handoff.md et le perimetre du journal corpo-plaza.",
+    "motifs_de_rejet": [
+      "ui_hud.scor_line : nombre calcule a la main ('4 min 37', '1250 points') au lieu de {timer}/{score} declares (no_hardcoded_computed_number) ET ligne SANS destination (all_lines_carry_destination_in_enum).",
+      "ui_menus.menu_title (68 c) depasse le gabarit ; island_name ecrase la cle publiee avec 'EDITION PREMIUM' invente au lieu du project_name reel (no_duplicate_or_overwritten_string_key, missing_data_marked_unknown_not_invented).",
+      "ui_hud.zone_nord_label : locuteur designe par une COORDONNEE '[3389.81, 6897.64, 128.0]' + distance en cm (all_lines_carry_locuteur_label_not_coordinate, no_coordinate_game_path_or_final_pid).",
+      "voix.replique_gardien_koi + voix.replique_pnj_01 : 2 repliques alors qu'aucun PNJ n'existe (verse_modules vide, NO_VERSE_STAGED) = npc_replication_only_if_npc_exists.",
+      "lore.memorial.dedique : '200 employes' inventes = empietement sur le lore de 06, cle hors espace reserve.",
+      "longueur_cm_estimate = 142 au lieu de 'UNKNOWN' ; ton_reference inverse (lyrique marque correct) : le few-shot contredit 00_vision.json au lieu de l'enseigner.",
+      "inventaire incoherent (5 cles non rattachees) ; acces_mcp='write' vs 'none' ; acceptance hors enum ; auto-validation (WP4 p.20) ; budget 7200>4000 ; ascii = encodage du paquet, pas une regle d'ecriture."
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+"$schema":"uefn.handoff.v1",
+"handoff_id":"H-BUILD-022",
+"from":"AI_Programmer",
+"to":["Gameplay_Programmer","UI_Programmer","Producer_Orchestrator"],
+"artifact":"09_verse_report.json",
+"mission_ref":"M-1V1BUILDFIGHT-BUILD-09",
+"summary_short":"2 .verse relus ; verse-build PASSED 0 diagnostic, ligne de succes 22.52.32 ; 1 ref ACTEUR relue ; 2 mecaniques blocked ; 0 AUTO_VERIFIED.",
+"payload":{
+"report":{"timestamp":"2026-10-23T22:52:27.448400+00:00","command":"verse-build","session":"Disconnected","status":"PASSED","diagnostics_count":0,"error_diagnostics":[],
+"build_log_lines":["[2026.10.23-22.52.32:067][154]VerseBuild: Compilation terminee."],
+"success_lines":["[2026.10.23-22.52.32:067][154]VerseBuild: Compilation terminee."],
+"scope":"BuildAll compile TOUT le projet : je ne reponds que de payload.files."},
+"files":[
+{"file_name":"special_mechanics.verse","class_name":"special_mechanics","owner_role":"AI_Programmer","declared_in_scope":true,"read_back_matches":true,"editable_names":["Spawner_P1_01"],"public_functions":["OnPlayerSpawned","GetZoneExitCount"]},
+{"file_name":"custom_combat_camera.verse","class_name":"custom_combat_camera","owner_role":"AI_Programmer","declared_in_scope":true,"read_back_matches":true,"editable_names":["KnockbackStrength"],"public_functions":["GetRemainingCooldown"]}
+],
+"mechanics":[
+{"key":"ROUND_TELEPORT_TO_SPAWN","kind":"arena_control","status":"compiled_not_playtested","verse_file":"special_mechanics.verse","devices":["Spawner_P1_01"],"playtest":"AUCUNE_SESSION","notes":"SpawnedEvent compile ; teleportation reservee."},
+{"key":"VOL_PROP_DEPOSE_BASE_ADVERSE","kind":"signature_loop","status":"blocked","verse_file":null,"devices":[],"playtest":"UNKNOWN","blocked_reason":"Ni prop ni base adverse dans 04_devices.json."},
+{"key":"DASH_INPUT_CAPACITE","kind":"combat_ability","status":"blocked","verse_file":null,"devices":[],"playtest":"UNKNOWN","blocked_reason":"Aucun input_trigger_device pose."}
+],
+"character_effects":[
+{"api":"player_spawner_device.SpawnedEvent.Subscribe","target":"device","digest_status":"VERIFIE","call_state":"appele","proof":"game_manager_device.verse PASSED 2026-10-20T23:32:21 (rapport agent 12)."},
+{"api":"fort_character.TeleportTo","target":"fort_character","digest_status":"UNKNOWN","call_state":"reserve","read_back":"verse-grep 0 resultat, motif re-essaye"}
+],
+"mechanics_device":{"creative_device_class":"special_mechanics","placed_in_umap":false,"placed_by":"AUCUNE_POSE","actor_label":null,"ref_path":null,"wire_state":"NON_CABLE"},
+"editables":{"command":"list-editables","status":"PASSED","editable_count":3,"actor_references":1,"parameters":2,"without_target":[],"wiring_errors":[],
+"mapping":[
+{"file":"special_mechanics.verse","editable":"Spawner_P1_01","type":"player_spawner_device","kind":"ACTEUR","declared_in_04_devices":true,"refPath":"/1a52cfc2-8485-44f7-8516-3583d0b0c33c/testmcp.testmcp:PersistentLevel.BP_Creative_Player_Spawner_Prop_C_UAID_00FFA9FB53741B0D03_1543002450","wiring":"MANUEL"}
+],
+"scope":"mapping tronque (3 editables, 1 ligne) ; un PARAMETRE n'est pas une cible."},
+"wired_devices_count":0,
+"events_to_agent12":["OnPropDeposeDansBaseAlliee(prop_label, team_index) : 12 convertit en Or","OnMancheTerminee(team_gagnante) : comptage par 12"],
+"values_for_agent14":[{"name":"CooldownRestantSec","type":"float","source":"GetRemainingCooldown(Agent)"},{"name":"SortiesZoneManche","type":"int","source":"GetZoneExitCount()"}]
+},
+"constraints":{
+"only_verse_files":["special_mechanics.verse","custom_combat_camera.verse","ai_entities.verse"],
+"must_not_move":["Spawner_P1_01","Round_Timer_01"],
+"forbidden":["aucun deplacement d'acteur","rien dans les .verse de 12 ou 14","aucun --apply sans decision du Producteur"],
+"session_state_required":"Disconnected"
+},
+"acceptance":["verse_compile_0_error","success_line_present","files_within_allowed_scope","session_disconnected_before_build","files_rewritten_read_back","0_editable_without_target","refpath_from_04_devices","no_economy_recomputed","events_exposed_to_agent_12","no_ui_file_written","no_actor_moved","playtest_claim_backed_by_session_report"],
+"next_step_hint":"Gate Producteur : poser les devices declencheurs (16) pour debloquer VOL_PROP_DEPOSE et DASH_INPUT, puis list-editables --apply. Sans rapport de session, rien n'est verifie en jeu.",
+"context_budget_tokens":1800,
+"golden_example_ref":"skill/exemples/mecaniques-signature-compilees.json",
+"exemple_annotations":{
+"role":"GOLDEN EXAMPLE - forme attendue du livrable 13",
+"source":"Reconstruction assumee : le run de reference (corpo_plaza) etait limite a la geometrie (journal 17, aucun Verse cree). report et editables copies des fichiers reels ; refPath du run 1v1-buildfight (paquet 12) ; fichiers et mecaniques du brief 13.",
+"pourquoi_il_passe":[
+"diagnostics vides + ligne de succes horodatee apres l'appel, Disconnected relu avant BuildAll",
+"read_back_matches true ; ai_entities.verse autorise mais absent : mecaniques blocked avec la cause",
+"wired_devices_count 0 et AUCUNE_POSE dits tels quels : device_placed_in_umap et bindings_on_target hors acceptance",
+"seuls device_placed_in_umap et bindings_on_target restent hors acceptance, et pour la bonne raison : le payload asserte l'inverse (placed_in_umap false, wire_state NON_CABLE, wired_devices_count 0) ; le schema dit explicitement qu'un critere de realisation non atteint ne se coche pas. Les autres criteres realises sont tous revendiques : without_target vide, aucune valeur economique recalculee (12 convertit en Or), et zero affirmation de playtest donc playtest_claim_backed_by_session_report tient sur AUCUNE_SESSION."
+],
+"ce_que_le_golden_ne_prouve_pas":"aucun playtest : une compilation PASSED n'est pas un test.",
+"budget": "context_budget_tokens = 1800, mesure sur deux lectures. Lecture contrat : le handoff hors exemple_annotations fait 4609 caracteres (~1317 tokens a 3,5 caracteres/token). Lecture few-shot : le fichier entier lu tel quel fait 6128 caracteres (~1751 tokens). 1800 couvre la pire des deux et reste sous le plafond 4000 ; les 1200 puis 1600 declares avant ne couvraient que la premiere."
+}
+}
