@@ -2,9 +2,7 @@
 
 # 🏝️ IslandForge — Harnais d'automatisation & Gestion de projet UEFN
 
-> ⚠️ **Projet en développement actif.** Rien n'est figé : je construis, je casse,
-> je mesure, je corrige — et j'enrichis ce dépôt au fil des découvertes.
-
+# [WIP - Novembre 2026] Refonte complète vers une architecture Studio Multi-Agents (21 agents + MCP) pour l'Epic AI MegaJam[cite: 1, 2, 3, 7]. Nouveau README en cours de rédaction.
 ---
 
 ## 📖 L'histoire & Le pivot
