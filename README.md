@@ -1,8 +1,8 @@
-# uefndashboard
+ uefndashboard
 
-# 🏝️ IslandForge — Harnais d'automatisation & Gestion de projet UEFN
+ ## 🏝️ IslandForge — Harnais d'automatisation & Gestion de projet UEFN
 
-# [WIP - Novembre 2026] Refonte complète vers une architecture Studio Multi-Agents (21 agents + MCP) pour l'Epic AI MegaJam[cite: 1, 2, 3, 7]. Nouveau README en cours de rédaction.
+# [WIP - Novembre 2026] Refonte complète vers une architecture Studio Multi-Agents (21 agents + MCP) pour l'Epic AI MegaJam. Nouveau README en cours de rédaction.
 ---
 
 ## 📖 L'histoire & Le pivot
