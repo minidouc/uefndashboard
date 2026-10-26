@@ -1,0 +1,152 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.producer.turn.v1",
+  "title": "Producer_Orchestrator — sortie d'un tour d'orchestration",
+  "description": "Contrat JSON strict de la sortie du Producer à CHAQUE tour. Une seule action par tour. Toute sortie non conforme = échec de schéma (WP2 p.29) = HALT + escalade. Validé côté client (Qoder Agent Team), jamais par le modèle lui-même.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "loop_step",
+    "phase",
+    "iterations_this_phase",
+    "decision",
+    "summary_short",
+    "state_writes"
+  ],
+  "properties": {
+    "loop_step": {
+      "description": "Étape de la boucle cognitive 5 temps (WP1 p.11-12).",
+      "enum": ["GetMission", "ScanScene", "ThinkItThrough", "TakeAction", "ObserveIterate"]
+    },
+    "phase": {
+      "description": "Phase courante du projet (machine à états v0.4 §4).",
+      "enum": ["INIT", "CADRAGE", "DESIGN", "BUILD", "POLISH", "QA", "SHIPPED"]
+    },
+    "iterations_this_phase": {
+      "description": "Compteur d'itérations dans la phase. Cap dur = 15 (au-delà: HALT_PHASE).",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 15
+    },
+    "decision": {
+      "description": "L'unique action du tour.",
+      "enum": ["DISPATCH", "VALIDATE", "REJECT", "ESCALATE_USER", "HALT_PHASE"]
+    },
+    "target_agent": {
+      "description": "Rôle destinataire (obligatoire si DISPATCH). Doit être dans la whitelist de la phase courante.",
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "Creative_Director", "Game_Designer", "System_Designer", "Economy_Designer",
+        "Mission_Content_Designer", "Narrative_Designer", "Writer_Scenariste",
+        "UX_UI_Designer", "Level_Designer", "Audio_Director", "Composer",
+        "Sound_Designer", "Voice_Designer", "Lead_Programmer", "Engine_Programmer",
+        "Gameplay_Programmer", "AI_Programmer", "Physics_Programmer", "UI_Programmer",
+        "Graphics_Programmer"
+      ]
+    },
+    "handoff_out_path": {
+      "description": "Chemin du handoff écrit (obligatoire si DISPATCH). Format: <project-slug>/handoff/H-<PHASE>-<seq>__Producer__to__<To>.json",
+      "type": ["string", "null"]
+    },
+    "artifact_validated": {
+      "description": "Chemin du livrable validé ou rejeté (si VALIDATE/REJECT).",
+      "type": ["string", "null"]
+    },
+    "judge_screened": {
+      "description": "true si la sortie du Flash a été écranter par l'étage bon marché 'Gemini as a Judge' (Flash-Lite) AVANT lecture Frontier (WP1 p.38). false uniquement si aucun sous-agent n'a produit de sortie ce tour.",
+      "type": "boolean",
+      "default": false
+    },
+    "validation_source": {
+      "description": "Provenance de la validation (règle 4ter). 'editor_readback' OBLIGATOIRE en BUILD/POLISH (save->get_actor_bounds->CaptureViewport->validateur Python). 'self_report' INTERDIT pour tout livrable technique.",
+      "type": ["string", "null"],
+      "enum": [null, "editor_readback", "deterministic_validator", "self_report"]
+    },
+    "rejection_reason": {
+      "description": "Motif de refus (obligatoire si REJECT). Incrémente attempt du rôle.",
+      "type": ["string", "null"]
+    },
+    "summary_short": {
+      "description": "L'unique phrase que tu relis mot à mot. 200 caractères max.",
+      "type": "string",
+      "maxLength": 200
+    },
+    "user_question": {
+      "description": "Question utilisateur (obligatoire si ESCALATE_USER). Toujours via AskUserQuestion, choix multiples privilégiés, 4 questions max/tour.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["question", "options"],
+      "properties": {
+        "question": { "type": "string", "minLength": 1 },
+        "options": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 4 },
+        "gate": {
+          "description": "Null sauf si c'est une des 4 gates HITL.",
+          "type": ["string", "null"],
+          "enum": [null, "brief", "gdd", "archi_technique", "ecriture_destructrice_uefn"]
+        },
+        "questions_asked_total_after": {
+          "description": "Compteur projet après cette question. Alerte à 30, STOP à 40.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40
+        }
+      }
+    },
+    "escalation_reason": {
+      "description": "Motif d'arrêt/escalade (obligatoire si HALT_PHASE ou ESCALATE_USER non-gate). Doit référencer un seuil de regles-engagement.md.",
+      "type": ["string", "null"]
+    },
+    "state_writes": {
+      "description": "Liste des écritures à répercuter dans project-state.json. Ex: ['phase=DESIGN','iterations_this_phase=4','roles.Game_Designer.status=VALIDATED'].",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "decision": { "const": "DISPATCH" } } },
+      "then": { "required": ["target_agent", "handoff_out_path"],
+                "properties": { "target_agent": { "type": "string" }, "handoff_out_path": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "decision": { "const": "VALIDATE" } } },
+      "then": { "required": ["artifact_validated"], "properties": { "artifact_validated": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "decision": { "const": "REJECT" } } },
+      "then": { "required": ["artifact_validated", "rejection_reason"],
+                "properties": { "artifact_validated": { "type": "string" }, "rejection_reason": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "decision": { "const": "ESCALATE_USER" } } },
+      "then": { "required": ["user_question"], "properties": { "user_question": { "type": "object" } } }
+    },
+    {
+      "if": { "properties": { "decision": { "const": "HALT_PHASE" } } },
+      "then": { "required": ["escalation_reason"], "properties": { "escalation_reason": { "type": "string" } } }
+    },
+    {
+      "$comment": "Gate BUILD/POLISH (regle 4ter): valider un livrable de ces phases exige un readback editeur. Jamais d'auto-declaration du Flash.",
+      "if": {
+        "properties": {
+          "decision": { "const": "VALIDATE" },
+          "phase": { "enum": ["BUILD", "POLISH"] }
+        },
+        "required": ["decision", "phase"]
+      },
+      "then": {
+        "required": ["validation_source"],
+        "properties": { "validation_source": { "const": "editor_readback" } }
+      }
+    },
+    {
+      "$comment": "Un livrable technique ne peut JAMAIS etre valide sur self_report (règle 4ter).",
+      "if": {
+        "properties": { "decision": { "const": "VALIDATE" }, "validation_source": { "const": "self_report" } },
+        "required": ["decision", "validation_source"]
+      },
+      "then": false
+    }
+  ]
+}

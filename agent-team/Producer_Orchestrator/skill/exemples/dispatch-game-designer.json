@@ -1,0 +1,70 @@
+{
+  "$comment": "GOLDEN EXAMPLE — un tour de dispatch complet du Producer vers Game_Designer (phase DESIGN, pivot). Deux artefacts: (A) la sortie JSON du Producer, conforme à schema-de-sortie.json; (B) le handoff uefn.handoff.v1 qu'il écrit dans le dossier du rôle. À charger en few-shot au démarrage de la phase DESIGN. 1 seul exemple, pas 3: au-delà = context rot (WP3 p.9).",
+
+  "A_producer_turn_output": {
+    "loop_step": "TakeAction",
+    "phase": "DESIGN",
+    "iterations_this_phase": 3,
+    "decision": "DISPATCH",
+    "target_agent": "Game_Designer",
+    "handoff_out_path": "night-city/handoff/H-DESIGN-003__Producer__to__Game_Designer.json",
+    "artifact_validated": null,
+    "rejection_reason": null,
+    "summary_short": "CADRAGE validé. Je lance Game_Designer sur les mécaniques cœur de Night City (verticalité, boucle de jeu, conditions victoire/défaite). Input: brief validé.",
+    "user_question": null,
+    "escalation_reason": null,
+    "state_writes": [
+      "phase=DESIGN",
+      "iterations_this_phase=3",
+      "roles.Game_Designer.status=IN_PROGRESS",
+      "next_action.role=Game_Designer",
+      "history+=dispatch Game_Designer H-DESIGN-003"
+    ]
+  },
+
+  "B_handoff_written": {
+    "$schema": "uefn.handoff.v1",
+    "handoff_id": "H-DESIGN-003",
+    "from": "Producer_Orchestrator",
+    "to": ["Game_Designer"],
+    "artifact": "design/game-design.md",
+    "mission_ref": "M-night-city-DESIGN-003",
+    "summary_short": "Définir les mécaniques cœur: boucle de jeu, progression, verticalité, victoire/défaite. Rôle PIVOT: mini-validation utilisateur après ta v1.",
+    "payload": {
+      "taches": [
+        "Décrire la boucle de jeu principale (core loop) en 1 paragraphe + schéma",
+        "Définir les conditions de victoire et de défaite",
+        "Lister les mécaniques de progression (niveaux, unlocks, économie de base)",
+        "Expliciter comment la VERTICALITÉ de Night City devient une mécanique de jeu (pas juste un décor)"
+      ],
+      "inputs_fournis": ["brief/creative-brief.md", "brief/user-intent.md"],
+      "sortie_attendue": "design/game-design.md"
+    },
+    "constraints": {
+      "must_respect_upstream": ["brief/creative-brief.md (ton, cible, ambiance validés)"],
+      "feasibility_check_obligatoire": "Chaque mécanique doit être confrontée à tech/mcp-inventory.json. Mécanique irréalisable = marquée ⚠️ UNKNOWN, pas inventée.",
+      "no_user_contact": "Tu ne contactes JAMAIS l'utilisateur. Tes gaps vont au Producer (fichier design/research-gaps.md).",
+      "forbidden": ["Aucune coordonnée 3D", "Aucun code Verse", "Aucun lore détaillé (c'est Narrative_Designer)"]
+    },
+    "golden_example_ref": "Game_Designer/skill/exemples/game-design-squelette.json",
+    "acceptance": [
+      "core_loop_presente",
+      "conditions_victoire_defaite_presentes",
+      "progression_listee",
+      "verticalite_comme_mecanique_explicitee",
+      "chaque_mecanique_tagguee_realisable_ou_UNKNOWN",
+      "0_contradiction_avec_creative-brief"
+    ],
+    "next_step_hint": "Pattern Recherche→Gaps→(Questions via Producer)→Présentation. Produis une v0 avec ⚠️ UNKNOWN sur les points non couverts, puis livre design/research-gaps.md au Producer. RÔLE PIVOT: après ta v1, le Producer fera un Generator-Critic puis une mini-validation utilisateur (max 2 itérations).",
+    "context_budget_tokens": 4000
+  },
+
+  "$pourquoi_cet_exemple": [
+    "1 seule action (DISPATCH), 1 seul target, conforme schema-de-sortie.json.",
+    "summary_short < 200 caractères: c'est le seul champ relu mot à mot.",
+    "Le handoff est black-box (WP3 p.18): payload = faits/tâches atomiques, ZÉRO prose de raisonnement, ZÉRO transcript.",
+    "acceptance = cases cochables par le Producer (ou un validateur), pas une auto-évaluation du Flash (WP4 p.20).",
+    "feasibility_check + tag UNKNOWN = anti-hallucination: on n'invente pas une mécanique non réalisable dans UEFN.",
+    "Rappel du statut PIVOT (Game_Designer) → Generator-Critic + mini-validation utilisateur, max 2 itérations."
+  ]
+}

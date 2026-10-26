@@ -1,0 +1,6 @@
+{
+  "$schema": "uefn.projects-registry.v1",
+  "$comment": "Registre multi-projets tenu par le Producer_Orchestrator. Créé vide; une ligne est ajoutée à chaque INIT de projet, mise à jour à chaque fin de phase. Sert à la reprise cross-session (policy_cross_session): 'reprends <nom>' -> lire ce registre -> ouvrir root_path/project-state.json. Ne contient AUCUN état détaillé, juste de quoi retrouver un projet.",
+  "updated_at": null,
+  "projects": []
+}

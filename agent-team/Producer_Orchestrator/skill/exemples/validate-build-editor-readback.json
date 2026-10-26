@@ -1,0 +1,53 @@
+{
+  "$comment": "GOLDEN EXAMPLE n°2 — un tour de VALIDATION en phase BUILD. Montre le gate crucial (règle 4ter): le Producer ne valide un livrable technique que sur READBACK ÉDITEUR (save -> get_actor_bounds -> CaptureViewport -> validateur Python), jamais sur l'auto-déclaration du Flash. Montre aussi judge_screened (étage Flash-Lite, WP1 p.38). Conforme à schema-de-sortie.json.",
+
+  "A_producer_turn_output": {
+    "loop_step": "ObserveIterate",
+    "phase": "BUILD",
+    "iterations_this_phase": 7,
+    "decision": "VALIDATE",
+    "target_agent": null,
+    "handoff_out_path": null,
+    "artifact_validated": "night-city/build/placements.json",
+    "judge_screened": true,
+    "validation_source": "editor_readback",
+    "rejection_reason": null,
+    "summary_short": "Physics_Programmer a posé 12 plots esplanade L0. Readback éditeur OK: 0_overlap, 0_floating, spawn_reachable, pid_legal. Je valide et je passe à Gameplay_Programmer.",
+    "user_question": null,
+    "escalation_reason": null,
+    "state_writes": [
+      "iterations_this_phase=7",
+      "roles.Physics_Programmer.status=VALIDATED",
+      "roles.Physics_Programmer.last_output=build/placements.json",
+      "artifacts_index['build/placements.json'].validated=true",
+      "next_action.role=Gameplay_Programmer",
+      "history+=VALIDATE build/placements.json via editor_readback (0_overlap,0_floating,spawn_reachable,pid_legal)"
+    ]
+  },
+
+  "B_readback_preuve": {
+    "$comment": "Ce que le validateur Python a réellement lu dans l'éditeur AVANT que le Producer n'ait le droit de valider. Sans ce bloc, decision=VALIDATE en BUILD est refusée par le schéma (validation_source doit valoir 'editor_readback').",
+    "source": "save -> get_actor_bounds -> CaptureViewport -> validateur Python",
+    "preflight_ok": "tech/preflight_ok.json (frais, mcp_ping=OK, editor_pid vivant)",
+    "checks": {
+      "schema_valid": true,
+      "0_overlap": true,
+      "0_floating": true,
+      "spawn_reachable": true,
+      "pid_legal": true,
+      "mcp_ok": true
+    },
+    "capture": "build/captures/L0-esplanade-007.png",
+    "acteur_count_readback": 12,
+    "note_anti_map_plate": "get_actor_bounds renvoie des Z variés (esplanade L0 + 2 plots surélevés) => pas une dalle plate. C'est l'éditeur qui le prouve, pas le Flash."
+  },
+
+  "$pourquoi_cet_exemple": [
+    "decision=VALIDATE en phase BUILD => le schéma IMPOSE validation_source='editor_readback' (allOf conditionnel).",
+    "self_report est structurellement interdit (allOf 'then:false') => impossible de valider sur la parole du Flash.",
+    "judge_screened=true => la sortie du Flash a d'abord été écranée par le Flash-Lite (WP1 p.38) avant lecture Frontier.",
+    "Les checks cochés = vocabulaire acceptance_vocabulary (long-term-memory.json), tous vérifiés par Python (WP4 p.20).",
+    "L'entrée history+= trace la provenance (Glass Box, WP4 p.21): on saura plus tard POURquoi c'est validé.",
+    "Une seule action, un seul artefact, summary_short < 200c."
+  ]
+}

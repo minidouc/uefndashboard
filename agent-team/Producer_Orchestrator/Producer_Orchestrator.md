@@ -373,10 +373,42 @@ Un Producer qui marche bien, c'est :
 
 ---
 
-## À creuser dans la prochaine itération (tes "on creusera après")
+## Points « à creuser » — RÉSOLUS (2026-10-26)
 
-1. **Politique de création de dossiers** : où exactement ? slug auto ou demandé ? gestion multi-projets ?
-2. **Granularité du dispatch** : 1 subagent par rôle, ou plusieurs si le rôle a plusieurs tâches ?
-3. **Persistance cross-session** : comment le Producer retrouve le projet actif au réveil (memory + state file ?).
-4. **Escalade utilisateur** : à quel seuil exact (nb de rejets, temps écoulé, type de décision) ?
-5. **Interaction avec les skills existants** (`product-design:*`, `uefn-map-creator`) : on les consomme, on les remplace, on les complète ?
+Ces 5 questions ouvertes sont maintenant **tranchées** et matérialisées dans le paquet
+opérationnel du Producer (structure définie par `util/multi_agent/06-structure-dossier-agent.md`).
+La source de vérité machine-readable est `skill/long-term-memory.json` ; la garde-fou prose est
+`skill/regles-engagement.md`.
+
+1. **Politique de création de dossiers** → `long-term-memory.json → policy_folder_creation`.
+   Racine par défaut `C:/Users/douco/Documents/Qoder/<slug>/` ; slug kebab-case proposé puis validé
+   par 1 `AskUserQuestion` en INIT ; multi-projets = 1 dossier racine + 1 ligne dans `projects-registry.json`.
+2. **Granularité du dispatch** → `policy_dispatch_granularity`. 1 rôle = 1 mission = 1 subagent =
+   1 handoff. Multi-sous-tâches = missions **séquentielles** (jamais parallèle, 16 Go), sous-tâches
+   dans le `payload`.
+3. **Persistance cross-session** → `policy_cross_session`. `agent-team/projects-registry.json` +
+   outil `memory` (chat_id + phase). Reprise : registre → `project-state.json` → report 3 lignes →
+   dispatch depuis `next_action`.
+4. **Escalade utilisateur** → `policy_escalation` + `regles-engagement.md §2/§3`. Seuils durs
+   (attempt≥3, iterations≥15, questions≥40, 2 payloads identiques, blocker>1 tour, isError MCP) et
+   4 gates toujours HITL (brief, GDD, archi technique, écriture destructrice UEFN).
+5. **Interaction avec les skills existants** → `policy_existing_skills`. On **complète**, jamais
+   remplace. `uefn-map-creator` consommé par les agents techniques via leur `outils.md` ; le Producer
+   ne l'appelle jamais.
+
+### Fichiers du paquet opérationnel (créés 2026-10-26)
+
+```
+Producer_Orchestrator/
+├── persona.md                         # identité stable + boucle cognitive + patterns + routing
+├── SKILL.md                           # point d'entrée + ordre de chargement
+├── Producer_Orchestrator.md           # ← ce fichier (spec v0.4, référence narrative)
+├── Producer_Orchestrator.system-prompt-v0.5.md   # overlay Whitepapers annoté (citations)
+└── skill/
+    ├── schema-de-sortie.json          # contrat JSON strict du tour (validé draft-07)
+    ├── long-term-memory.json          # phases, graphe, pivots, budgets, 5 politiques
+    ├── regles-engagement.md           # anti-boucle, MCP 0-halluc, JAMAIS, escalade
+    ├── outils.md                      # outils QoderWork (AUCUN MCP)
+    ├── exemples/dispatch-game-designer.json   # golden example (conforme au schéma)
+    └── tool-output/lecture-handoff.md # comment lire un retour sain vs empoisonné
+```
