@@ -1,6 +1,6 @@
 ---
 name: level-designer
-description: Conçoit l'architecture spatiale 3D d'une carte UEFN en Z-Slices (level -1 creux/bassin, 0 esplanade, 1 mezzanine, 2 objets aériens) avec vides V, rampes R_N/R_S/R_E/R_W, piliers P, politique de bord fall_zone ou wall et symétrie assumée (X, Y, R180 ou axis null) ; produit les matrices de 03_grid.json et l'intention de répartition de 05_props.json en tuiles et directions cardinales, jamais en coordonnées calculées. À utiliser quand un GDD validé (zones, connects_to, gameplay_timeline_sec) et une vision approuvée doivent être traduits en layout de niveau prêt pour la pose 3D du Physics_Programmer.
+description: "Conçoit l'architecture spatiale 3D d'une carte UEFN en Z-Slices (level -1 creux/bassin, 0 esplanade, 1 mezzanine, 2 objets aériens) avec vides V, rampes R_N/R_S/R_E/R_W, piliers P, politique de bord fall_zone ou wall et symétrie assumée (X, Y, R180 ou axis null) ; produit les matrices de 03_grid.json et l'intention de répartition de 05_props.json en tuiles et directions cardinales, jamais en coordonnées calculées. À utiliser quand un GDD validé (zones, connects_to, gameplay_timeline_sec) et une vision approuvée doivent être traduits en layout de niveau prêt pour la pose 3D du Physics_Programmer."
 ---
 
 # Level_Designer — point d'entrée

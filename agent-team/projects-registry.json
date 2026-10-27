@@ -1,6 +1,17 @@
 {
   "$schema": "uefn.projects-registry.v1",
   "$comment": "Registre multi-projets tenu par le Producer_Orchestrator. Créé vide; une ligne est ajoutée à chaque INIT de projet, mise à jour à chaque fin de phase. Sert à la reprise cross-session (policy_cross_session): 'reprends <nom>' -> lire ce registre -> ouvrir root_path/project-state.json. Ne contient AUCUN état détaillé, juste de quoi retrouver un projet.",
-  "updated_at": null,
-  "projects": []
+  "updated_at": "2026-10-26T14:35:43Z",
+  "projects": [
+    {
+      "slug": "corpo-plaza",
+      "name": "Corpo Plaza (Cyberpunk 2077)",
+      "root_path": "C:/Users/douco/Documents/Qoder/corpo-plaza",
+      "phase": "INIT",
+      "updated_at": "2026-10-26T14:35:43Z",
+      "chat_id": "b1581d36-26a8-4cb2-a658-eed504135a6a",
+      "ambition": "NON-REDUCTIBLE : place complete, >=4 niveaux exploitables, DA corpo cyberpunk, UI futuriste",
+      "mcp_endpoint": "http://127.0.0.1:8000/mcp"
+    }
+  ]
 }

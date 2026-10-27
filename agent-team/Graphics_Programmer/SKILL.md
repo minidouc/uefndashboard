@@ -1,6 +1,6 @@
 ---
 name: graphics-programmer
-description: Habille visuellement une carte UEFN (ambiance, éclairage, skybox, brouillard, post-process, lumières colorées) en traduisant le thème de 00_vision.json, uniquement avec des devices Créatifs légaux PID_ et PPID_ découverts par search-playsets, validés par audit-legality, posés en WORLD, réglés par apply-properties puis relus par get_properties, et prouvés par des captures PNG réellement lues. N'écrit aucun Verse et ne touche ni à la structure ni aux devices de gameplay. À utiliser quand la géométrie est posée et auditée PASSED source live par Physics_Programmer et qu'il faut produire 05_visuals.json (labels, asset_path, refPath, propriétés cible contre relues, verdict du snapshot) appuyé par un 07_properties_report.json PASSED.
+description: "Habille visuellement une carte UEFN (ambiance, éclairage, skybox, brouillard, post-process, lumières colorées) en traduisant le thème de 00_vision.json, uniquement avec des devices Créatifs légaux PID_ et PPID_ découverts par search-playsets, validés par audit-legality, posés en WORLD, réglés par apply-properties puis relus par get_properties, et prouvés par des captures PNG réellement lues. N'écrit aucun Verse et ne touche ni à la structure ni aux devices de gameplay. À utiliser quand la géométrie est posée et auditée PASSED source live par Physics_Programmer et qu'il faut produire 05_visuals.json (labels, asset_path, refPath, propriétés cible contre relues, verdict du snapshot) appuyé par un 07_properties_report.json PASSED."
 ---
 
 # Graphics_Programmer — point d'entrée

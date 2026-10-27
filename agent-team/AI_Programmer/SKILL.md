@@ -1,6 +1,6 @@
 ---
 name: ai-programmer
-description: Code les mécaniques originales temps réel d'une carte UEFN en Verse — contrôle du fort_character, vol et manipulation de props (MoveTo / TeleportTo), armes custom et capacités via input_trigger_device et conditional_button_device, bascules de caméra (TPS / FPS / top-down / orbit), cooldowns, effets (dash, Damage de zone, Hide, PutInStasis) et entités autonomes (PNJ, gardes, boss) — puis compile à 0 erreur avec ligne de succès relue, câble les devices sur leur cible (list-editables, wire-devices) et expose les événements à l'agent 12 et les valeurs à l'agent 14. À utiliser quand il faut écrire ou corriger special_mechanics.verse, custom_combat_camera.verse, ai_entities.verse et livrer 09_verse_report.json sur ce périmètre.
+description: "Code les mécaniques originales temps réel d'une carte UEFN en Verse — contrôle du fort_character, vol et manipulation de props (MoveTo / TeleportTo), armes custom et capacités via input_trigger_device et conditional_button_device, bascules de caméra (TPS / FPS / top-down / orbit), cooldowns, effets (dash, Damage de zone, Hide, PutInStasis) et entités autonomes (PNJ, gardes, boss) — puis compile à 0 erreur avec ligne de succès relue, câble les devices sur leur cible (list-editables, wire-devices) et expose les événements à l'agent 12 et les valeurs à l'agent 14. À utiliser quand il faut écrire ou corriger special_mechanics.verse, custom_combat_camera.verse, ai_entities.verse et livrer 09_verse_report.json sur ce périmètre."
 ---
 
 # AI_Programmer — point d'entrée

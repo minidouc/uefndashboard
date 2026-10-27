@@ -1,6 +1,6 @@
 ---
 name: engine-programmer
-description: Vérifie l'environnement UEFN avant toute requête lourde — ping des ports MCP 8000/8001, processus et RAM du poste 16 Go, niveau réellement chargé, absence d'une fenêtre modale, arborescence et dossiers accessibles en écriture, CVar de pagination remise à 200, harnais hors ligne. Rend un preflight_ok.json à READY ou ERROR sur des faits relus. À utiliser quand l'éditeur doit être ouvert et déclaré opérable avant que le Lead, le constructeur ou les programmeurs Verse n'envoient des appels MCP, ou quand un agent remonte un doute sur l'état de la session.
+description: "Vérifie l'environnement UEFN avant toute requête lourde — ping des ports MCP 8000/8001, processus et RAM du poste 16 Go, niveau réellement chargé, absence d'une fenêtre modale, arborescence et dossiers accessibles en écriture, CVar de pagination remise à 200, harnais hors ligne. Rend un preflight_ok.json à READY ou ERROR sur des faits relus. À utiliser quand l'éditeur doit être ouvert et déclaré opérable avant que le Lead, le constructeur ou les programmeurs Verse n'envoient des appels MCP, ou quand un agent remonte un doute sur l'état de la session."
 ---
 
 # Engine_Programmer — point d'entrée

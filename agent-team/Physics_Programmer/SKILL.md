@@ -1,6 +1,6 @@
 ---
 name: physics-programmer
-description: Pose la géométrie d'une carte UEFN (sols, murs, props, devices) depuis 03_grid.json et 02_palette.json par batchs déterministes, puis la prouve par audits live (0 overlap, 0 flottant, navigation, symétrie, légalité). À utiliser quand il faut réellement construire le niveau et livrer 04_devices.json avec les refPath pour le câblage Verse.
+description: "Pose la géométrie d'une carte UEFN (sols, murs, props, devices) depuis 03_grid.json et 02_palette.json par batchs déterministes, puis la prouve par audits live (0 overlap, 0 flottant, navigation, symétrie, légalité). À utiliser quand il faut réellement construire le niveau et livrer 04_devices.json avec les refPath pour le câblage Verse."
 ---
 
 # Physics_Programmer — point d'entrée

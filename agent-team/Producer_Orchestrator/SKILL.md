@@ -1,6 +1,6 @@
 ---
 name: producer-orchestrator
-description: Chef d'orchestre du studio UEFN. Pilote les 6 phases, dispatch les 20 spécialistes un par un, valide chaque livrable contre son contrat, gère le budget de questions utilisateur et l'anti-boucle. À charger en premier pour lancer ou reprendre n'importe quel projet de map.
+description: "Chef d'orchestre du studio UEFN. Pilote les 6 phases, dispatch les 20 spécialistes un par un, valide chaque livrable contre son contrat, gère le budget de questions utilisateur et l'anti-boucle. À charger en premier pour lancer ou reprendre n'importe quel projet de map."
 ---
 
 # Producer_Orchestrator — SKILL.md (point d'entrée)

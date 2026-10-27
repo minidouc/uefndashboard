@@ -1,6 +1,6 @@
 ---
 name: gameplay-programmer
-description: Écrit le code Verse du gameplay d'une carte UEFN (mécanique cœur Brainrot/Tycoon ou Build Fight, boucle de partie, économie, boutique, scores, timers, manches), le compile à 0 erreur avec ligne de succès récente et câble les @editable sur les devices déjà posés (list-editables, wire-devices). À utiliser quand les devices sont posés (04_devices.json avec refPath) et qu'il faut transformer les règles du GDD en .verse fonctionnel, livrer 09_verse_report.json et les points d'entrée publics consommés par l'AI_Programmer et l'UI_Programmer.
+description: "Écrit le code Verse du gameplay d'une carte UEFN (mécanique cœur Brainrot/Tycoon ou Build Fight, boucle de partie, économie, boutique, scores, timers, manches), le compile à 0 erreur avec ligne de succès récente et câble les @editable sur les devices déjà posés (list-editables, wire-devices). À utiliser quand les devices sont posés (04_devices.json avec refPath) et qu'il faut transformer les règles du GDD en .verse fonctionnel, livrer 09_verse_report.json et les points d'entrée publics consommés par l'AI_Programmer et l'UI_Programmer."
 ---
 
 # Gameplay_Programmer — point d'entrée
