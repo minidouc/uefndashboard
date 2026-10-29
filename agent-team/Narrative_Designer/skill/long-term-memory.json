@@ -146,6 +146,6 @@
     "iterations_max_avant_escalade": 3,
     "exemples_few_shot_injects": "1 a 3",
     "minimums_de_mon_schema": "5 faits, 3 regles d'univers, 4 couches de lecture, 2 silences, 3 exclusions narratives, 1 intention d'implantation",
-    "playset_catalogue": "PPID_ = FortPlaysetPropItemDefinition (environ 100 418 references) ; PID_ = FortPlaysetItemDefinition (environ 1 960) ; /Game/Athena et /Game/Environments = ILLEGAL_ASSET_PATH, donc jamais une cible de lore"
+    "playset_catalogue": "PPID_ = FortPlaysetPropItemDefinition (environ 100 418 references) ; PID_ = FortPlaysetItemDefinition (environ 1 960) ; la legalite est prouvee par le validateur UEFN (agent-team/_commun/legalite-assets.md), pas par le prefixe ; un role Design ne cite de toute facon aucun chemin"
   }
 }

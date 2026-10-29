@@ -12,7 +12,7 @@
     "camera_et_capture": "EditorApp.SetCameraTransform, GetCameraTransform, CaptureViewport = verifies : c'est LE moyen de preuve du rendu",
     "outils_inexistants": "batch.exec, editor.undo, validate_folder, validate_selected, pont Bridge :9210, export .t3d : mentions caduques, ne pas les appeler",
     "get_dynamic_input_schema": "fait crasher l'editeur hors session : ne jamais appeler",
-    "chemins_interdits": "/Game/Athena et /Game/Environments = ILLEGAL_ASSET_PATH : echec de la validation d'ile au lancement de session",
+    "chemins_interdits": "ceux de agent-team/_commun/catalogue-verifie.json -> refuses, et tout chemin cite 'disallowed' par le validateur apres sauvegarde. Le prefixe (/Game/Athena...) ne decide rien (agent-team/_commun/legalite-assets.md).",
     "bilan_campagne_2026_10": "sur le run documente, aucune requete catalogue n'a rendu de device d'ambiance (skydome, brouillard, post-process, lumiere) : les seuls leviers reels observes etaient des props deja emissifs ou deja allumes"
   },
   "contrats_outils": {

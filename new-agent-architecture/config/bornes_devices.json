@@ -1,0 +1,37 @@
+{
+  "$schema": "studio.bornes_devices.v1",
+  "$comment": "Bornes REELLES d'un device relues apres pose, relatives a son pivot (yaw 0), quelles que soient les dimensions declarees dans le plan. check_plan.py s'en sert pour voir ce que l'editeur pose. Une entree n'est ajoutee qu'avec sa preuve relue.",
+  "devices": {
+    "PID_CP_Devices_PlayerSpawner": {
+      "min": [-128, -157, -128], "max": [252, 128, 196],
+      "preuve": "corpo-plaza lots 1 (2026-10-27, 3 poses) : bounds x[-8628,-8248] y[-157,128] pour pivot (-8500,0) ; z = pivot-128 .. pivot+196"
+    },
+    "PID_Device_Billboard": {
+      "min": [-179, -1, 0], "max": [179, 28, 162],
+      "preuve": "corpo-plaza lots 1-2 (2026-10-27, 4 poses) : 358x28x162, base a la cote du pivot, face avant au pivot (+Y), quelles que soient les dimensions declarees"
+    },
+    "PID_Device_HoloScreen": {
+      "min": [0, -256, -128], "max": [153, 256, 128],
+      "preuve": "corpo-plaza lot 2 (2026-10-27, 2 poses) : 153x512x256, x de pivot a pivot+153, centre en Y et Z"
+    },
+    "PID_Device_PointLight": {
+      "min": [-128, -128, -128], "max": [128, 128, 128],
+      "preuve": "corpo-plaza lots 1-2 (2026-10-27) : 256^3 centre sur le pivot"
+    }
+  },
+  "primitives": {
+    "$comment": "L'editeur porte toute dimension d'une primitive a 256 uu minimum. Cube : X/Y centres (Z gere par pose_lot.decouper). Cylindre : Z centre.",
+    "min_uu": 256,
+    "preuve": "corpo-plaza lot 2 (2026-10-27) : 29 cubes Y 100 -> 256 centres ; S-1_DEC_VAPEUR_1/2 cylindre Z 200 -> 256, base -28"
+  },
+  "assets": {
+    "$comment": "Assets du pack (support ASSET:<chemin>) : bornes relues apres pose au pivot (0,0,0), yaw 0 (spike mesurer-assets, corpo-plaza 2026-10-28, build/studio/spikes/mesures_assets.json). Les BP_Cybercity_* ont une boite ~1200^3 identique (composant invisible probable) : c'est pourtant ce que le validateur relira.",
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_CP_Sunburst_Streetlamp_01_NoLight_0065256f.PPID_CRP_Sunburst_CP_Sunburst_Streetlamp_01_NoLight_0065256f": {"min": [-447, -41, 0], "max": [42, 40, 716]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_CP_Sunburst_SupplyCrate_01_73cfcfe3.PPID_CRP_Sunburst_CP_Sunburst_SupplyCrate_01_73cfcfe3": {"min": [-985, -985, -4], "max": [985, 985, 1751]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Cybercity_Antenna.PPID_CRP_Sunburst_BP_Cybercity_Antenna": {"min": [-534, -500, -537], "max": [666, 700, 663]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Sunburst_Mural_Decal_01_65aa4072.PPID_CRP_Sunburst_BP_Sunburst_Mural_Decal_01_65aa4072": {"min": [-572, -10, -322], "max": [572, 0, 322]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Cybercity_Sign_Other_A.PPID_CRP_Sunburst_BP_Cybercity_Sign_Other_A": {"min": [-534, -500, -537], "max": [666, 700, 663]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Cybercity_Sign_Other_B.PPID_CRP_Sunburst_BP_Cybercity_Sign_Other_B": {"min": [-534, -500, -537], "max": [666, 700, 663]},
+    "/CRP_Sunburst/SetupAssets/Maps/PPIDs/PPID_CRP_Sunburst_BP_Cybercity_Holo_Other_A.PPID_CRP_Sunburst_BP_Cybercity_Holo_Other_A": {"min": [-600, -500, -616], "max": [600, 700, 584]}
+  }
+}

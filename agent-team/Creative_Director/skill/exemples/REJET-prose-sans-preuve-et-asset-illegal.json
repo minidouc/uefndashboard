@@ -45,7 +45,7 @@
     "role": "CONTRE-EXEMPLE - livrable REJETE par le validateur Python et par le juge Generator-Critic",
     "motifs_de_rejet": [
       "gate_hitl_1.statut = 'VALIDE' signe par le CD : seuls PENDING / VALIDE_HUMAIN / REJETE_HUMAIN sont admis ; l'auto-validation est le motif de rejet WP4 p.20.",
-      "references[0].equivalent_creatif = /Game/Athena/... : refuse par le pattern ; une direction qui n'existe qu'en /Game/ est fausse et bloque la validation de l'ile.",
+      "references[0].equivalent_creatif = un chemin d'asset : refuse par le pattern, un role Design ne cite aucun chemin (il nomme une famille du catalogue commun). Ce n'est pas le prefixe /Game/Athena qui est en cause : la legalite se prouve par le validateur UEFN (agent-team/_commun/legalite-assets.md), et cet asset n'a jamais ete prouve.",
       "references[1] : statut_conversion absent, cle 'statut' inventee, holographique pretendu proche sans une seule requete catalogue.",
       "references[2] cite une franchise comme cible et non comme inspiration, sans equivalent verifiable.",
       "aucun ecart assume, aucune anti-reference, un seul non_negotiable ('c'est beau', sous les 8 caracteres).",

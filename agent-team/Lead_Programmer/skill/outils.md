@@ -13,7 +13,7 @@
 | Commande / outil | Quand / pourquoi | Paramètres clés | Sortie à savoir lire |
 |---|---|---|---|
 | `search-playsets` | trouver un asset **légal** dans le catalogue exposé | `--type PPID\|PID\|ALL`, motif | `status`, `count`, `results[].asset_path`, `class` (`FortPlaysetPropItemDefinition` / `FortPlaysetItemDefinition`) ; fichier `search_<motif>.json` conservé |
-| `list-devices` / `Device.ListDeviceAssets` | retrouver l'`asset_path` **exact** d'un device | type de device | liste de `PID_*` ; un device absent = `DEVICE_ASSET_NOT_FOUND`, pas un chemin approximatif |
+| `list-devices --filter <nom>` *(via `Device.ListDeviceAssets`)* | retrouver l'`asset_path` **exact** d'un device | type de device | liste de `PID_*` ; un device absent = `DEVICE_ASSET_NOT_FOUND`, pas un chemin approximatif |
 | `Scene.find_actors` | vérifier l'état du niveau avant/après mesure | `{"name": "MEASURE_"}` | `returnValue: []` = niveau propre ; sinon liste des orphelins avec `refPath` |
 | `ActorTools.get_actor_bounds` | la **mesure** : boîte alignée aux axes d'un acteur posé | `{"actor": {"refPath": ...}}` | `{min, max, isValid}` ; `size_cm = max − min` ; ⚠️ `min == max == 0` avec `isValid: true` = asset non mesurable |
 | `ActorTools.get_actor_transform` | relecture de la pose et **du yaw** | `{"actor": {"refPath": ...}}` | transform relue ; yaw ≠ yaw demandé ⇒ mesure rejetée |
@@ -21,6 +21,7 @@
 | `ValkyrieToolset.SessionToolset.GetSessionStatus` | vérifier que la session autorise les écritures | `{}` | `Disconnected` / `Connected` |
 | `verse-scan`, `verse-grep`, `Verse.ReadFile` | **lecture seule** pour arbitrer `verse_architecture` (fichiers existants, signatures consommées) | workspace, motif | état des `.verse` du projet ; ⚠️ une réponse `[]` ne prouve **pas** une absence |
 | `preflight_ok.json`, `01_gdd.json` | mes conditions d'entrée | workspace | `status: "READY"` ; `requested_assets` (liste à mesurer) |
+| `check-validator --no-save` | **la preuve de légalité** : relire le verdict du validateur UEFN après la dernière sauvegarde (la version avec sauvegarde est lancée par le Producer, gate HITL) | `--workspace`, `--update-catalogue` pour inscrire les refus | `06b_validator_report.json` : `status` (`PASSED`/`FAILED`/`UNKNOWN`), `refused_paths`. `UNKNOWN` ≠ légal (`../../_commun/legalite-assets.md`) |
 
 ## Autorisé — écriture dans l'éditeur (gate HITL, save préalable)
 
@@ -42,8 +43,8 @@
 | `apply-properties` | `Graphics_Programmer` (ambiance) / 12 (gameplay) | je ne règle aucun device |
 | `wire-devices`, `list-editables`, `verse-write`, `verse-build` | 12 / 13 / 14 | je **déclare** des signatures et des fichiers, je n'écris aucune logique Verse |
 | `cleanup` | `Producer_Orchestrator` (décision) / `Engine_Programmer` (exécution) | destructif hors mesure : jamais de mon initiative |
-| `launch-session`, `Save`/`SaveAll`, `Publish` | `Producer_Orchestrator` via gate HITL utilisateur | ouverture de session et publication |
-| `Asset.find_assets` dans `/Game/Athena`, `/Game/Environments` | — | assets Epic non exposés → `ILLEGAL_ASSET_PATH`, échec de validation d'île |
+| `launch-session`, `check-validator` sans `--no-save`, `Asset.save_assets`, `Scene.save_actor`, publication (aucun outil MCP : faite à la main) | `Producer_Orchestrator` via gate HITL utilisateur | ouverture de session et publication |
+| Déclarer un asset légal ou illégal **d'après son chemin** | — | seul le journal du validateur fait foi (`../../_commun/legalite-assets.md`) ; `find_assets` dans `/Game/Athena/Items/...` est **autorisé** (armes et soins classiques prouvés) |
 | `GetDynamicInputSchema` hors session | — | **crash connu de l'éditeur** : les schémas se lisent dans la doc de skill |
 | `batch.exec`, `editor.undo`, `validate_folder` | — | **n'existent pas** : mentions caduques à ne pas promettre |
 

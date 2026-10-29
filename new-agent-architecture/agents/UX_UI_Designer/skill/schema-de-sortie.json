@@ -1,0 +1,279 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.UX_UI_Designer.v1",
+  "title": "UX_UI_Designer - contrat du livrable 01_ux_ui.json",
+  "description": "Schema de sortie de l'agent UX_UI_Designer (agent 08, pole Design, phase DESIGN). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md). Le payload est une CARTE D'INTERFACE : ecrans, elements, hierarchie d'information, flux, etats, gabarits de place, abstentions motivees et contrat pour l'UI_Programmer (agent 14). Frontiere de role : cet agent n'ecrit aucun .verse et n'oblige personne a recalculer - toute valeur affichee porte soit le nom de la fonction qui la produit, lu dans un artefact reel (09_verse_report.json, 10_editables.json, 08_wiring_report.json), soit UNKNOWN assume. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin /Game/, aucun PPID_/PID_ final, aucun device impose. acceptance = criteres cochables par un validateur Python, jamais 'c_est_lisible'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": { "const": "uefn.handoff.v1" },
+    "handoff_id": { "type": "string", "pattern": "^H-[A-Z]+-[0-9]{3,}$" },
+    "from": { "const": "UX_UI_Designer" },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator", "Creative_Director", "Game_Designer", "System_Designer",
+          "Economy_Designer", "Mission_Content_Designer", "Narrative_Designer", "Writer_Scenariste",
+          "UX_UI_Designer", "Level_Designer", "Engine_Programmer", "Lead_Programmer",
+          "Gameplay_Programmer", "AI_Programmer", "UI_Programmer", "Graphics_Programmer",
+          "Physics_Programmer", "Audio_Director", "Composer", "Sound_Designer", "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": { "const": "01_ux_ui.json" },
+    "mission_ref": { "type": "string", "minLength": 1 },
+    "summary_short": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "payload": { "$ref": "#/definitions/payload" },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur." },
+        "must_preserve": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Garde-fous transmis en aval : chaque role suivant les applique sans redemander le contexte amont." },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "must_ask_producer": { "type": "array", "items": { "type": "string" }, "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase." },
+        "limites_techniques_lues": { "type": "array", "items": { "type": "string" }, "description": "Contraintes relevees dans les rapports du run : editable_count, wired, devices disponibles." }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "ecran_count_declared_1_to_6",
+          "every_element_has_emprise_and_gabarit",
+          "every_display_value_has_traced_function_or_unknown",
+          "no_hand_computed_value",
+          "type_source_matches_fonction_origin",
+          "every_screen_has_four_states",
+          "every_flow_has_error_path",
+          "abstentions_each_have_motif_and_lock_source",
+          "no_screen_requires_save_or_publish",
+          "text_refs_exist_in_01_scripts_or_unknown",
+          "components_require_only_devices_present_in_04_devices",
+          "contract_for_agent_14_no_recompute",
+          "no_verse_written_and_no_coordinate_or_game_path",
+          "design_gate_status_pending"
+        ]
+      }
+    },
+    "next_step_hint": { "type": "string", "maxLength": 400 },
+    "context_budget_tokens": { "type": "integer", "maximum": 4000 }
+  },
+  "definitions": {
+    "emprise": {
+      "enum": [
+        "coin_haut_gauche", "coin_haut_droit", "bandeau_haut_centre", "centre",
+        "coin_bas_gauche", "coin_bas_droit", "bandeau_bas_centre",
+        "liste_verticale_centree", "plein_ecran"
+      ]
+    },
+    "origine_artefact": {
+      "enum": [
+        "09_verse_report.json", "10_editables.json", "08_wiring_report.json",
+        "04_devices.json", "01_gdd.json", "01_scripts.json", "UNKNOWN"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entrees", "principes", "ecrans", "flux", "etats",
+        "abstentions", "gabarits_de_place", "contrat_pour_agent_14", "gate_hitl"
+      ],
+      "properties": {
+        "entrees": {
+          "type": "array", "minItems": 2, "items": { "type": "string", "minLength": 3 },
+          "description": "Artefacts reellement lus avant de dessiner (01_gdd.json, 01_systems.json, 01_scripts.json, 04_devices.json, 08/09/10 des rapports). Un livrable qui n'a rien lu est une wish-list."
+        },
+        "principes": {
+          "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string", "minLength": 8 },
+          "description": "Hierarchie d'information et charge cognitive, enoncees sans chiffre invente."
+        },
+        "ecrans": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/definitions/ecran" } },
+        "flux": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/flux" } },
+        "etats": {
+          "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/etats_ecran" },
+          "description": "Cles = id d'ecran de payload.ecrans. Chaque ecran declare ses quatre etats (vide, chargement, erreur, fin) : une interface sans etat d'erreur n'est pas un parcours."
+        },
+        "abstentions": {
+          "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/abstention" },
+          "description": "Ce qui n'est PAS dessine, avec le motif et l'artefact qui verrouille. Une interface a 0 composant persistant se prouve ici, pas par un HUD invente."
+        },
+        "gabarits_de_place": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/gabarit_de_place" } },
+        "contrat_pour_agent_14": { "$ref": "#/definitions/contrat_pour_agent_14" },
+        "gate_hitl": { "$ref": "#/definitions/gate_hitl" }
+      }
+    },
+    "ecran": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "moment", "elements"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,}$" },
+        "role": { "enum": ["jeu", "menu", "pause", "resultats", "onboarding", "inventaire", "boutique", "carte", "parametres", "dialogue"] },
+        "nom": { "type": "string" },
+        "moment": { "type": "string", "minLength": 3, "description": "Quand cet ecran existe, rattache a gameplay_timeline_sec de 01_gdd.json." },
+        "justification": { "type": "string", "minLength": 8, "description": "Pourquoi cet ecran est justifie par la scene ; sans lui, un ecran de trop est un motif de rejet." },
+        "elements": { "type": "array", "minItems": 0, "items": { "$ref": "#/definitions/element" } }
+      }
+    },
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "emprise", "gabarit", "valeur_affichee", "type_source", "source_fonction", "lu_dans", "statut", "affichage"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,}$" },
+        "role": { "enum": ["information_permanente", "information_conditionnelle", "signal_temporaire", "texte_fixe", "action", "conteneur"] },
+        "libelle": { "type": "string" },
+        "emprise": { "$ref": "#/definitions/emprise" },
+        "gabarit": { "type": "string", "minLength": 2, "description": "Id d'une entree de gabarits_de_place : la place n'est pas libre, elle est declaree." },
+        "valeur_affichee": {
+          "type": "string", "minLength": 3,
+          "description": "Ce que le joueur voit, enonce non calcule : jamais un nombre invente par le modele (score, pourcentage, chrono). 'aucune valeur numerique' est une valeur affichee legale."
+        },
+        "type_source": { "enum": ["fonction_exposee", "constante_d_artefact", "texte_agent_07", "aucune"] },
+        "source_fonction": {
+          "type": "string", "pattern": "^(UNKNOWN|[A-Za-z_][A-Za-z0-9_.]*)$",
+          "description": "NOM DE LA FONCTION QUI PRODUIT LA VALEUR, lu dans 09_verse_report.json / 10_editables.json / 08_wiring_report.json, sinon UNKNOWN. C'est le champ qui separe un design consommable d'un wish-list : l'agent 14 s'abonne, il ne recalcule rien."
+        },
+        "lu_dans": { "$ref": "#/definitions/origine_artefact" },
+        "statut": { "enum": ["affiche_source_lue", "attente_source_inconnue", "abstenu", "inutile_pour_ce_mode"] },
+        "affichage": { "type": "string", "minLength": 5, "description": "Apparition, persistance, disparition, ordre de lecture. Un element sans comportement est un motif de rejet." },
+        "texte_ref": { "type": "string", "description": "Cle de 01_scripts.json si le libelle vient du Writer, sinon UNKNOWN quand l'artefact n'a pas ete emis pendant la run." },
+        "device_requis": { "type": "string", "description": "Label du device dont depend l'element, obligatoirement present dans 04_devices.json, sinon UNKNOWN + abstention." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type_source": { "const": "fonction_exposee" } }, "required": ["type_source"] },
+          "then": {
+            "properties": {
+              "source_fonction": { "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$" },
+              "lu_dans": { "enum": ["09_verse_report.json", "10_editables.json", "08_wiring_report.json"] },
+              "statut": { "const": "affiche_source_lue" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "source_fonction": { "const": "UNKNOWN" } }, "required": ["source_fonction"] },
+          "then": { "properties": { "type_source": { "enum": ["constante_d_artefact", "texte_agent_07", "aucune"] } } }
+        }
+      ]
+    },
+    "flux": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "depuis", "vers", "declencheur", "retour", "erreur"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,}$" },
+        "depuis": { "type": "string", "minLength": 2 },
+        "vers": { "type": "string", "minLength": 2 },
+        "declencheur": { "type": "string", "minLength": 3 },
+        "retour": { "type": "string", "minLength": 3, "description": "Comment le joueur revient en arriere : un flux sans sortie est un piege." },
+        "erreur": { "type": "string", "minLength": 5, "description": "Ce que l'ecran affiche quand la source ne repond pas ; doit rejoindre l'etat 'erreur' de l'ecran concerne." }
+      }
+    },
+    "etats_ecran": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vide", "chargement", "erreur", "fin"],
+      "properties": {
+        "vide": { "type": "string", "minLength": 5 },
+        "chargement": { "type": "string", "minLength": 5 },
+        "erreur": { "type": "string", "minLength": 5 },
+        "fin": { "type": "string", "minLength": 5 }
+      }
+    },
+    "abstention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["element", "categorie", "motif", "verrou"],
+      "properties": {
+        "element": { "type": "string", "minLength": 3 },
+        "categorie": { "enum": ["score", "timer", "sauvegarde", "economie", "quete", "combat", "multijoueur", "inventaire", "carte", "onboarding", "accessibilite", "autre"] },
+        "motif": { "type": "string", "minLength": 8 },
+        "verrou": { "$ref": "#/definitions/origine_artefact" },
+        "si_reactivation": { "type": "string" }
+      }
+    },
+    "gabarit_de_place": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "emprise", "capacite", "debordement"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{2,}$" },
+        "emprise": { "$ref": "#/definitions/emprise" },
+        "unite": { "const": "relatif_16_9", "description": "Gabarit relatif (zone + capacite), jamais des pixels absolus calcules par le modele : la resolution cible est une contrainte technique, pas une decision de design." },
+        "capacite": { "type": "string", "minLength": 3, "description": "Capacite redigee : 'une ligne courte', 'deux actions', 'aucun chiffre'." },
+        "debordement": { "type": "string", "minLength": 3 }
+      }
+    },
+    "contrat_pour_agent_14": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["principe", "ne_recalcule_rien", "fonctions_attendues", "textes", "interdits"],
+      "properties": {
+        "principe": { "type": "string", "minLength": 8 },
+        "ne_recalcule_rien": { "const": true, "description": "Regle de pipeline verifiee dans ce depot : UI_Programmer (14) s'abonne aux fonctions exposees par les agents 12 et 13 et ne recalcule aucune valeur affichee." },
+        "fonctions_attendues": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/fonction_attendue" } },
+        "textes": { "enum": ["01_scripts.json", "UNKNOWN"] },
+        "interdits": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 5 } }
+      }
+    },
+    "fonction_attendue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nom", "origine_artefact", "statut"],
+      "properties": {
+        "nom": { "type": "string", "pattern": "^(UNKNOWN|[A-Za-z_][A-Za-z0-9_.]*)$" },
+        "origine_artefact": { "$ref": "#/definitions/origine_artefact" },
+        "statut": { "enum": ["exposee_lue", "non_exposee", "UNKNOWN"] },
+        "note": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "statut": { "const": "exposee_lue" } }, "required": ["statut"] },
+          "then": {
+            "properties": {
+              "nom": { "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$" },
+              "origine_artefact": { "enum": ["09_verse_report.json", "10_editables.json", "08_wiring_report.json"] }
+            }
+          }
+        }
+      ]
+    },
+    "gate_hitl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "properties": {
+        "numero": { "enum": [1, 2, 3, 4] },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"], "description": "Un agent n'ecrit que PENDING ; VALIDE_HUMAIN et REJETE_HUMAIN appartiennent a la main de l'humain portee par le Producteur." },
+        "valide_par": { "type": "string" }
+      }
+    }
+  }
+}

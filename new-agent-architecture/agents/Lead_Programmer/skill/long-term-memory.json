@@ -1,0 +1,123 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.longterm.Lead_Programmer.v1",
+  "agent": "Lead_Programmer",
+  "description": "Memoire longue terme de l'agent Lead_Programmer (agent 11, note Lead_Tech_Director dans les docs de pipeline). Contient UNIQUEMENT des faits stables : constantes du catalogue legal, gabarits de grille, contrats d'outils de mesure, lexique de statuts, pieges signe/cause/conduite, decisions de pipeline. Aucun etat de projet, aucune palette d'un projet particulier : la palette d'une run vit dans le workspace et dans le handoff.",
+  "langue": "fr",
+  "constantes_catalogue": {
+    "classes_legales": {
+      "FortPlaysetPropItemDefinition": { "prefixe": "PPID_", "ordre_de_grandeur": 100418, "outil": "search-playsets --type PPID", "usage": "props, structures, decor ; ce sont les entrees mesurables" },
+      "FortPlaysetItemDefinition": { "prefixe": "PID_", "ordre_de_grandeur": 1960, "outil": "search-playsets --type PID", "usage": "devices creatifs et setups ; beaucoup de PID de buildings sont des conteneurs non mesurables" },
+      "ALL": { "outil": "search-playsets --type ALL", "usage": "quand la famille n'est pas connue ; le resultat porte la classe, la lire" }
+    },
+    "devices": {
+      "outil": "Device.ListDeviceAssets (toolset DeviceToolset)",
+      "sortie": "asset_path exact du device, a recopier tel quel dans uefn_path",
+      "exemple_prouve": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner"
+    },
+    "interdits_absolus": ["/Game/Athena", "/Game/Environments"],
+    "raison_interdiction": "FortValidator_FortExposedAssets : les assets Epic non exposes aux createurs font echouer la validation d'ile au lancement de session, meme s'ils s'affichent dans l'editeur",
+    "playsets_editeurs_CRP": {
+      "statut": "couverts par une decision memorisee du pipeline",
+      "condition": "acceptes seulement si l'item est un PPID_/PID_ expose par la recherche ET que le fichier search_<motif>.json est cite dans la palette",
+      "exemples_vus": ["/CRP_Sunburst", "/CRP_Covert", "/CRP_7Village", "/CRP_GardenPartyHG", "/CRP_GasStation"]
+    },
+    "gabarits_grille": {
+      "tuile_defaut_cm": [512, 512, 384],
+      "variante_cm": [512, 512, 512],
+      "note": "la matrice et l'origine appartiennent a Level_Designer (03_grid.json) ; ici only le gabarit de lecture des scales"
+    },
+    "dalle_moteur": {
+      "chemin": "/Engine/BasicShapes/Cube",
+      "size_cm": [100, 100, 100],
+      "scale_pour_une_tuile": [5.12, 5.12, 0.32],
+      "piege": "la taille de la TUILE (512x512x384) n'est jamais la taille de l'asset ; les confondre pose des cubes geants"
+    }
+  },
+  "contrats_outils_de_mesure": {
+    "sequence": ["add_to_scene_from_asset (nom MEASURE_<asset_key>)", "get_actor_bounds (par refPath)", "get_actor_transform (relecture yaw)", "remove_from_scene (par refPath)", "find_actors (pattern MEASURE_) attendu []"],
+    "xform_de_mesure_reelement_utilisee": { "location": [0.0, -20000.0, 5000.0], "rotation": [0.0, 0.0, 0.0], "scale": [1.0, 1.0, 1.0], "snap_to_ground": false },
+    "ecart_documente": "la spec de l'agent 11 indique un spawn en (0,0,0) ; le harnais et le journal mesurent en (0,-20000,5000), hors zone de jeu. La valeur appliquee fait foi, l'ecart est ecrit.",
+    "get_actor_bounds_sortie": "un objet {min, max, isValid} ; size_cm = max - min. isValid true ne veut pas dire non nul : min=max={0,0,0} est une sortie valide mais INEXPLOITABLE.",
+    "pivot_offset_cm": "centre des bounds moins la position de l'acteur, mesure a yaw 0 et yaw relu ; un asset peut etre CENTER, BOTTOM ou BOTTOM_CORNER, ne rien supposer",
+    "device_vs_actor": "un device se pose par PlaceDevice puis se relit : measured.kind vaut 'device' ; un prop ou une structure vaut 'actor'",
+    "tailles_de_reference_observes": "get_actor_bounds ~9 a 40 ms quand l'editeur est calme ; jusqu'a ~330 ms sous charge ; remove_from_scene 151 a 377 ms, un cas a 2373 ms (a relire, pas a ignorer)",
+    "add_tag": "les acteurs de mesure peuvent etre marques (tag UEFNMAP) pour permettre une suppression par lot ; le tag ne remplace pas la relecture"
+  },
+  "lexique_statuts": {
+    "PASSED": "code retour 0 : la commande a tourne, la sortie est exploitable",
+    "FAILED": "code 1 : la commande a tourne et a echoue, l'etat est connu",
+    "OFFLINE": "code 2 : editeur injoignable, rien n'a ete execute",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3 : etat inconnu ; ni succes ni echec net",
+    "ILLEGAL_ASSET_PATH": "chemin hors catalogue expose (/Game/Athena, /Game/Environments) : bloque, non mesure, signale",
+    "PALETTE_EMPTY": "aucun asset demande : je ne choisis pas a la place du design",
+    "NULL_BOUNDS": "bounds min=max={0,0,0} avec isValid true : asset non mesurable, remplace ou bloque",
+    "NO_SEARCH_RESULT": "count 0, results [] : le nom du design n'existe pas dans le catalogue expose",
+    "YAW_NOT_VERIFIED": "yaw relu different du yaw demande : la mesure est rejetee",
+    "DEVICE_ASSET_NOT_FOUND": "aucun asset_path de device trouve pour la fonction demandee : UNKNOWN, jamais un chemin approximatif",
+    "MEASURE_TIMEOUT": "mesure interrompue (code 3) : chercher les orphelins MEASURE_ avant de rejouer",
+    "NO_VERSE_STAGED": "aucun module Verse ecrit ou pret a compiler : etat legitime, a declarer comme tel",
+    "UNKNOWN": "valeur de substitution obligatoire quand aucune sortie ne prouve le champ"
+  },
+  "pieges_catalogue_et_mesure": [
+    {
+      "signe": "Un PID de building (FortPlaysetRoot) rend des bounds nuls avec isValid true.",
+      "cause": "le PID est un conteneur de playset, pas un maillage mesurable ; les bounds du root actor sont vides.",
+      "conduite": "remplacer par le PPID equivalent de la meme famille, mesurer, et tracer le remplacement dans blocked_assets (code NULL_BOUNDS) + replaced_by ; ne jamais ecrire 0 x 0 x 0 comme une taille."
+    },
+    {
+      "signe": "La recherche d'un nom donne du design renvoie count 0 (ex. 'koi', 'cyan fish').",
+      "cause": "le mot employe en design n'est pas un nom d'item du catalogue expose.",
+      "conduite": "une seule reformulation avec un nom de famille (ex. 'neon fish'), fichier de preuve a l'appui ; si toujours 0, NO_SEARCH_RESULT remonte au Producteur pour arbitrage du design."
+    },
+    {
+      "signe": "Un asset demande n'existe que sous /Game/Athena ou /Game/Environments.",
+      "cause": "c'est un asset Epic non expose aux createurs.",
+      "conduite": "ILLEGAL_ASSET_PATH : bloque et signale, avec une alternative PPID/PID proposee. Ne pas 'tester quand meme', la validation d'ile casse au lancement de session."
+    },
+    {
+      "signe": "Apres un WinError 10054 ou un timeout, un acteur MEASURE_ est encore dans l'Outliner.",
+      "cause": "le pont a ete deconnecte entre le spawn et la destruction ; la mesure n'a pas ete completee.",
+      "conduite": "find_actors sur le prefixe MEASURE_, suppression ciblee PAR refPath (jamais par label ni par nom), puis nouvelle mesure. Deux tentatives sans succes = BLOCKED."
+    },
+    {
+      "signe": "Le yaw relu n'est pas le yaw demande apres pose d'un device.",
+      "cause": "PlaceDevice ignore le yaw passe dans la transform (piege prouve, 0 demande / 90 relu).",
+      "conduite": "mesurer a yaw 0 et relire ; si le yaw n'est pas celui attendu, rejeter la mesure. La transform de pose se force ensuite par ActorTools.set_actor_transform puis se relit (c'est le role de place-scene, pas le mien)."
+    },
+    {
+      "signe": "La palette semble correcte mais compile-transforms refuse les entrees.",
+      "cause": "entrees sans measured, ou size_cm/pivot_offset_cm ecrits a la main.",
+      "conduite": "relancer measure-palette sur les entrees refusees ; je n'edite pas une taille pour debloquer un compile."
+    },
+    {
+      "signe": "Deux assets 'semblables' rendent des tailles tres differentes.",
+      "cause": "pivots differents (CENTER vs BOTTOM) et variantes de playset ; l'oeil ne distingue pas les silhouettes.",
+      "conduite": "mesurer les deux, consigner pivot_kind, laisser Level_Designer choisir ; je ne tranche pas au gout."
+    },
+    {
+      "signe": "Une vague de mesures fait ralentir puis lacher l'editeur.",
+      "cause": "16 Go de RAM : les acteurs de mesure non detruits s'accumulent.",
+      "conduite": "detruire immediatement apres chaque bounds, verifier la RAM entre les vagues, et demander une pause a Engine_Programmer si la RAM passe pres du seuil."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Les tailles et les pivots ne sont que des MESURES : le booleen measured:true ne suffit pas, la forme {at, kind} date la mesure.",
+    "La palette est le contrat entre design et construction : Level_Designer ne dessine qu'avec des assets mesures, Physics_Programmer ne pose que ce qui est dans 02_palette.json.",
+    "verse_architecture est publiee dans 02_palette.json : c'est la liste des fichiers .verse autorises et le nom du creative_device principal ; un fichier hors liste ne s'ecrit pas (agents 12/13/14).",
+    "Un fichier .verse a un seul proprietaire ; aucune dependance circulaire entre Gameplay (12), AI (13) et UI (14).",
+    "Je ne laisse jamais un acteur dans le niveau apres la mission : la liberte de mesure se paie par l'obligation de restitution.",
+    "Les substitutions d'assets (PID -> PPID) sont tracees et remontees, jamais presentees comme le choix initial.",
+    "Agent 11 = meme role que Lead_Tech_Director dans les docs de pipeline : le dossier, l'id et le from du handoff restent Lead_Programmer."
+  ],
+  "chiffres_de_reference": {
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "recherches_conservees_par_la_run_de_reference": 50,
+    "assets_de_la_palette_de_reference": 22,
+    "vagues_de_mesure_de_reference": "21:46 (6), 21:54 (12), 22:04 (4), total 22/22 mesures",
+    "appels_de_mesure_de_reference": "4089 get_actor_bounds, 865 get_actor_transform, 134 set_actor_transform, 37 add_tag, 37 remove_from_scene, 35 add_to_scene_from_asset, 2 PlaceDevice",
+    "legalite_de_reference": "06_legality_report.json : 582 acteurs valides, illegal_count 0",
+    "harnais": "python script/uefn_spatial_cli.py <commande> --workspace <absolu> ; tests hors editeur python script/tests/verify.py"
+  }
+}

@@ -11,7 +11,7 @@
     "acces_mcp": "none : ni lecture ni ecriture dans l'editeur, aucun CLI",
     "gates_hitl": "4 gates (1 brief creatif, 2 GDD, 3 architecture technique, 4 avant toute ecriture destructive) ; un agent n'ecrit que PENDING dans un champ de gate",
     "pivots_generator_critic": "Creative_Director (01), Game_Designer (02), Lead_Programmer (11) - UX_UI_Designer n'est pas un pivot, son juge est externe",
-    "legal_uefn": "seuls les assets Creatifs du catalogue sont mobilisables en aval : PPID_ (environ 100 418) et PID_ (environ 1 960) ; /Game/Athena et /Game/Environments font echouer la validation de l'ile",
+    "legal_uefn": "seuls les assets Creatifs du catalogue sont mobilisables en aval : PPID_ (environ 100 418) et PID_ (environ 1 960) ; la legalite se prouve par le validateur UEFN, pas par le prefixe (agent-team/_commun/legalite-assets.md)",
     "frontiere_stable_transitoire": "WP3 p.61 : etat mouvant (project-state.json, handoffs, rapports du run) hors du dossier d'agent"
   },
   "contrats_fichiers": {

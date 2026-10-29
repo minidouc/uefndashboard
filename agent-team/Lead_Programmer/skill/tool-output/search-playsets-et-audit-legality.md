@@ -111,9 +111,13 @@ impression sur la scène. Deux subtilités :
   pour rien — à signaler au Producteur, pas à célébrer.
 - `valid_actors: 582` est un comptage **d'acteurs posés**, pas d'entrées de palette. Les deux
   nombres ne coïncident pas et ne doivent jamais être confondus dans un handoff.
-- Le seul message d'échec qui m'arrête est `ILLEGAL_ASSET_PATH` sur `/Game/Athena/...` ou
-  `/Game/Environments/...`. Un acteur dont le `nativeClass` interne est un `/Game/...` **n'est
-  pas** une illégalité : ce qui compte est le `asset_path` que **j'ai** demandé.
+- Le seul message d'échec qui m'arrête est `ILLEGAL_ASSET_PATH`, c'est-à-dire un chemin cité dans
+  une ligne `AssetCheck: Error … references disallowed object` **postérieure** à la dernière
+  sauvegarde. Un chemin `/Game/...` n'est pas une illégalité en soi : le 2026-10-29, des
+  `/Game/Athena/Items/...` et `/Game/Creative/...` ont passé le validateur pendant que des
+  `/BlastBerryWeapons/...` échouaient (`../../../_commun/legalite-assets.md`).
+- ⚠️ `audit-legality` (§5 ci-dessus) classait par **préfixe** : un `PASSED` de cet audit ne remplace
+  **pas** la lecture du journal du validateur, qui est la seule preuve.
 
 ## 6. Échecs reconnus, codes retour et conduites
 

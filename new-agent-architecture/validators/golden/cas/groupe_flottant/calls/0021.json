@@ -1,0 +1,19 @@
+{
+ "outil": "EditorAppToolset.GetCameraTransform",
+ "rc": 0,
+ "args": {},
+ "payload": {
+  "returnValue": {
+   "location": {
+    "x": -1500.0,
+    "y": 0.0,
+    "z": 300.0
+   },
+   "rotation": {
+    "pitch": -5,
+    "yaw": 0,
+    "roll": 0
+   }
+  }
+ }
+}

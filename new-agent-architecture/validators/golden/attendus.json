@@ -1,0 +1,61 @@
+{
+ "cas": {
+  "sain": [],
+  "chevauchement_justifie": [],
+  "sain_releve_groupee": [],
+  "releve_groupee_acteur_absent": [
+   "integrite_preuves"
+  ],
+  "bornes_falsifiees": [
+   "integrite_preuves"
+  ],
+  "acteur_non_relu": [
+   "integrite_preuves"
+  ],
+  "lot_interrompu": [
+   "integrite_preuves"
+  ],
+  "chevauchement": [
+   "zero_overlap"
+  ],
+  "exception_sans_justification": [
+   "zero_overlap"
+  ],
+  "flottant": [
+   "zero_flottant"
+  ],
+  "groupe_flottant": [
+   "zero_flottant"
+  ],
+  "inaccessible": [
+   "accessibilite"
+  ],
+  "preexistant_supprime": [
+   "preexistants_intacts"
+  ],
+  "save_echoue": [
+   "persistance"
+  ],
+  "improvisation": [
+   "source_coordonnees"
+  ],
+  "item_oublie": [
+   "couverture_plan"
+  ],
+  "capture_mur": [
+   "captures_visuelles"
+  ],
+  "nuit_en_plein_jour": [
+   "captures_visuelles"
+  ],
+  "spawn_non_pose": [
+   "gameplay"
+  ],
+  "capture_absente": [
+   "captures_visuelles"
+  ],
+  "deplace_hors_plan": [
+   "source_coordonnees"
+  ]
+ }
+}

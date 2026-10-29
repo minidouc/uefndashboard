@@ -1,0 +1,126 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-018",
+  "from": "Composer",
+  "to": ["Audio_Director", "Producer_Orchestrator"],
+  "artifact": "13_music.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-18",
+  "summary_short": "Partition contemplative Corpo Plaza : nappe + cue d'arrivee, silences aux kois, support NON_VERIFYE.",
+  "payload": {
+    "direction_recue": {
+      "statut_source": "UNKNOWN",
+      "contrainte_contemplative": "Decision 4 : scene contemplative, ni combat, ni quete, ni economie, ni mecanique annexe.",
+      "ambiances": ["souffle de ville lointain", "neon qui bourdonne"],
+      "signature": "place presque vide : positionnel et rare",
+      "silence": "vide central et kois sans musique.",
+      "interdits_sonores": ["boucle globale permanente", "percussion de combat"],
+      "faisabilite": "UNKNOWN"
+    },
+    "pieces": [
+      {
+        "id": "MUS_CENTRE",
+        "destination": { "kind": "zone_id", "valeur": "Zone_Center" },
+        "forme": "nappe contemplative, courbe plate : montee discrete puis reprise, sans rupture.",
+        "tempo_bpm": { "bpm": 60 },
+        "tonalite": "La mineur dorien",
+        "instrumentation": ["cordes graves", "drone de souffle", "piano rare"],
+        "duree_sec": 96,
+        "boucle": true,
+        "points_entree_sortie": { "entree_sec": 0, "sortie_sec": 90 },
+        "statut": "PARTITION_LIVREE"
+      },
+      {
+        "id": "MUS_ENTREE_SUD",
+        "destination": { "kind": "actor_label", "valeur": "Spawner_Plaza_01" },
+        "forme": "cue one-shot : une note tenue a l'apparition au sud face au nord (timeline t=0).",
+        "tempo_bpm": { "bpm": 56 },
+        "tonalite": "La mineur",
+        "instrumentation": ["drone", "une note de piano"],
+        "duree_sec": 8,
+        "boucle": false,
+        "points_entree_sortie": { "entree_sec": 0, "sortie_sec": 8 },
+        "statut": "A_VERIFIER"
+      }
+    ],
+    "variations": [
+      { "id": "VAR_ENTREE", "piece_ref": "MUS_ENTREE_SUD",
+        "declencheur": { "kind": "EVENEMENT_PIPELINE", "reference": "01_gdd.json gameplay_timeline_sec t=0 : apparition au sud." },
+        "nature": "lance le cue une seule fois." },
+      { "id": "VAR_CIRCULATION", "piece_ref": "MUS_CENTRE",
+        "declencheur": { "kind": "NON_IMPOSEE", "reference": "aucun evenement de gameplay : ni combat, quete, score." },
+        "nature": "nappe sans reactivite." }
+    ],
+    "silences_voulus": [
+      { "destination": { "kind": "zone_id", "valeur": "Zone_West" }, "motif": "koi cyan : ecouter le vide et le bourdonnement." },
+      { "destination": { "kind": "zone_id", "valeur": "Zone_East" }, "motif": "koi orange : meme silence positionnel." }
+    ],
+    "support_lecture": {
+      "statut": "NON_VERIFYE",
+      "device_audio_candidat": "UNKNOWN",
+      "commande_verification": "search-playsets --workspace ws_corpo_plaza --query \"audio player\" --type PID --max 20"
+    },
+    "hors_perimetre": [
+      { "element": "mix global et cartographie", "motif": "Audio_Director (17)." },
+      { "element": "SFX", "motif": "Sound_Designer (19)." },
+      { "element": "voix", "motif": "Voice_Designer (20)." },
+      { "element": "implementation AudioPlayer, triggers, .verse", "motif": "Gameplay/UI_Programmer (12/14)." }
+    ]
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "must_preserve": [
+      "0 musique d'action, 0 couche dynamique liee a un evenement",
+      "piece livree seulement si support declare (ici NON_VERIFYE)",
+      "aucune revendication d'ecoute : session play-in-client non connectee"
+    ],
+    "forbidden": [
+      "aucune coordonnee, aucun /Game/, aucun PPID_/PID_ final impose",
+      "aucune pretention de musique posee/jouee sans recherche catalogue audio"
+    ],
+    "must_ask_producer": [
+      "le support audio est-il verifiable avec un device PID ici ?",
+      "13_audio_direction.json (17) doit-il preexister ?"
+    ]
+  },
+  "golden_example_ref": "skill/exemples/partition-corpo-plaza-contemplative.json",
+  "acceptance": [
+    "toutes_pistes_duree_bornee",
+    "toutes_pistes_tempo_numerique_unite",
+    "toutes_pistes_destination_zone_ou_actor",
+    "toutes_pistes_statut_declare",
+    "variations_declencheur_reel_ou_non_imposee",
+    "support_lecture_statut_declare",
+    "commande_verification_presente_sans_affirmation_de_pose",
+    "aucune_revendication_ecoute",
+    "aucune_reference_asset_audio_non_verifie",
+    "aucune_musique_d_action_ni_couche_gameplay",
+    "perimetre_hors_roles_declare",
+    "acces_mcp_none"
+  ],
+  "next_step_hint": "Audio_Director (17) arbitre mix et cartographie. Le Producer remonte, jamais le Composer.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - forme attendue de 13_music.json (partition, jamais une ecoute)",
+    "source": "Journal corpo-plaza : decision 4 (S2), 9 zones + timeline 0/1/5 (01_gdd.json), 49 requetes dont 0 audio, NO_VERSE_STAGED, session non connectee (S20) ; amont 17/01 non emis.",
+    "pourquoi_il_passe": [
+      "support NON_VERIFYE + commande : ni pose ni ecoute revendiquees",
+      "destination zone_id ou actor_label, tempo BPM, duree bornee",
+      "une variation a declencheur reel (t=0), l'autre NON_IMPOSEE"
+    ],
+    "regle_de_troncature": "12 criteres sur 12 revendiques : aucun n'a ete retire pour faire rentrer la troncature. Ce qui est tronque est la matiere (2 pieces sur la couche prevue, 2 variations, 2 silences sur les 9 zones).",
+    "criteres_revendiques": [
+      "toutes_pistes_duree_bornee : 96 s et 8 s, toutes deux sous le plafond du schema (duree_sec maximum 600) ; les deux pieces portent points_entree_sortie",
+      "toutes_pistes_tempo_numerique_unite : tempo_bpm 60 et 56, valeur numerique avec l'unite dans la cle",
+      "toutes_pistes_destination_zone_ou_actor : Zone_Center (zone_id relu dans 01_gdd.json) et Spawner_Plaza_01 (actor_label unique de 04_devices.json) ; 0 coordonnee dans le payload",
+      "toutes_pistes_statut_declare : PARTITION_LIVREE pour la nappe, A_VERIFIER pour le cue ; le statut fait partie du schema, pas d'une note",
+      "variations_declencheur_reel_ou_non_imposee : VAR_ENTREE sur EVENEMENT_PIPELINE (01_gdd.json gameplay_timeline_sec t=0), VAR_CIRCULATION sur NON_IMPOSEE avec motif",
+      "support_lecture_statut_declare : NON_VERIFYE avec device_audio_candidat UNKNOWN",
+      "commande_verification_presente_sans_affirmation_de_pose : la commande search-playsets est ecrite et non executee ; must_preserve subordonne toute livraison a un support declare",
+      "aucune_revendication_ecoute : session play-in-client non connectee (journal S20) ; 0 assertion d'ecoute dans le payload",
+      "aucune_reference_asset_audio_non_verifie : 0 occurrence de 'PID_', 'PPID_' ou '/Game/' dans le payload (verifiee par comptage) ; 'PID' n'apparait que comme argument de la commande a lancer, et dans constraints.forbidden comme interdiction",
+      "aucune_musique_d_action_ni_couche_gameplay : interdits_sonores nomme la boucle permanente et la percussion de combat ; aucune variation reactive",
+      "perimetre_hors_roles_declare : 4 elements hors perimetre, chacun avec son motif et son destinataire (17, 19, 20, 12/14)",
+      "acces_mcp_none : constraints.acces_mcp = 'none' ; aucun champ n'affirme d'ecriture dans l'editeur"
+    ]
+  }
+}

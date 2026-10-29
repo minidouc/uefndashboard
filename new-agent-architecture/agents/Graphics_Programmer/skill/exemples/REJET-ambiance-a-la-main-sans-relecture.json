@@ -1,0 +1,82 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-015",
+  "from": "Graphics_Programmer",
+  "to": ["Producer_Orchestrator"],
+  "artifact": "05_visuals.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-09",
+  "summary_short": "Ambiance terminee : la scene est superbe, lumiere chaude, brouillard epais et ciel saccade sur le theme CP77, tout est conforme au brief, prete pour la publication.",
+  "payload": {
+    "visual_devices": [
+      {
+        "actor_label": "Skydome Eclairage 01",
+        "role_visuel": "ciel_skybox",
+        "asset_path": "/Game/Athena/Architectural/Environments/Skydome_Corporate.Skydome_Corporate",
+        "placement_mode": "WORLD",
+        "status": "placed",
+        "consigne_dans_05_visuals": true,
+        "properties_tentees": [
+          { "property": "TimeOfDay", "target": 19.5, "read_back": null, "status": "RELUE_CONFORME" }
+        ]
+      },
+      {
+        "actor_label": "Fog_Epaisseur_Plaza",
+        "role_visuel": "brouillard",
+        "asset_path": "/Game/Environments/FogVolume.FogVolume",
+        "placement_mode": "TILE_ANCHOR",
+        "tile": [11, 11, 0],
+        "ref_path": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest.claudtest:PersistentLevel.FogVolume_C_UAID_01",
+        "status": "placed",
+        "consigne_dans_05_visuals": true,
+        "properties_tentees": [
+          { "property": "fogDensity", "target": 0.04, "read_back": 0.0, "status": "RELUE_CONFORME" }
+        ],
+        "notes": "densite ajustee a la main dans le viewport jusqu'a ce que ce soit joli"
+      }
+    ],
+    "properties": {
+      "report": "07_properties_report.json",
+      "status": "PASSED",
+      "error_count": 2,
+      "applied": [
+        { "actor": "Skydome Eclairage 01", "property": "TimeOfDay", "written": 19.5, "read_back": 19.5 }
+      ],
+      "errors": [],
+      "not_placed": [],
+      "scope": "ambiance appliquee"
+    },
+    "snapshot": {
+      "captures": [
+        { "file": "topdown.png", "bytes": 0, "image_lue": false, "observations": "" }
+      ],
+      "verdict": "conforme",
+      "appuye_par": []
+    },
+    "legality": { "report": "06_legality_report.json", "status": "PASSED", "valid_actors": 584, "illegal_count": 0, "illegal_actors": [] }
+  },
+  "constraints": {
+    "must_preserve": [],
+    "forbidden": []
+  },
+  "acceptance": ["c_est_bon", "ambiance_ok", "tout_conforme"],
+  "next_step_hint": "Vous pouvez publier la carte, l'ambiance est validlee.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - le livrable est REJETE par le validateur Python, ne jamais l'imiter",
+    "motifs_de_rejet": [
+      "asset_path '/Game/Athena/...' et '/Game/Environments/...' : le motif du schema exige un identifiant PID_ ou PPID_ ; ces chemins non exposes font echouer la validation d'ile au lancement de session (ILLEGAL_ASSET_PATH).",
+      "actor_label 'Skydome Eclairage 01' avec des espaces : pattern [A-Za-z0-9_]+ refuse, et la cle de _placed.json devient introuvable a la relance.",
+      "placement_mode 'WORLD' sans world_location_cm : l'ancre du device n'existe nulle part, la pose n'est pas reproductible.",
+      "status 'placed' sans ref_path pour le meme device : rien n'est persiste, donc la relance creeront des doublons - l'interdit 'aucun device non consigne' est la pour ca.",
+      "TimeOfDay declare RELUE_CONFORME avec read_back null : une valeur non relue n'est pas appliquee (le CLI aurait rendu PROPERTY_UNREADABLE).",
+      "fogDensity target 0.04 / read_back 0.0 declare RELUE_CONFORME : PROPERTY_MISMATCH, et la note 'ajustee a la main dans le viewport' est un reglage hors spec que le prochain batch ecrase.",
+      "07_properties_report.json incoherent : error_count 2 avec status PASSED, applied non vide mais errors vides, et scope 'ambiance appliquee' qui a supprime la mention des devices Verse non couverts.",
+      "snapshot sans preuve : bytes 0, image_lue false, observations vides, appuye_par [] et verdict 'conforme'. Un verdict doit etre une lecture d'image ; ici il n'y a meme pas d'image.",
+      "legalite sur-vendue : 584 acteurs declares alors que le rapport relu du run rend 582 - deux acteurs ajoutes a la main (skydome, brouillard) ne sont dans aucun rapport.",
+      "acceptance en criteres subjectifs (c_est_bon, ambiance_ok, tout_conforme) au lieu des criteres cochables (devices_tous_consignes, asset_paths_pid_ou_ppid, camera_relue, png_lu...).",
+      "summary_short en auto-evaluation ('superbe', 'conforme au brief') : output-only exige des faits relus ; WP4 p.20 classe le succes annonce sans preuve parmi les causes d'echec multi-agent.",
+      "next_step_hint prescriptif et fautif ('vous pouvez publier') : publication = gate HITL utilisateur via Producer, et 'validlee' est une faute de frappe dans un champ que le Producteur lit en entier.",
+      "contraintes must_preserve et forbidden vides : le handoff ne dit plus ce qui ne doit pas etre touche, la passerelle de securite n'a plus rien a comparer."
+    ]
+  }
+}

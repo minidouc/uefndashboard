@@ -76,7 +76,7 @@
     "must_preserve": ["Spawner_Plaza_01", "Bassin_Memorial_01", "Plateforme_21x21"],
     "forbidden": [
       "aucun acteur hors spec dans le niveau",
-      "aucun chemin /Game/Athena ou /Game/Environments",
+      "aucun chemin hors 02_palette.json ; aucun chemin refuse par le validateur UEFN",
       "aucun deplacement manuel dans l'Outliner"
     ]
   },

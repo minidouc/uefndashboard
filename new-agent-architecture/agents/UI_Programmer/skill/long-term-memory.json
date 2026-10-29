@@ -1,0 +1,131 @@
+{
+  "$id": "uefn.longterm.UI_Programmer.v1",
+  "agent": "UI_Programmer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contrats d'outils, un lexique de statuts, des pieges signe/cause/conduite et des decisions de pipeline actees.",
+  "langue": "fr",
+  "constantes_interface": {
+    "fichiers_possedes": ["ui_hud.verse", "ui_menus.verse"],
+    "source_de_la_liste": "02_palette.json, section verse_architecture. Sur le run de reference (Corpo Plaza 2026-10-24) la palette ne porte que _comment et assets : verse_architecture = ABSENT, donc la liste des fichiers autorises vaut UNKNOWN tant que Lead_Programmer ne la publie pas.",
+    "contenu_attendu_du_hud": ["score", "or", "timers", "barre de vie", "barre de shield", "cooldown", "progression"],
+    "contenu_attendu_des_menus": ["menu principal", "reglages", "ecran de fin de partie"],
+    "widgets_cites_par_la_spec": ["player_ui", "canvas", "text_block"],
+    "statut_des_widgets_cites": "UNKNOWN cote editeur : la campagne de tests du 2026-10-19 et le run du 2026-10-24 n'ont ecrit AUCUN .verse et n'ont donc jamais compile ces widgets. Verifier la signature dans le digest (Verse.Grep / Verse.ReadFile) avant d'ecrire.",
+    "navigation_menu": "evenements d'input du gameplay (input_trigger_device, boutons) ; pas de channel invente",
+    "types_editables_primitifs": ["logic", "bool", "int", "float", "string", "message", "locale", "type"],
+    "regle_editable": "un @editable de type primitif est un PARAMETRE (un reglage), pas une cible : aucune erreur s'il n'a pas d'actor_label. Seules les references classees ACTEUR sans refPath sont signalees dans without_target.",
+    "convention_nommage": "le nom de chaque @editable est identique a l'actor_label du device dans 04_devices.json (verse-qa-standard.md section 1)",
+    "import_verse_valides": [
+      "using { /Fortnite.com/Devices }",
+      "using { /Fortnite.com/Characters }",
+      "using { /Verse.org/Simulation }",
+      "using { /UnrealEngine.com/Temporary/Diagnostics }",
+      "using { /UnrealEngine.com/Temporary/SpatialMath }"
+    ],
+    "syntaxe_rappelee": "variable mutable : var Nom : type = valeur puis set Nom = ... ; Sleep() seulement dans une fonction <suspends> ou un spawn{}"
+  },
+  "contrats_outils": {
+    "point_entree_unique": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]",
+    "serveur_mcp": "http://127.0.0.1:8000/mcp par defaut ; le pont actif observe sur le run etait 8001 (export UEFN_MCP_URL=http://127.0.0.1:8001/mcp avant chaque commande shell)",
+    "codes_retour": {
+      "0": "PASSED - continuer",
+      "1": "FAILED ou partiel - l'appel A ETE TRAITE : relire l'etat avant de rejouer",
+      "2": "OFFLINE - rien n'a ete execute",
+      "3": "TIMEOUT / etat inconnu - relire l'etat, jamais relancer a l'aveugle"
+    },
+    "journalisation": "chaque appel CLI est trace dans <workspace>/_mcp_calls.jsonl ; un appel direct via mcp_client.py ne l'est qu'avec --log ou UEFN_MCP_LOG",
+    "workspace": "toujours HORS du skill (un workspace a l'interieur est refuse : WORKSPACE_INSIDE_SKILL)",
+    "verse_scan": "verse-scan [--root R] [--recursive] -> Verse.ListFiles -> _verse_files.json ; une liste vide ne prouve PAS l'absence de .verse",
+    "verse_grep": "verse-grep --pattern P | --symbols A,B [--glob G] -> _verse_grep.json ; FAILED si un symbole manque ; un Grep vide ne prouve pas que l'API n'existe pas",
+    "verse_write": "verse-write --file F --path P : sans --i-agree-to-modify-project -> CONSENT_REQUIRED (code 1, rien n'ecrit) ; avec : WriteFile puis ReadFile, historique _verse_written.json, champ read_back_matches",
+    "verse_build": "verse-build exige Session.GetSessionStatus == Disconnected ; sinon SESSION_CONNECTED (code 1) et AUCUN appel d'editeur. BuildAll prouve uniquement sur projet vide, environ 6 s.",
+    "preuve_build": "PASSED exige diagnostics sans Error ET une ligne de succes recente dans Logs.GetLogEntries category VerseBuild ; les lignes sont localisees et le log garde les builds precedents : comparer l'horodatage",
+    "list_editables": "list-editables [--live --device LABEL] [--apply] -> 10_editables.json ; --live/--apply exigent que le device Verse soit pose (DEVICE_NOT_PLACED)",
+    "wire_devices": "wire-devices [--dry-run] [--allow-empty] : GetBindingOptions sur la SOURCE valide event et function, AddEventBinding (IDEMPOTENT : rejouer apres erreur partielle est sans risque), puis relecture ListEventBindings sur la CIBLE",
+    "binding_sans_declare": "aucun bindings dans 04_devices.json -> NO_BINDING_DECLARED (code 1) ; avec --allow-empty -> 08_wiring_report.json PASSED, wired: [], scope qui explique",
+    "cablage_par_canal": "NON PROUVE : un essai anterieur avec un entier a echoue, le champ attendrait un GameplayTagContainer",
+    "regles_non_negociables": [
+      "Un seul appel MCP a la fois, jamais en parallele, jamais deux agents sur l'editeur.",
+      "Ne tenir pour vrai que ce qui a ete relu par un second appel ; une reponse vide ([] / null / false) vaut 'inconnu'.",
+      "Ecrire dans le code source du projet (VerseToolset.WriteFile) est DANGEREUX : accord explicite (gate HITL) puis relecture.",
+      "Ne jamais lancer verse-build pendant une session connectee : comportement non teste.",
+      "Ne jamais modifier un fichier .verse d'un autre agent, meme pour un import manquant.",
+      "Ne jamais modifier un fichier du skill pendant une run."
+    ]
+  },
+  "lexique_statuts": {
+    "NO_VERSE_STAGED": "aucun .verse stage dans workspace/verse/ (code 1) : sans objet si la scene est contemplative, pas une erreur a deguiser",
+    "CONSENT_REQUIRED": "verse-write sans --i-agree-to-modify-project : rien n'est ecrit, montrer le code et demander l'accord",
+    "FILE_NOT_FOUND": "verse-write : le fichier local --file n'existe pas",
+    "SESSION_CONNECTED": "une session de jeu tourne : verse-build et ecritures lourdes sont bloques",
+    "DEVICE_NOT_PLACED": "list-editables --live/--apply exige le device Verse pose (ou trouvable via ListDeviceAssets avec --apply)",
+    "BINDING_EVENT_UNKNOWN": "l'evenement demande n'est pas dans sourceEvents de GetBindingOptions sur la source",
+    "BINDING_FUNCTION_UNKNOWN": "la fonction demandee n'est pas dans targetFunctions de GetBindingOptions",
+    "BINDING_NOT_READ_BACK": "AddEventBinding appele mais lien absent de ListEventBindings sur la CIBLE : non prouve",
+    "EDITABLE_PROPERTY_NOT_FOUND": "nom de @editable absent du schema ListDeviceProperties du device Verse",
+    "EDITABLE_READBACK_MISMATCH": "value cable puis relue differente : le row reste MANUEL et tombe dans wiring_errors",
+    "SET_DEVICE_PROPERTY_FAILED": "Device.SetDeviceProperty a renvoye une erreur : statut unknown sur un creative_device",
+    "PROPERTY_NOT_FOUND": "le nom demande n'existe pas dans list_properties : ne jamais inventer (closest = nearest)",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3, etat inconnu : relire avant tout nouvel appel",
+    "OFFLINE": "code 2, editeur injoignable : rien n'a ete execute",
+    "DRY_RUN": "statut rendu par --dry-run : jamais un PASSED"
+  },
+  "pieges_signe_cause_conduite": [
+    {
+      "signe": "09_verse_report.json affiche diagnostics_count: 0 et un statut PASSED alors que rien n'a compile.",
+      "cause": "BuildAll renvoie une liste vide quand le projet ne contient aucun .verse stage ; le log VerseBuild conserve en plus les builds precedents.",
+      "conduite": "Verifier la ligne de succes RECENTE (comparer l'horodatage a celui de l'appel) ; sur le run de reference les lignes rendues sont 'Compilation terminee.', 'Liaison terminee.', 'SUCCES -- Version terminee.' et le scope du rapport le dit explicitement."
+    },
+    {
+      "signe": "verse-build refuse (SESSION_CONNECTED) alors que l'editeur semble libre.",
+      "cause": "GetSessionStatus renvoie Connecting / UpdatingContent / Connected : le comportement de BuildAll session connectee n'a jamais ete teste.",
+      "conduite": "STOP, aucun appel d'editeur ; attendre un retour Disconnected relu ; ne pas annoncer le succes quand meme (c'est le motif de rejet type de ce role)."
+    },
+    {
+      "signe": "Le HUD affiche un score ou de l'or calcules dans ui_hud.verse.",
+      "cause": "L'agent a reimplente la logique d'un autre role faute d'avoir verifie l'exposition de la fonction.",
+      "conduite": "Interdit par contrat : verser la demande au Producteur pour que 12/13 exposent la fonction ; le handoff marque data_source UNKNOWN et le handoff est BLOCKED."
+    },
+    {
+      "signe": "Le fichier relu ne contient pas le texte ecrit (read_back_matches: false).",
+      "cause": "Ecriture partiellement appliquee ou chemin Verse mal resolu (le CLI retry avec la racine du projet montee par l'editeur quand WriteFile renvoie 'mounted Verse content root').",
+      "conduite": "Ne pas compiler. Rendre le diff au Producteur, re-emettre la mission. Compiler un fichier non relu est explicitement interdit par le CLI (champ 'next')."
+    },
+    {
+      "signe": "list-editables rend une table avec des lignes sans cible.",
+      "cause": "Confusion ACTEUR / PARAMETRE : un @editable de type primitif n'a pas de refPath, ce n'est pas un cable manquant.",
+      "conduite": "Ne signaler dans without_target que les lignes ACTEUR ; les PARAMETRE sont des reglages. Le scope de 10_editables.json doit etre cite tel quel."
+    },
+    {
+      "signe": "Un lien parait sur le device source et nulle part ailleurs.",
+      "cause": "ListEventBindings s'appelle sur la CIBLE : le lien n'existe que la.",
+      "conduite": "Relire sur la cible ; sans relecture, errors BINDING_NOT_READ_BACK. AddEventBinding etant idempotent, rejouer l'appel est sur."
+    },
+    {
+      "signe": "verse-scan ou le schema d'un toolset rend une sortie huge.",
+      "cause": "L'inventaire du projet (606 entrees de repertoires sur le run de reference) et les schemas complets saturent la fenetre.",
+      "conduite": "Sortie redirigee vers _verse_files.json / fichier tmp, lecture ciblee ; ne jamais coller la sortie brute dans un handoff. GetDynamicInputSchema hors session ne doit JAMAIS etre appele (crash editeur connu) ; pagination forcee a 200."
+    },
+    {
+      "signe": "Le @editable d'un device Verse ne se cable pas par MCP.",
+      "cause": "Device.SetDeviceProperty est UNKNOWN sur un creative_device (le rapport de propriete le dit : 'outil inconnu, jamais teste sur un creative_device').",
+      "conduite": "Presenter le cablage en MANUEL dans 10_editables.json et l'annoncer honnetement ; ne jamais marquer AUTO_VERIFIED sans relecture GetDeviceProperties."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "L'UI vient APRES les agents 12 et 13 : elle consomme leurs fonctions publiques, elle ne les redessine pas.",
+    "Les noms de fonctions et d'evenements consommes sont recopies des rapports amont (09_verse_report.json, 10_editables.json) puis verifies dans le digest ; aucun nom n'est reconstitue.",
+    "Ecrire un .verse est une ecriture dans le code source du projet : gate HITL, puis relecture, puis compilation seulement si la relecture est conforme.",
+    "Une scene sans Verse ni cablage est un etat legitime : NO_VERSE_STAGED et wire-devices --allow-empty se documentent dans le scope, pas dans un faux succes.",
+    "Un livrable technique n'est jamais auto-valide : les criteres d'acceptation sont cochables par un validateur Python.",
+    "Le perimetre de l'agent est le code d'interface : aucun acteur deplace, aucune propriete de device de gameplay reglee, aucune ambiance."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur observes sur le run documente du 2026-10-24 (scene contemplative, aucun .verse ecrit). Ce sont des echelles, pas des cibles.",
+    "verse_scan_entrees": 606,
+    "builds_precedents_dans_le_log": 5,
+    "lignes_de_log_retenues_par_defaut": 15,
+    "duree_buildall_proven": "environ 6 s sur un projet vide",
+    "editable_count_attendu_scene_sans_module": 0,
+    "lignes_du_log_versebuild": "Compilation terminee / Liaison terminee / SUCCES -- Version terminee (lignes localisees)"
+  }
+}

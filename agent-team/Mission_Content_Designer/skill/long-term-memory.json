@@ -89,7 +89,7 @@
       "conduite": "fin.statut = atteignable avec condition et seuil, ou abandon.possible = true avec consequence ; sinon BLOCKED."
     },
     {
-      "signe": "Le livrable contient un chemin /Game/Athena/... pour un trigger, ou un PPID_ copie d'un autre role.",
+      "signe": "Le livrable contient un chemin d'asset (/Game/..., PPID_...) pour un trigger, ou un PPID_ copie d'un autre role.",
       "cause": "Confusion des niveaux d'abstraction : un designer de contenu cite des roles de device, pas des references d'assets ; /Game est illegal et fait echouer la validation d'ile.",
       "conduite": "dispositif_reel = device_class generique (player_spawner_device) + statut_ref ; tout chemin d'asset est retire avant envoi."
     },

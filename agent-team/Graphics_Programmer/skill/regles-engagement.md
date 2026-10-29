@@ -81,7 +81,7 @@
 | `06_audit_report.json` absent, `FAILED`, ou `source: "spec"` | géométrie non prouvée → `Physics_Programmer` avant d'habiller |
 | `preflight_ok.json` ≠ READY / pont injoignable (code 2) | éditeur non opérable |
 | Aucun device `PID_`/`PPID_` correspondant à l'effet demandé (skydome, brouillard, post-process) | plafond catalogue : contournement à valider par `Engine_Programmer` |
-| Chemin hors catalogue (`/Game/Athena`, `/Game/Environments`) | `ILLEGAL_ASSET_PATH` : non posé, signalé |
+| Chemin refusé par le validateur (`disallowed` après sauvegarde, ou `refuses` du catalogue commun) | `ILLEGAL_ASSET_PATH` : non posé, signalé |
 | `PROPERTY_NOT_FOUND` sur la seule propriété qui porterait l'effet | l'outil ne peut pas faire ce que demande le thème → question de design au Producteur |
 | 2 passes de réglage sans delta relu sur la capture | arrêter et rendre compte : le moteur n'écoute pas cette propriété |
 | Capture illisible (surexposée, coupée) et correction caméra impossible | la preuve visuelle est absente : rien n'est annoncé |

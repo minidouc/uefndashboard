@@ -1,0 +1,12 @@
+{
+ "outil": "SceneTools.add_to_scene_from_class",
+ "rc": 0,
+ "args": {
+  "name": "CP_SPAWN_S0"
+ },
+ "payload": {
+  "returnValue": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_SPAWN_S0"
+  }
+ }
+}

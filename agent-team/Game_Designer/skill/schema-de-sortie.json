@@ -287,8 +287,8 @@
         "uefn_path": {
           "type": "string",
           "minLength": 6,
-          "pattern": "^(?!.*(/Game/Athena|/Game/Environments)).*(PID_|PPID_|/Engine/BasicShapes/).*$",
-          "description": "Candidat Creatif issu des recherches catalogue reellement lancees, ou /Engine/BasicShapes/ pour la structure de sol. Le chemin definitif reste a certifier par Lead_Programmer (mesure) : une couleur ou une silhouette non certifiee s'ecrit dans notes, pas dans le nom."
+          "pattern": "^/[A-Za-z0-9_./-]+$",
+          "description": "Candidat issu du catalogue commun (agent-team/_commun/catalogue-verifie.json -> acceptes) ou des recherches catalogue reellement lancees, ou /Engine/BasicShapes/ pour la structure de sol. Le prefixe ne prouve ni la legalite ni l'illegalite. Le chemin definitif reste a certifier par Lead_Programmer (mesure) : une couleur ou une silhouette non certifiee s'ecrit dans notes, pas dans le nom."
         },
         "category": {
           "enum": ["STRUCTURE_FLOOR", "STRUCTURE_WALL", "PROP", "DEVICE_SPAWNER", "VFX", "UNKNOWN"]

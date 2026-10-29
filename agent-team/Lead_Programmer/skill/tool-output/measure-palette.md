@@ -84,8 +84,9 @@ l'aveugle (risque : deux `MEASURE_basin` dans la scène, donc deux mesures diver
 obligatoire : `find_actors` → suppression par `refPath` → ré-inventaire → nouvelle mesure.
 
 ⚠️ Le `nativeClass` d'un acteur **peut** être un `/Game/...` (ici
-`/Game/Building/ActorBlueprints/...`) **sans** que la palette cite ce chemin : ce qui est illégal,
-c'est le `asset_path` demandé (`/Game/Athena`, `/Game/Environments`).
+`/Game/Building/ActorBlueprints/...`) **sans** que la palette cite ce chemin. Un `/Game/...` n'est
+d'ailleurs **pas** illégal en soi : seul le journal du validateur tranche
+(`../../../_commun/legalite-assets.md`).
 
 ## 5. Yaw : la condition qui invalide une mesure
 
@@ -103,7 +104,7 @@ pose (`set_actor_transform` puis relecture) appartient à `place-scene`, pas à 
 | `WinError 10054` pendant la mesure d'un asset | 3 | relecture `find_actors MEASURE_` + suppression par `refPath` avant tout rejou |
 | `{"status":"FAILED","error_kind":"TIMEOUT_OUTCOME_UNKNOWN","error":"timeout 60.0s : timed out"}` | 3 | état inconnu : on ne déclare **aucune** taille pour l'asset interrompu |
 | bounds `min == max == {0,0,0}` avec `isValid: true` | 1 (à mon niveau) | `NULL_BOUNDS` → remplacement PPID, jamais `size_cm: [0,0,0]` |
-| `ILLEGAL_ASSET_PATH` (`/Game/Athena`, `/Game/Environments`) | 1 | bloqué et signalé, alternative proposée |
+| `ILLEGAL_ASSET_PATH` (cité `disallowed` dans le journal après sauvegarde, ou dans `refuses` du catalogue commun) | 1 | bloqué et signalé, alternative `acceptes` proposée |
 | `PALETTE_EMPTY` (aucun `requested_assets`) | 1 | je ne choisis pas les assets : `BLOCKED` vers le design |
 | « Output too large » (sortie > 4000 tokens, ex. 790,8 Ko) | 0 | contenu gardé sur fichier, seul le chemin va dans le handoff |
 

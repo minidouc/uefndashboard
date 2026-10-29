@@ -1,0 +1,474 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.AI_Programmer.v1",
+  "title": "AI_Programmer -- contrat du livrable 09_verse_report.json (mecaniques temps reel)",
+  "description": "Schema de sortie de l'agent AI_Programmer (agent 13). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte la compilation relue des fichiers de SON perimetre (special_mechanics.verse, custom_combat_camera.verse, ai_entities.verse), le creative_device des mecaniques pose dans le .umap, la table @editable -> refPath, les bindings relus sur la cible, les evenements rendus a l'agent 12 et les valeurs exposees a l'agent 14. Validable par un validateur Python, jamais par le modele.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "AI_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": ["09_verse_report.json", "10_editables.json", "08_wiring_report.json"],
+      "description": "L'artefact faisant foi est 09_verse_report.json sur le perimetre du role 13."
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report",
+        "files",
+        "mechanics",
+        "mechanics_device",
+        "editables",
+        "wired_devices_count",
+        "events_to_agent12",
+        "values_for_agent14"
+      ],
+      "properties": {
+        "report": { "$ref": "#/definitions/verse_report" },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Les .verse de MON perimetre, ecrits puis relus. Un fichier d'un autre agent (game_manager_device.verse, ui_hud.verse) n'a pas a apparaitre ici : sa presence est un motif de rejet.",
+          "items": { "$ref": "#/definitions/verse_file" }
+        },
+        "mechanics": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Une entree par mecanique demandee par 01_gdd.json / 01_systems.json : etat reel, pas etat voulu.",
+          "items": { "$ref": "#/definitions/mechanic" }
+        },
+        "character_effects": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/character_effect" },
+          "description": "Effets appliques au fort_character, aux props ou aux PNJ, avec leur preuve d'API. Un symbole NON_VERIFIE doit etre en call_state 'reserve'."
+        },
+        "mechanics_device": { "$ref": "#/definitions/umap_device" },
+        "editables": { "$ref": "#/definitions/editables_report" },
+        "wiring": { "$ref": "#/definitions/wiring_report" },
+        "wired_devices_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Nombre de references @editable reellement relues cablees (AUTO_VERIFIED). 0 est une valeur licite et doit etre annoncee comme telle, jamais comme un succes."
+        },
+        "events_to_agent12": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Evenements que le monde reel envoie a la boucle globale (ex. objet vole depose = +500 Or). L'agent 12 decide du montant : aucun calcul economique ici."
+        },
+        "values_for_agent14": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/value_row" },
+          "description": "Valeurs brutes exposees a l'UI (cooldown restant, score, etat d'une capacite). 14 ne recalcule rien."
+        },
+        "devices_bound": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/device_ref" },
+          "description": "Devices de 04_devices.json utilises par mes mecaniques, avec le refPath relu."
+        },
+        "reports": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Miroir des autres rapports produits (07_properties_report.json, _verse_written.json, 12_session_report.json). Un champ 'scope' doit dire ce qui n'a PAS ete verifie."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["only_verse_files", "must_not_move", "forbidden"],
+      "properties": {
+        "only_verse_files": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z0-9_][a-z0-9_]*\\.verse$" },
+          "description": "Liste declaree par 02_palette.json / verse_architecture (ou 01_gdd.json / verse_modules) pour le role 13."
+        },
+        "must_not_move": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "actor_label existants (props, murs, devices) dont la transform est interdite de changement."
+        },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "session_state_required": { "const": "Disconnected" },
+        "tuning_source": { "type": "string" },
+        "zones_from_grid": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "zone_id de 03_grid.json servant de zones d'action ou de spawn aux mecaniques."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "verse_compile_0_error",
+          "success_line_present",
+          "files_within_allowed_scope",
+          "device_placed_in_umap",
+          "bindings_on_target",
+          "events_exposed_to_agent_12",
+          "session_disconnected_before_build",
+          "files_rewritten_read_back",
+          "0_editable_without_target",
+          "refpath_from_04_devices",
+          "no_economy_recomputed",
+          "no_ui_file_written",
+          "no_actor_moved",
+          "playtest_claim_backed_by_session_report"
+        ],
+        "description": "Criteres cochables par un validateur Python : chaque critere est une assertion sur un champ du payload, pas un jugement."
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "verse_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timestamp",
+        "command",
+        "session",
+        "status",
+        "diagnostics_count",
+        "error_diagnostics",
+        "build_log_lines",
+        "success_lines",
+        "scope"
+      ],
+      "description": "Miroir exact de 09_verse_report.json ecrit par verse-build. Une liste de diagnostics vide NE SUFFIT PAS : une ligne de succes horodatee apres l'appel est exigee. Sinon le handoff est BLOCKED et rien n'est annonce compile.",
+      "properties": {
+        "timestamp": { "type": "string" },
+        "command": { "const": "verse-build" },
+        "session": { "const": "Disconnected" },
+        "status": { "const": "PASSED" },
+        "diagnostics_count": { "type": "integer", "const": 0 },
+        "error_diagnostics": { "type": "array", "maxItems": 0 },
+        "warnings": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "build_log_lines": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "success_lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Ligne localisee du log VerseBuild (' Compilation terminee. ', ' Liaison terminee. ', ' SUCCES -- Version terminee. '). Le log garde les builds precedents : l'horodatage doit etre posterieur au timestamp de l'appel."
+        },
+        "compiled_project_files": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "BuildAll compile TOUT le Verse du projet, pas seulement mon perimetre : ce compteur le rappelle."
+        },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "verse_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_name", "class_name", "owner_role", "declared_in_scope", "read_back_matches", "editable_names", "public_functions"],
+      "properties": {
+        "file_name": { "type": "string", "pattern": "^[a-z0-9_][a-z0-9_]*\\.verse$" },
+        "verse_project_path": { "type": "string", "minLength": 1 },
+        "class_name": { "type": "string", "pattern": "^[a-z_][a-z0-9_]*$" },
+        "class_kind": { "enum": ["creative_device", "library", "other"] },
+        "owner_role": {
+          "const": "AI_Programmer",
+          "description": "Le fichier est declare pour le role 13 dans la repartition de verse_architecture. game_manager_device.verse = 12, ui_hud.verse = 14."
+        },
+        "declared_in_scope": {
+          "const": true,
+          "description": "Figure dans 02_palette.json / verse_architecture (ou, a defaut, dans 01_gdd.json / verse_modules). false = hors perimetre : handoff BLOCKED."
+        },
+        "read_back_matches": {
+          "const": true,
+          "description": "verse-write a ecrit puis Verse.ReadFile a relu le texte (historique _verse_written.json)."
+        },
+        "bytes": { "type": "integer", "minimum": 1 },
+        "editable_names": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+          "description": "Chaque @editable d'acteur porte exactement l'actor_label de 04_devices.json."
+        },
+        "public_functions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9_]*$" }
+        },
+        "mechanics_covered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "mechanic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "kind", "status", "verse_file", "devices", "playtest"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+        "kind": {
+          "enum": [
+            "signature_loop",
+            "prop_manipulation",
+            "combat_ability",
+            "camera_control",
+            "autonomous_entity",
+            "arena_control",
+            "vfx_sfx_hook"
+          ]
+        },
+        "status": {
+          "enum": ["compiled", "compiled_not_playtested", "blocked", "not_started"],
+          "description": "'compiled' = 0 diagnostic + ligne de succes relue sur ce fichier. Aucun statut n'affirme un comportement vu en jeu."
+        },
+        "verse_file": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z0-9_][a-z0-9_]*\\.verse$",
+          "description": "Fichier porteur ; null quand la mecanique n'a pas ete ecrite."
+        },
+        "devices": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+          "description": "actor_label de 04_devices.json utilises. Vide = mecanique bloquee faute de device pose."
+        },
+        "playtest": {
+          "enum": ["AUCUNE_SESSION", "REPORT_LU", "UNKNOWN"],
+          "description": "'TESTE_EN_JEU' n'existe pas : sans 12_session_report.json relu, rien ne peut etre annonce observe en jeu."
+        },
+        "blocked_reason": { "type": "string", "maxLength": 300 },
+        "notes": { "type": "string", "maxLength": 300 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["blocked", "not_started"] } }, "required": ["status"] },
+          "then": { "required": ["blocked_reason"] }
+        }
+      ]
+    },
+    "character_effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api", "target", "digest_status", "call_state"],
+      "properties": {
+        "api": { "type": "string", "minLength": 3 },
+        "target": { "enum": ["fort_character", "prop", "npc", "device", "camera", "vfx"] },
+        "digest_status": {
+          "enum": ["VERIFIE", "NON_VERIFIE", "UNKNOWN"],
+          "description": "'VERIFIE' exige une preuve citee dans 'proof' : resultat verse-grep relu, ou compilation PASSED anterieuse appelant deja le meme symbole."
+        },
+        "proof": { "type": "string", "maxLength": 300 },
+        "call_state": {
+          "enum": ["appele", "reserve"],
+          "description": "'appele' n'est licite que si digest_status = VERIFIE. Sinon la ligne est ecrite et documentee, pas appelee."
+        },
+        "read_back": { "type": "string", "maxLength": 200 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "call_state": { "const": "appele" } }, "required": ["call_state"] },
+          "then": { "required": ["proof"], "properties": { "digest_status": { "const": "VERIFIE" } } }
+        }
+      ]
+    },
+    "umap_device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["creative_device_class", "placed_in_umap", "placed_by", "actor_label", "ref_path", "wire_state"],
+      "description": "Le creative_device des mecaniques dans le .umap. 'device_placed_in_umap' ne se coche que si placed_in_umap = true ET ref_path une chaine non vide relue ; sinon le critere reste absent de acceptance.",
+      "properties": {
+        "creative_device_class": { "type": "string", "pattern": "^[a-z_][a-z0-9_]*$" },
+        "placed_in_umap": {
+          "type": "boolean",
+          "description": "false = la classe compilee n'est pas encore posee dans le niveau : rien n'est annonce jouable."
+        },
+        "placed_by": { "enum": ["list-editables --apply", "Physics_Programmer", "Producer_Orchestrator", "AUCUNE_POSE"] },
+        "actor_label": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "description": "Label reellement present dans l'Outliner ; null tant que rien n'est pose."
+        },
+        "ref_path": {
+          "type": ["string", "null"],
+          "description": "savedActor relu (_placed.json) ; null = aucune ecriture de reference possible, donc pas de 'AUTO_VERIFIED'."
+        },
+        "wire_state": { "enum": ["AUTO_VERIFIED", "MANUEL", "PARTIEL", "NON_CABLE"] },
+        "properties": { "type": "object", "additionalProperties": true }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "wire_state": { "const": "AUTO_VERIFIED" } }, "required": ["wire_state"] },
+          "then": { "properties": { "ref_path": { "type": "string", "minLength": 10 } } }
+        },
+        {
+          "if": { "properties": { "placed_in_umap": { "const": true } }, "required": ["placed_in_umap"] },
+          "then": { "properties": { "placed_by": { "enum": ["list-editables --apply", "Physics_Programmer", "Producer_Orchestrator"] } } }
+        }
+      ]
+    },
+    "editables_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "status", "editable_count", "actor_references", "parameters", "without_target", "wiring_errors", "mapping", "scope"],
+      "description": "Miroir de 10_editables.json (list-editables). Sans --apply, le cablage reste MANUEL et doit etre annonce comme tel.",
+      "properties": {
+        "command": { "const": "list-editables" },
+        "status": { "const": "PASSED" },
+        "timestamp": { "type": "string" },
+        "editable_count": { "type": "integer", "minimum": 0 },
+        "actor_references": { "type": "integer", "minimum": 0 },
+        "parameters": { "type": "integer", "minimum": 0 },
+        "without_target": { "type": "array", "maxItems": 0 },
+        "wiring_errors": { "type": "array", "maxItems": 0 },
+        "mapping": { "type": "array", "items": { "$ref": "#/definitions/editable_row" } },
+        "live": { "type": ["object", "null"], "additionalProperties": true },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "editable_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "editable", "type", "kind", "declared_in_04_devices", "wiring"],
+      "properties": {
+        "file": { "type": "string", "pattern": "^[a-z0-9_][a-z0-9_]*\\.verse$" },
+        "editable": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$" },
+        "type": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["ACTEUR", "PARAMETRE"] },
+        "declared_in_04_devices": { "type": "boolean" },
+        "asset_key": { "type": ["string", "null"] },
+        "refPath": { "type": ["string", "null"] },
+        "wiring": { "enum": ["AUTO_VERIFIED", "MANUEL", "AUCUNE_CIBLE"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "ACTEUR" } }, "required": ["kind"] },
+          "then": { "required": ["refPath"] }
+        }
+      ]
+    },
+    "wiring_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "error_count", "wired", "errors", "not_placed", "scope"],
+      "description": "Miroir de 08_wiring_report.json (wire-devices). La preuve est ListEventBindings sur la CIBLE, pas le null renvoye par AddEventBinding.",
+      "properties": {
+        "timestamp": { "type": "string" },
+        "status": { "const": "PASSED" },
+        "error_count": { "type": "integer", "const": 0 },
+        "wired": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "errors": { "type": "array", "maxItems": 0 },
+        "not_placed": { "type": "array", "maxItems": 0 },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "value_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "source"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9_]*$" },
+        "type": { "enum": ["int", "float", "string", "logic"] },
+        "source": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Fonction publique ou champ exposee chez moi, nomme exactement comme dans le code : 14 s'y abonne, ne le recalcule pas."
+        },
+        "refresh": { "enum": ["abonnement", "lecture_periodique", "sur_evenement"] }
+      }
+    },
+    "device_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_label", "ref_path"],
+      "properties": {
+        "actor_label": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+          "description": "Venant de 04_devices.json, jamais recree de tete ni espace."
+        },
+        "device_class": { "type": "string" },
+        "ref_path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "savedActor / refPath persiste par _placed.json. Sans lui, aucun cablage n'est prouvable."
+        },
+        "editable_kind": { "enum": ["ACTEUR", "PARAMETRE"] }
+      }
+    }
+  }
+}

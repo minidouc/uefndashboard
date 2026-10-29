@@ -1,0 +1,44 @@
+{
+  "$schema": "studio.config.v1",
+  "projet_actif": "corpo-plaza",
+  "outils_interdits_absolus": ["GetDynamicInputSchema"],
+  "statuts_autorises_lecture": ["VERIFIE"],
+  "lectures_prouvees": {
+    "$comment": "Outils de LECTURE hors statut VERIFIE mais prouves a l'usage.",
+    "AssetTools.is_dirty": "corpo-plaza lots 0-9 : 16 appels rc=0"
+  },
+  "ecritures_prouvees": {
+      "VerseToolset.BuildAll": "a prouver par spike_capacite.py compiler-verse (corpo-plaza 2026-10-27)",
+    "$comment": "Outils d'ECRITURE autorises. Un outil n'entre ici qu'avec une preuve relue (fichier + date). Tout autre outil d'ecriture = UNKNOWN_TOOL_BLOCKED.",
+    "SceneTools.add_to_scene_from_class": "corpo-plaza lots 1-9, 2026-10-27, rc=0 + bounds relus",
+    "SceneTools.add_to_scene_from_asset": "inventaire VERIFIE 2026-10-26 (a reprouver au premier usage)",
+    "SceneTools.remove_from_scene": "corpo-plaza cleanup spike, rc=0 + find_actors relu",
+    "SceneTools.set_actor_folder": "inventaire VERIFIE 2026-10-26",
+    "PrimitiveTools.add_cube": "corpo-plaza lots 1-9, portee X/Y 3900 uu prouvee, Z min 256",
+    "PrimitiveTools.add_cylinder": "corpo-plaza lots 1-9",
+    "ActorTools.add_tag": "inventaire VERIFIE 2026-10-26",
+    "ActorTools.set_label": "inventaire VERIFIE 2026-10-26",
+    "ActorTools.set_actor_transform": "corpo-plaza lot 0 resize LevelBounds, relu 2x",
+    "DeviceToolset.PlaceDevice": "corpo-plaza lots 1-9 (spawner, lights, billboard, holo, skydome, postprocess, light rig)",
+    "AssetTools.save_assets": "corpo-plaza lot 0 : rc=0, is_dirty=false, bornes relues apres save",
+    "EditorAppToolset.SetCameraTransform": "etat du viewport, pas une ecriture de niveau",
+    "EditorAppToolset.SetCVarValue": "inventaire VERIFIE 2026-10-26"
+  },
+  "ecritures_a_prouver": {
+    "$comment": "Autorisees UNIQUEMENT par scripts/spike_capacite.py (1 appel, niveau de test, approbation humaine).",
+    "TextureTools.import_file": "T6 echoue sur /Game ; racine valide lue dans l'erreur : <content_root>/",
+    "StaticMeshTools.import_file": "idem T6",
+    "MaterialInstanceTools.set_scalar_parameter": "spike T1 : rc=0 mais save rc=5",
+    "MaterialInstanceTools.set_vector_parameter": "spike T2 : rc=0",
+    "ObjectTools.set_properties": "inventaire VERIFIE, usage materiau d'acteur non prouve",
+            "ObjectTools.set_properties": "inventaire VERIFIE, usage materiau d'acteur non prouve",
+    "MaterialInstanceTools.create": "a prouver par spike materiau (corpo-plaza 2026-10-28)",
+    "MaterialInstanceTools.set_texture_parameter": "a prouver par spike materiau (corpo-plaza 2026-10-28)"
+  },
+  "outils_lourds": {
+    "$comment": "Sorties volumineuses : jamais dans le contexte, toujours sur disque.",
+    "SceneTools.find_actors": 400000,
+    "AssetTools.find_assets": 400000,
+    "DeviceToolset.ListDeviceAssets": 200000
+  }
+}

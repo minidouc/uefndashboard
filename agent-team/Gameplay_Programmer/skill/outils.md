@@ -13,7 +13,7 @@
 |---|---|---|---|
 | `verse-scan` | **avant** d'écrire : ce que le projet Verse contient réellement | `root: ""`, `recursive: true` | `_verse_files.json` : `files` (dossiers + `.verse`). 606 entrées pour 0 `.verse` = rien à relire |
 | `verse-grep` | vérifier **chaque** signature d'API dans les digests, avant de l'appeler | `--pattern <symbole>`, `--path-glob "/Fortnite.com (Fortnite)/**"` | `_verse_grep.json` : `resolved` (avec `filePath`, `span`, `lineText`), `not_found`. Un `[]` ne prouve PAS l'absence |
-| `verse-read` *(via `Verse.ReadFile`)* | relire le texte écrit ; comparer à mon fichier local | `path` du `.verse` dans le contenu monté | texte brut ; `isError` + `file does not exist: '…'.` = fichier absent |
+| `verse-read --path <chemin>` *(via `Verse.ReadFile`)* | relire le texte écrit ; comparer à mon fichier local | `path` du `.verse` dans le contenu monté | texte brut ; `isError` + `file does not exist: '…'.` = fichier absent |
 | `list-editables` | table `@editable` → cible, **sans rien écrire** | `verse/` + `04_devices.json` + `_placed.json` | `10_editables.json` : `without_target`, `wiring_errors`, `mapping` (`kind`, `wiring`) |
 | `validate-scene` | cohérence specs ↔ palette et légalité des chemins avant câblage | `02`, `04`, `05` | `ILLEGAL_ASSET_PATH`, labels en double |
 | `GetSessionStatus` | **obligatoire avant `verse-build`** | — | `Disconnected` attendu ; toute autre valeur = STOP |
@@ -37,7 +37,7 @@
 | `place-scene`, `build-structure`, `PlaceDevice`, `set_actor_transform`, `add_to_scene_from_asset` | `Physics_Programmer` (16) / `Level_Designer` | je consomme les `refPath`, je ne déplace **rien** dans la 3D |
 | arbres de comportement PNJ / Gardes, `NavigateTo`, effets sur `fort_character`, caméras | `AI_Programmer` (13) | hors de mon périmètre de fichiers |
 | `canvas`, `text_block`, HUD, menus | `UI_Programmer` (14) | je transmets des **valeurs**, je ne dessine pas |
-| `StartSession`, `StopSession`, `PushChanges`, `Publish`, `launch-session` | `Producer_Orchestrator` via gate HITL | destructeur / publication ; `verse-build` exige `Disconnected` |
+| `StartSession`, `StopSession`, `PushChanges`, publication (aucun outil MCP : faite à la main), `launch-session` | `Producer_Orchestrator` via gate HITL | destructeur / publication ; `verse-build` exige `Disconnected` |
 | `SetDeviceProperty`, `ListDeviceProperties`, `GetDeviceProperties` *(sur un `creative_device`)* | — | statut **« inconnu »** (`mcp_tools/devices/device-toolset.md`) : jamais testés sur un device Verse |
 | `GetClientLogEntries` hors session | — | statut **« echec »** : `No client log was found; start a play-in-client session first.` |
 | `Game.MutateVerb`, `SetIsReceivingCommand`, `AddHero` | — | **n'existent pas** : mentions caduques du catalogue |

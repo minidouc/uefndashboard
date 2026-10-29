@@ -72,7 +72,7 @@ câbler.
 | Cas | Conduite |
 |---|---|
 | Asset absent de `02_palette.json` ou non mesuré (`measured: false`) | STOP → handoff `BLOCKED`, remonté au Producer pour `Lead_Programmer` |
-| Chemin `/Game/Athena/...` ou `/Game/Environments/...` dans une spec | `ILLEGAL_ASSET_PATH` : bloqué, non posé, signalé (jamais contourné) |
+| Chemin cité `disallowed` par le validateur, ou listé dans `refuses` du catalogue commun | `ILLEGAL_ASSET_PATH` : bloqué, non posé, signalé (jamais contourné). Un `/Game/...` n'est **pas** illégal en soi (`../_commun/legalite-assets.md`) |
 | Overlap entre deux structures majeures | STOP, tu ne tranche pas seul → Producer → `Level_Designer` |
 | Timeout de pose (code 3) | Relire l'état et chercher les acteurs **sans label** avant toute relance (risque de doublon connu) |
 | Audit échoué après 3 passes de correction | Tu rends le rapport tel quel (`status: "FAILED"`, liste des erreurs), tu n'édulcores rien |

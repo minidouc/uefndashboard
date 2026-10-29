@@ -1,0 +1,218 @@
+{
+  "$schema": "uefn.producer.ltm.v1",
+  "comment": "Connaissances PERSISTANTES du Producer (composant Long-Term Memory, WP3 p.8). Stable, réutilisable d'un projet à l'autre. Ne contient AUCUN état de projet mouvant (ça vit dans project-state.json). Les blocs 'policy_*' résolvent les 5 questions 'à creuser' de la spec v0.4.",
+
+  "phases": [
+    {
+      "id": "INIT",
+      "objectif": "Créer le projet, poser l'arborescence, vérifier l'environnement technique.",
+      "roles": ["Producer_Orchestrator", "Engine_Programmer"],
+      "livrables": ["project-state.json", "arborescence créée", "tech/mcp-inventory.json", "ping MCP = OK"],
+      "gate_hitl": null
+    },
+    {
+      "id": "CADRAGE",
+      "objectif": "Vision globale, références, brief artistique.",
+      "roles": ["Creative_Director"],
+      "livrables": ["brief/creative-brief.md", "brief/moodboard/", "brief/user-intent.md"],
+      "gate_hitl": "brief",
+      "pivot": "Creative_Director"
+    },
+    {
+      "id": "DESIGN",
+      "objectif": "Game design, systèmes, économie, narration, missions, UX, level design.",
+      "roles": ["Game_Designer", "System_Designer", "Economy_Designer", "Narrative_Designer", "Writer_Scenariste", "Mission_Content_Designer", "UX_UI_Designer", "Level_Designer"],
+      "livrables": ["design/*.md", "design/level/placement-plan.json"],
+      "gate_hitl": "gdd",
+      "pivot": "Game_Designer"
+    },
+    {
+      "id": "BUILD",
+      "objectif": "Implémentation technique dans UEFN (géométrie, Verse, acteurs posés).",
+      "roles": ["Lead_Programmer", "Engine_Programmer", "Gameplay_Programmer", "AI_Programmer", "Physics_Programmer", "UI_Programmer", "Graphics_Programmer"],
+      "livrables": ["tech/architecture.md", "tech/verse/", "build/placements.json", "build/build-log.md"],
+      "gate_hitl": "archi_technique",
+      "pivot": "Lead_Programmer",
+      "note": "Toute écriture dans l'éditeur = gate 'ecriture_destructrice_uefn' supplémentaire, à chaque opération."
+    },
+    {
+      "id": "POLISH",
+      "objectif": "Audio, voix, effets, ambiance, retouches visuelles.",
+      "roles": ["Audio_Director", "Composer", "Sound_Designer", "Voice_Designer", "Graphics_Programmer"],
+      "livrables": ["audio/music/", "audio/sfx/", "audio/voice/", "polish-log.md"],
+      "gate_hitl": null
+    },
+    {
+      "id": "QA",
+      "objectif": "Conformité design vs build, playtests, bugs classés.",
+      "roles": ["Producer_Orchestrator", "Physics_Programmer", "UX_UI_Designer", "Lead_Programmer"],
+      "livrables": ["qa/qa-report.md", "qa/bugs.md", "qa/playtest-notes.md"],
+      "gate_hitl": null,
+      "note": "Un QA échoué autorise un retour arrière tracé dans state.history[]."
+    },
+    {
+      "id": "SHIPPED",
+      "objectif": "Publication, doc finale, handoff à l'utilisateur.",
+      "roles": ["Producer_Orchestrator"],
+      "livrables": ["README.md projet", "changelog", "archive du state"],
+      "gate_hitl": null
+    }
+  ],
+
+  "dependency_graph": {
+    "comment": "Un rôle ne peut être lancé que si TOUS ses prédécesseurs listés sont VALIDATED. Un seul rôle actif à la fois.",
+    "Creative_Director": [],
+    "Game_Designer": ["Creative_Director"],
+    "System_Designer": ["Game_Designer"],
+    "Economy_Designer": ["System_Designer"],
+    "Narrative_Designer": ["Game_Designer"],
+    "Writer_Scenariste": ["Narrative_Designer"],
+    "Mission_Content_Designer": ["Game_Designer"],
+    "UX_UI_Designer": ["Game_Designer", "Mission_Content_Designer"],
+    "Level_Designer": ["UX_UI_Designer", "Game_Designer"],
+    "Lead_Programmer": ["Level_Designer"],
+    "Engine_Programmer": [],
+    "Gameplay_Programmer": ["Lead_Programmer"],
+    "AI_Programmer": ["Lead_Programmer"],
+    "Physics_Programmer": ["Lead_Programmer", "Level_Designer"],
+    "UI_Programmer": ["Lead_Programmer", "UX_UI_Designer"],
+    "Graphics_Programmer": ["Lead_Programmer"],
+    "Audio_Director": ["Game_Designer"],
+    "Composer": ["Audio_Director"],
+    "Sound_Designer": ["Audio_Director"],
+    "Voice_Designer": ["Audio_Director", "Writer_Scenariste"]
+  },
+
+  "pivot_roles": [
+    { "role": "Creative_Director", "phase": "CADRAGE", "livrable": "brief/creative-brief.md", "pourquoi": "Toute la DA en découle.", "max_iterations": 2 },
+    { "role": "Game_Designer", "phase": "DESIGN", "livrable": "design/game-design.md", "pourquoi": "Mécaniques cœur → influencent System/Economy/Mission/Level.", "max_iterations": 2 },
+    { "role": "Lead_Programmer", "phase": "BUILD", "livrable": "tech/architecture.md", "pourquoi": "Archi technique → contraint tous les autres programmeurs.", "max_iterations": 2 }
+  ],
+
+  "question_budget": {
+    "per_phase_max": 15,
+    "per_phase_type": "dur (bloquant: au-delà le Producer ne peut plus poser de question dans la phase)",
+    "project_soft_max": 40,
+    "project_alert_at": 30,
+    "per_turn_max": 4,
+    "format": "AskUserQuestion à choix multiples (2-4 options argumentées). 'je sais pas, propose-moi' est une réponse valide: le rôle tranche, justifie, log dans history[].",
+    "counter_path": "project-state.json.stats.questions_asked_by_phase.{INIT,CADRAGE,DESIGN,BUILD,POLISH,QA}"
+  },
+
+  "iteration_caps": {
+    "per_phase_hard_stop": 15,
+    "per_role_attempt_escalate": 3,
+    "pivot_max_iterations": 2,
+    "identical_payload_stop": 2,
+    "comment": "Le WP1 ne fournit AUCUN compteur d'itération: ces seuils sont du CODE (garde-fou déterministe, WP1 p.35), pas du prompt."
+  },
+
+  "policy_folder_creation": {
+    "question_v0.4": "Où exactement ? slug auto ou demandé ? gestion multi-projets ?",
+    "resolution": {
+      "racine_defaut": "C:/Users/douco/Documents/Qoder/<slug>/",
+      "slug": "Proposé par le Producer en kebab-case (dérivé du nom de map, sans espaces ni accents), puis VALIDÉ par 1 AskUserQuestion en phase INIT. Jamais imposé silencieusement.",
+      "arborescence": "Créée d'un bloc par Bash mkdir -p au démarrage (voir spec v0.4 §5). Git-friendly: noms kebab-case, .gitignore pour assets lourds, .backup/ non commité.",
+      "multi_projets": "Chaque projet = un dossier racine distinct + une ligne dans projects_registry.json. Le Producer ne mélange jamais deux state."
+    }
+  },
+
+  "policy_dispatch_granularity": {
+    "question_v0.4": "1 subagent par rôle, ou plusieurs si le rôle a plusieurs tâches ?",
+    "resolution": {
+      "regle": "1 rôle = 1 mission = 1 subagent (Agent tool) = 1 handoff d'entrée + 1 handoff de sortie.",
+      "multi_taches": "Si un rôle a plusieurs sous-tâches, on les SÉQUENCE en plusieurs missions (jamais en parallèle: 16 Go de RAM = 1 seul agent actif). Les sous-tâches d'une même mission vivent dans le champ payload du handoff, pas dans plusieurs agents.",
+      "chevauchement": "Le chevauchement partiel (v0.4 §4.2) reste autorisé entre rôles DIFFÉRENTS si les dépendances sont satisfaites, mais l'exécution demeure séquentielle (un seul process Flash à la fois)."
+    }
+  },
+
+  "policy_cross_session": {
+    "question_v0.4": "Comment le Producer retrouve le projet actif au réveil ?",
+    "resolution": {
+      "registre": "agent-team/projects-registry.json: liste de {slug, name, root_path, phase, updated_at, chat_id}. Tenu à jour à chaque fin de phase.",
+      "memoire": "L'outil memory (target=daily puis MEMORY) journalise le chat_id du projet + la phase atteinte, pour retrouver le registre même hors du dossier.",
+      "reprise": "'reprends <nom>' → lit projects-registry.json → lit <root_path>/project-state.json → report 3 lignes (phase, dernier livrable validé, next_action) → reprend le dispatch à next_action.",
+      "stateless_entre_tours": "Entre deux tours le Producer est quasi-stateless: il ne recharge que phase + dernier summary_short + compteurs, jamais l'historique (WP3 p.16, économie de RAM)."
+    }
+  },
+
+  "policy_escalation": {
+    "question_v0.4": "À quel seuil exact (nb de rejets, temps écoulé, type de décision) ?",
+    "resolution": {
+      "seuils_durs": [
+        "attempt >= 3 sur un même livrable → ESCALATE_USER",
+        "iterations_this_phase >= 15 → HALT_PHASE + ESCALATE_USER",
+        "questions_asked_total >= 40 → HALT + revue forcée de budget",
+        "2 itérations consécutives au payload identique (aucun delta) → HALT + ESCALATE_USER",
+        "blocker technique non résolu après 1 tour → ESCALATE_USER",
+        "réponse MCP isError / 4xx / vide / non-JSON → statut UNKNOWN, PAS d'itération, ESCALATE_USER ou re-demande de preflight_ok.json"
+      ],
+      "gates_toujours_hitl": [
+        "validation du brief (Creative_Director)",
+        "validation du GDD (Game_Designer)",
+        "validation de l'archi technique (Lead_Programmer)",
+        "TOUTE écriture destructrice dans l'éditeur UEFN (save, delete_actor, set_material, batch_place, apply_physics, run_python à effet de bord)"
+      ],
+      "alerte_douce": "questions_asked_total >= 30 → alerte utilisateur, sans blocage"
+    }
+  },
+
+  "policy_existing_skills": {
+    "question_v0.4": "Interaction avec uefn-map-creator et product-design:* : consommer, remplacer, compléter ?",
+    "resolution": {
+      "verbe": "COMPLÉTER, jamais remplacer.",
+      "uefn_map_creator": "Consommé par les AGENTS TECHNIQUES (Engine_Programmer, Level_Designer, Physics_Programmer, Graphics_Programmer) via leur skill/outils.md. Le Producer ne l'appelle JAMAIS directement (il ne passe aucun appel MCP). Rappel: le skill installé dans ~/.qoderwork/skills ne contient que SKILL.md; le CLI + references + mcp_tools sont dans ~/Downloads/uefn-dashboard/skill/uefn_map_creator/ — les appels CLI des agents techniques pointent vers cette 2e copie.",
+      "product_design": "Les skills product-design:* peuvent outiller les rôles Design (UX_UI_Designer, Game_Designer) en phase DESIGN, comme boîte à méthodes interne. Ils ne remplacent pas les fiches de rôle.",
+      "principe": "Un skill existant = une capacité d'outillage pour un spécialiste. Le studio (21 fiches + bus handoff) est la couche d'orchestration AU-DESSUS, pas un concurrent."
+    }
+  },
+
+  "acceptance_vocabulary": {
+    "comment": "Vocabulaire standard des critères cochables par un validateur Python, JAMAIS par un LLM (WP4 p.20). Source: 05-securite-mcp.md §8. Utilisé dans le champ acceptance[] de chaque handoff.",
+    "schema_valid": "JSON conforme à templates/handoff.schema.json (draft-07)",
+    "0_overlap": "aucune bounding-box intersectante (via get_actor_bounds)",
+    "0_floating": "chaque prop ancré à un support dans sa Z-slice",
+    "spawn_reachable": "chemin spawn -> objectif sans trou",
+    "mcp_ok": "preflight_ok.json frais + ping port 8000/8001",
+    "pid_legal": "tout PID_/PPID_ présent dans la palette autorisée",
+    "clamp_deterministe": "X/Y/Z bornés aux Z-slices du handoff par le Python AVANT écriture (05 §3)"
+  },
+
+  "judge_stage": {
+    "source": "WP1 p.38 'Gemini as a Judge' + archi couche 4",
+    "regle": "Avant que le Frontier lise la sortie d'un Flash, un passage bon marché (Flash-Lite / Gemma fine-tuné) écranter: JSON conforme au schéma, prompt-injection, hors-sujet, contenu dangereux. Échec d'écran = REJECT direct sans lire le payload, attempt++.",
+    "trace": "schema-de-sortie.json -> judge_screened (booléen)"
+  },
+
+  "policy_enforcement_checkpoints": {
+    "source": "WP2 p.43 'Deterministic Policy Enforcement' (4 points, vérifié mot à mot) + WP1 p.38 before_tool_callback",
+    "checkpoints": [
+      "1. before_tool_discovery: allowlist + pinning + anti-tool-shadowing (WP2 p.41/42)",
+      "2. before_tool_invocation: before_tool_callback valide les params contre l'état courant (WP1 p.38)",
+      "3. before_data_returned_to_client: outputSchema + Output Sanitization (WP2 p.29/44)",
+      "4. before_tool_outbound_call: least privilege, secrets hors contexte (WP2 p.47)"
+    ],
+    "note": "Ce sont des garde-fous CODE hors du raisonnement du modèle (WP1 p.35 'security chokepoint')."
+  },
+
+  "build_validation_gate": {
+    "source": "[adaptation maison] crucial pour l'objectif Night City + principe 'éditeur=juge' (05-securite-mcp.md, WP4 p.20 n°3)",
+    "regle": "En phase BUILD et POLISH, le Producer ne peut passer un livrable à VALIDATE que sur un readback déterministe de l'éditeur: save -> get_actor_bounds -> CaptureViewport -> validateur Python. L'auto-déclaration du Flash (self_report) est INTERDITE pour tout livrable technique.",
+    "trace": "schema-de-sortie.json -> validation_source (const editor_readback imposé en BUILD/POLISH; self_report => then:false)",
+    "pourquoi": "Un Flash peut déclarer 'c'est bon' sur une map plate/vide. L'éditeur ne ment pas. C'est le rempart n°1 contre une map plate produite proprement."
+  },
+
+  "compaction_policy": {
+    "source": "WP3 p.22-24 (sliding window / token-truncation ~4000 / recursive summarization) + WP3 p.38 + WP2 p.19 (offloading)",
+    "context_budget_tokens": 4000,
+    "ordre": ["sliding_window", "token_truncation", "recursive_summary"],
+    "offload": "contexte lourd -> disque; passer un NOM de fichier, jamais le contenu",
+    "scan_scene_minimal": "phase + dernier summary_short + compteurs uniquement; JAMAIS l'historique complet (WP3 p.16 history != context)"
+  },
+
+  "observability_policy": {
+    "source": "WP5 p.19-20 (Observe -> Act -> Evolve) + WP4 p.21 (Black Box -> Glass Box) + archi couche 6",
+    "regle": "Chaque handoff/dispatch/validation/rejet/appel MCP remonté est journalisé. Les handoffs sont COMMITÉS dans <projet>/handoff/ = log de trajectoire rejouable et auditable.",
+    "version": "jam allégée: fichiers seulement, pas de plateforme. Mais rien ne passe sans laisser de trace."
+  }
+}

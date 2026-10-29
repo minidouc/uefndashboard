@@ -1,0 +1,104 @@
+{
+  "$id": "uefn.longterm.Physics_Programmer.v1",
+  "agent": "Physics_Programmer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des faits d'editeur, des contrats d'outils et des decisions de pipeline actees.",
+  "langue": "fr",
+  "constantes_grille": {
+    "tuile_cm": [512.0, 512.0, 384.0],
+    "note_altaine": "Les arenes Fortnite se posent aussi sur un pas 512 x 512 x 512 quand l'etage doit faire une hauteur de mur complete ; la valeur retenue est celle declaree dans 03_grid.json (tile_size_cm), jamais supposee.",
+    "origine_tile": "declaree dans 03_grid.json (ex. [2, 2, 0]) : c'est la tuile ou commence l'interieur jouable",
+    "ancres_slot": ["CENTER", "NORTH_EDGE", "SOUTH_EDGE", "EAST_EDGE", "WEST_EDGE", "CORNER_NE", "CORNER_NW", "CORNER_SE", "CORNER_SW"],
+    "orientations": ["NORTH", "EAST", "SOUTH", "WEST", "CENTER"],
+    "orientation_par_defaut_yaw": {"NORTH": 0.0, "EAST": 90.0, "SOUTH": 180.0, "WEST": 270.0},
+    "formule_ancre": "centre vise = (Bx + 256, By + 256) pour CENTER ; Bx = tx * 512, By = ty * 512, Bz = tz * 384 ; Z = Bz + taille_z/2",
+    "formule_pose": "position = centre_voulu - rotation(pivot_offset_cm, yaw) - calculee par le Python, jamais par le modele",
+    "empreinte_max_par_tuile": "~ 55 % de l'espacement : au-dela, les bounds rotatifs font overlap",
+    "largeur_min_couloir_cm": 100,
+    "penetration_toleree_cm": 5.0,
+    "modes_placement": ["TILE_ANCHOR", "WORLD", "RELATIVE_TO_ACTOR"],
+    "politiques_bord": ["fall_zone", "wall"]
+  },
+  "contrats_outils": {
+    "point_entree_unique": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]",
+    "serveur_mcp": "http://127.0.0.1:8000/mcp par defaut ; le pont peut etre sur 8001 - verifier avec UEFN_MCP_URL avant d'affirmer un OFFLINE",
+    "codes_retour": {
+      "0": "PASSED - continuer",
+      "1": "FAILED ou partiel - l'appel A ETE TRAITE : relire l'etat avant de rejouer",
+      "2": "OFFLINE - rien n'a ete execute",
+      "3": "TIMEOUT / etat inconnu - relire l'etat, jamais relancer a l'aveugle"
+    },
+    "journalisation": "chaque appel CLI est trace dans <workspace>/_mcp_calls.jsonl ; un appel direct via mcp_client.py ne l'est qu'avec --log ou UEFN_MCP_LOG",
+    "workspace": "toujours HORS du skill (un workspace a l'interieur est refuse : WORKSPACE_INSIDE_SKILL)",
+    "idempotence": "_placed.json conserve label -> refPath ; un label deja pose n'est jamais re-pose",
+    "regles_non_negociables": [
+      "Un seul appel MCP a la fois, jamais en parallele, jamais deux agents sur l'editeur.",
+      "Ne tenir pour vrai que ce qui a ete relu par un second appel ; une reponse vide ([] / null / false) vaut 'inconnu'.",
+      "Aucun asset /Game/Athena ou /Game/Environments : uniquement PPID_ / PID_ du catalogue creatif (validate-scene et measure-palette bloquent ILLEGAL_ASSET_PATH).",
+      "Sauvegarde, publication, lancement de session et cleanup sont des gates HITL : accord explicite requis.",
+      "Ne jamais modifier un fichier du skill pendant une run."
+    ]
+  },
+  "lexique_statuts": {
+    "OVERLAP_ERROR": "penetration d'AABB entre deux acteurs (audit-scene --live)",
+    "GRAVITY_ERROR": "acteur flottant (FLOATING) ou enfonce (BURIED) - detectable UNIQUEMENT en live",
+    "ACTOR_NOT_FOUND": "l'acteur attendu n'est pas dans la scene",
+    "TRANSFORM_MISMATCH": "transform relue differente de la transform demandee (souvent l'echelle ignoree)",
+    "TRANSFORM_DRIFT": "la paire symetrique n'est pas a la meme position relue (check-symmetry --live)",
+    "MIRROR_PARTNER_MISSING": "acteur symetrique dont le jumeau est sorti du controle (mirror: false pose d'un seul cote)",
+    "ILLEGAL_ASSET_PATH": "chemin /Game/... non expose : refuse avant tout spawn",
+    "FLOOR_NOT_TILE_SIZED": "taille mesuree != 512 x 512 en X/Y, l'echelle suggeree est renvoyee",
+    "PROPERTY_NOT_FOUND": "le nom demande n'existe pas dans list_properties : ne jamais inventer",
+    "SESSION_CONNECTED": "une session de jeu tourne : verse-build et ecritures lourdes sont bloques",
+    "NO_VERSE_STAGED": "aucun .verse stage dans le workspace : sans objet, pas une erreur"
+  },
+  "pieges_editeur": [
+    {
+      "signe": "Un audit live explose le nombre d'overlap apres rotation des acteurs (anneaux, enseignes, tours).",
+      "cause": "Les AABB retournees par l'editeur sont alignees aux axes : un objet tourne occupe |taille_x*cos| + |taille_y*sin|. La taille 'theorique' non tournee n'est pas la taille subie.",
+      "conduite": "Raisonner en bounds relus, reduire l'echelle ou changer d'ancre, jamais 'c'est pareil mais tourne'."
+    },
+    {
+      "signe": "Hors ligne, un audit pretend 0 erreur de gravite.",
+      "cause": "Le centre compile d'un TILE_ANCHOR est par construction pose au sol : la distance au sol vaut toujours 0 ; un pivot_offset_cm faux passe inapercu.",
+      "conduite": "Aucune preuve de gravite sans --live ; verifier gravity_scope dans le rapport."
+    },
+    {
+      "signe": "Un device PID de playset renvoie des bounds nuls apres mesure.",
+      "cause": "Certains PID sont des FortPlaysetRoot sans mesh mesurable.",
+      "conduite": "Remplacer par le PPID equivalent mesurable et le signaler au Lead_Programmer ; ne pas garder une taille inventee."
+    },
+    {
+      "signe": "WinError 10054 / timeout pendant une pose ou une mesure.",
+      "cause": "Deconnexion transitoire du pont : l'acteur a pu etre cree sans que la reponse revienne.",
+      "conduite": "Relire l'Outliner, supprimer l'orphelin par refPath (jamais par nom suppose), puis reprendre. Ne pas relancer a l'aveugle : doublon quasi sur."
+    },
+    {
+      "signe": "check-symmetry renvoie axis: null et checked_pairs: 0 en PASSED.",
+      "cause": "03_grid.json ne declare pas symmetry_axis : le controle n'a pas eu lieu.",
+      "conduite": "Ce PASSED n'est PAS une preuve de symetrie. Le dire tel quel dans le handoff, ou declarer symmetric + symmetry_axis (X, Y ou R180) et relancer."
+    },
+    {
+      "signe": "La capture de preuve est surexposee ou coupee.",
+      "cause": "visual-snapshot a une camera par defaut trop proche (Z = max(lignes, colonnes) * 512 * 1,2).",
+      "conduite": "Capture corrective avec la meme suite d'appels (SetCameraTransform -> GetCameraTransform -> CaptureViewport), camera reculee, et relecture de la camera."
+    },
+    {
+      "signe": "list_toolsets ou un schema d'outil renvoie une sortie huge.",
+      "cause": "Les 20+ toolsets et leurs schemas completent la fenetre.",
+      "conduite": "Sortie redirigee sur fichier, lecture ciblee ; ne jamais coller la sortie brute dans un handoff. GetDynamicInputSchema hors session est a ne jamais appeler (crash editeur connu)."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "La geometrie est compilee hors editeur (validate-* puis compile-transforms) AVANT tout spawn : l'editeur n'est jamais un bac a sable.",
+    "Les corrections d'audit se font dans la spec source puis recompile/repose ; aucun ajustement manuel dans l'Outliner.",
+    "Le 04_devices.json rendu aux programmeurs Verse porte les ref_path reellement poses, pas les intentions.",
+    "Un livrable technique n'est jamais auto-valide : les criteres d'acceptation sont cochables par un validateur Python.",
+    "Une scene sans Verse ni cablage est un etat legitime : le rapport le dit explicitement (allow-empty / NO_VERSE_STAGED) au lieu de le taire."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur observes sur une run complete de place moyenne (582 acteurs legaux, 441 dalles de sol, 128 entites, 22 assets mesures, 49 requetes de catalogue, 3 passes d'audit pour passer de 91 overlaps a 0). Ce sont des echelles, pas des cibles.",
+    "lots_de_pose": 10,
+    "assets_par_palette": "12 a 40",
+    "passes_audit_attendu": "1 a 3"
+  }
+}

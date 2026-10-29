@@ -1,0 +1,151 @@
+{
+ "placements": [
+  {
+   "id": "S0_SOL",
+   "strate": "S0",
+   "categorie": "plancher",
+   "position": [
+    0.0,
+    0.0,
+    -50.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 4000,
+    "Y": 4000,
+    "Z": 100
+   }
+  },
+  {
+   "id": "SPAWN_S0",
+   "strate": "S0",
+   "categorie": "poi",
+   "position": [
+    0.0,
+    0.0,
+    50.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 100,
+    "Y": 100,
+    "Z": 100
+   }
+  },
+  {
+   "id": "S0_RAMPE_1",
+   "strate": "S0",
+   "categorie": "connecteur",
+   "position": [
+    1500.0,
+    0.0,
+    250.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 1000,
+    "Y": 400,
+    "Z": 500
+   }
+  },
+  {
+   "id": "S1_PLANCHER",
+   "strate": "S1",
+   "categorie": "plancher",
+   "position": [
+    2500.0,
+    0.0,
+    1450.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 1000,
+    "Y": 2000,
+    "Z": 100
+   }
+  },
+  {
+   "id": "S0_POTEAU",
+   "strate": "S0",
+   "categorie": "structure",
+   "position": [
+    -950.0,
+    550.0,
+    400.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 100,
+    "Y": 100,
+    "Z": 800
+   }
+  },
+  {
+   "id": "S0_LUM_1",
+   "strate": "S0",
+   "categorie": "signalisation",
+   "position": [
+    525.0,
+    1525.0,
+    1225.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 50,
+    "Y": 50,
+    "Z": 50
+   }
+  },
+  {
+   "id": "S1_PILIER",
+   "strate": "S1",
+   "categorie": "structure",
+   "position": [
+    2500.0,
+    0.0,
+    700.0
+   ],
+   "rotation_degres": [
+    0,
+    0,
+    0
+   ],
+   "support": "PrimitiveTools.add_cube",
+   "dimensions_uu": {
+    "X": 200,
+    "Y": 200,
+    "Z": 1400
+   }
+  }
+ ]
+}

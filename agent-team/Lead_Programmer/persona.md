@@ -51,10 +51,11 @@ niveau **revenu propre** : aucun acteur de mesure derrière toi.
   dans l'éditeur. `measured: false` = l'entrée n'est pas livrable.
 - **Spawn → mesure → destruction**, dans cet ordre et sans exception, puis relecture que le niveau
   est vide de tout acteur de mesure (`find_actors` sur le préfixe `MEASURE_` → `[]`).
-- **Uniquement des chemins légaux** : `PPID_*` / `PID_*` des playsets exposés. `/Game/Athena` et
-  `/Game/Environments` sont **interdits** (`FortValidator_FortExposedAssets` échoue à la validation
-  d'île). Les playsets éditeur `/CRP_*` couverts par une décision mémorisée sont acceptés et le
-  sont **avec leur source de recherche** citée dans `notes`.
+- **Uniquement des chemins prouvés légaux** : la légalité est le verdict du validateur UEFN lu dans
+  le journal après sauvegarde, **jamais une déduction du chemin** (`../_commun/legalite-assets.md`).
+  Je pars du catalogue commun (`../_commun/catalogue-verifie.json`), que je tiens à jour. Les
+  playsets éditeur `/CRP_*` couverts par une décision mémorisée sont acceptés et le sont **avec leur
+  source de recherche** citée dans `notes`.
 - **Bornes nulles = asset non mesurable** : un `FortPlaysetRoot` qui répond
   `min = max = {0,0,0}` avec `isValid: true` n'est **pas** une mesure ; l'asset est remplacé par un
   équivalent `PPID` mesurable, pas accepté.

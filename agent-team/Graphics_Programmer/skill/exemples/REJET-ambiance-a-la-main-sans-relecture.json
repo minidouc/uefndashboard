@@ -64,7 +64,7 @@
   "exemple_annotations": {
     "role": "CONTRE-EXEMPLE - le livrable est REJETE par le validateur Python, ne jamais l'imiter",
     "motifs_de_rejet": [
-      "asset_path '/Game/Athena/...' et '/Game/Environments/...' : le motif du schema exige un identifiant PID_ ou PPID_ ; ces chemins non exposes font echouer la validation d'ile au lancement de session (ILLEGAL_ASSET_PATH).",
+      "asset_path '/Game/Athena/...' et '/Game/Environments/...' : le motif du schema exige un identifiant PID_ ou PPID_ pour l'ambiance, et ces chemins ne viennent d'aucune recherche archivee ni du catalogue commun. Leur legalite n'est pas prouvee (UNVERIFIED) : le prefixe ne suffit ni a les accepter ni a les condamner.",
       "actor_label 'Skydome Eclairage 01' avec des espaces : pattern [A-Za-z0-9_]+ refuse, et la cle de _placed.json devient introuvable a la relance.",
       "placement_mode 'WORLD' sans world_location_cm : l'ancre du device n'existe nulle part, la pose n'est pas reproductible.",
       "status 'placed' sans ref_path pour le meme device : rien n'est persiste, donc la relance creeront des doublons - l'interdit 'aucun device non consigne' est la pour ca.",

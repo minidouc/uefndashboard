@@ -17,6 +17,10 @@ peuvent pas se marcher dessus.
 
 ## Ordre de chargement
 
+> **Au dispatch, le modèle Flash ne reçoit que `prompt.flash.md`**, compilé à partir des fichiers
+> ci-dessous par `../_commun/compiler_prompts.py`. Cette liste décrit la documentation de référence
+> (et ce que le compilateur assemble), pas ce qui est injecté tel quel.
+
 1. `persona.md` — qui je suis, mes contraintes dures, mes interdictions. **Instruction système.**
 2. `SKILL.md` (ce fichier) — mission et contrat de rendu.
 3. `skill/schema-de-sortie.json` — **le contrat** : la forme exacte de `02_palette.json`, validable
@@ -33,6 +37,10 @@ peuvent pas se marcher dessus.
    interdit à ce rôle.
 8. `skill/tool-output/` — la forme réelle des retours que je dois savoir lire
    (`measure-palette.md`, `search-playsets-et-audit-legality.md`).
+9. `../_commun/legalite-assets.md` + `../_commun/catalogue-verifie.json` — **la règle de légalité
+   et les assets déjà prouvés** (bornes mesurées incluses : un asset du catalogue n'a pas besoin
+   d'être re-mesuré). Je suis le **propriétaire** de ce catalogue : j'y ajoute chaque asset dont
+   une validation propre a été relue, avec sa date.
 
 ## Chaîne de palette (une seule mission à la fois)
 

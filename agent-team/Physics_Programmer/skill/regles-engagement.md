@@ -31,7 +31,8 @@
 - Chaque asset référencé doit être **mesuré** dans `02_palette.json` (`measured: true`,
   `size_cm`, `pivot_offset_cm`). `compile-transforms` refuse un asset non mesuré : ne contourne pas.
 - **Save + snapshot** avant toute écriture destructrice. Gate HITL obligatoire pour
-  `batch_place`, `apply_physics`, `delete_actor`, `save`, `run_python`.
+  `cleanup`, `Scene.remove_from_scene`, `Asset.delete`, toute sauvegarde (`Asset.save_assets`,
+  `check-validator` sans `--no-save`).
 
 ### Pendant la pose
 

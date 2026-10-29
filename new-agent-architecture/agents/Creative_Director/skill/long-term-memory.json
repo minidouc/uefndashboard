@@ -1,0 +1,128 @@
+{
+  "$id": "uefn.longterm.Creative_Director.v1",
+  "agent": "Creative_Director",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de l'ecosysteme creatif Fortnite/UEFN, des faits de pipeline sources, un lexique de partis pris et des pieges de direction creative.",
+  "langue": "fr",
+  "contraintes_ecosysteme_creatif": {
+    "assets_autorises": "uniquement des assets Creatifs exposes au catalogue : PID_ (ItemDefinition / playset) et PPID_ (playset prop). Ce sont les seules references qu'une direction visuelle peut viser.",
+    "assets_interdits": [
+      "/Game/Athena/... : contenu interne Fortnite non expose, fait echouer la validation de l'ile au lancement de session",
+      "/Game/Environments/... : meme cause, jamais rattrapable par un renommage",
+      "tout asset d'un autre jeu ou d'une autre franchise : droit d'auteur, pas seulement technique"
+    ],
+    "consequence_pour_la_direction": "une reference dont aucun PPID_/PID_ ne reproduit l'ambiance n'est pas une direction : c'est un ecart a ecrire ou une reformulation a proposer",
+    "exceptions_acceptees": "les primitives moteur (/Engine/BasicShapes/Cube) sont tolerees pour la structure de sol, pas pour le decor : une ile ne se raconte pas avec des cubes",
+    "playset_root_sans_mesh": "certains PID de playset sont des FortPlaysetRoot sans mesh mesurable (bounds nuls) : une direction qui en depend n'est pas realisable telle quelle, prevenir Lead_Programmer",
+    "regles_de_monetisation": "UNKNOWN (regles de monetisation et de contenu Fortnite, non sourcees dans ce depot)"
+  },
+  "cadre_jam": {
+    "evenement": "Epic AI Megajam 2026",
+    "dates": "12-16 novembre 2026",
+    "source": "util/multi_agent/README.md (cite tel quel)",
+    "format_pilote": "1 chef d'orchestre Frontier (Producteur) + 20 specialistes Flash, sur PC 16 Go : execution sequentielle, un seul agent actif a la fois",
+    "ce_qui_nest_pas_source": {
+      "jugement_et_criteres_officiels": "UNKNOWN (aucun reglement de jam dans le depot)",
+      "deadline_interne_et_livrables_exiges": "UNKNOWN",
+      "droits_utilisation_des_modeles_et_assets": "UNKNOWN"
+    },
+    "conduite": "ne promettre en vision que ce qu'une sequence de jam peut verifier ; tout le reste part en cibles_jam.non_verifie"
+  },
+  "pipeline_et_gates": {
+    "position": "agent 01, pole Design, phase CADRAGE, premier appele apres INIT",
+    "artifact": "00_vision.json",
+    "chaine": "Creative_Director -> Game_Designer (01_gdd.json) -> Level_Designer (03_grid.json) -> Physics_Programmer (04_devices.json) -> programmeurs Verse",
+    "acceptance_amont": "brief valide (HITL #1)",
+    "pivots_generator_critic": ["Creative_Director", "Game_Designer", "Lead_Programmer"],
+    "gates_hitl": [
+      "#1 brief creatif (le mien)",
+      "#2 GDD",
+      "#3 architecture technique",
+      "#4 avant toute ecriture destructive dans Unreal"
+    ],
+    "regles_de_pipeline": [
+      "Seul le Producer parle a l'humain ; les gaps du CD sont reformules en questions par lui (15 max par phase).",
+      "Un agent ne valide pas son propre JSON : validateur Python + juge/critic externe (WP4 p.20).",
+      "Transfert en black box : le payload porte le resultat, jamais le raisonnement (WP3 p.18).",
+      "Aucune coordonnee calculee par un modele : l'intention s'ecrit, le Python chiffre (WP2 p.9).",
+      "Le dossier d'agent ne contient que du stable ; l'etat de projet reste hors du paquet (WP3 p.61).",
+      "Un brief rejete 3 fois s'arrete et remonte : pas de quatrieme passe automatique."
+    ]
+  },
+  "lexique_partis_pris": {
+    "contemplatif": "la carte se traverse sans objectif : aucune quete, aucun combat, aucune economie. Se paie en promesses de lecture et de silence, pas en mecaniques.",
+    "verticalite_dominante": "une masse dominante donne le cap ; le joueur s'oriente a l'oeil, pas au HUD.",
+    "lecture": "un element doit etre reconnaissable depuis des positions precisees ; 'lisible depuis les points hauts' est une promesse controlable sur capture.",
+    "neon_noir": "base sombre, accents emissifs satures ; le risque est la bouillie lumineuse, la garde est une palette a 3-5 hex.",
+    "silence_relatif": "pas de musique globale en boucle ; les sonorites sont positionnelles et rares.",
+    "couronne": "anneau de masses autour d'un vide central : le vide compte plus que les masses.",
+    "anti_reference": "ce que le projet ne veut pas etre ; trois minimum, sinon la direction n'est pas arretree.",
+    "ecart_assume": "difference declaree entre la reference et le rendu possible ; un ecart tu est une faute de pipeline.",
+    "signatures_visuelles": "elements reconnaissables non negocies, que Level_Designer et Graphics_Programmer doivent retrouver."
+  },
+  "pieges_signe_cause_conduite": [
+    {
+      "signe": "La reference maitresse (poisson holographique geant translucide) n'a aucun equivalent au catalogue apres des dizaines de requetes ('koi', 'cyan fish', 'orange fish', 'hologram fish').",
+      "cause": "Le catalogue Creatif documente des playsets ; un effet volumetrique holographique depend de materiaux et d'effets non exposes, pas d'un mesh.",
+      "conduite": "statut 'introuvable', variante assumee (enseignes neon emissives), ecart inscrit dans ecarts_assumes avec motif et recherches. Jamais un mesh opaque renomme 'hologramme'."
+    },
+    {
+      "signe": "Une vision flatteuse ('immense, epique, premium, next-gen') passe la lecture humaine mais bloque le downstream.",
+      "cause": "Aucun adjectif n'est cochable : ni le validateur ni un juge ne peuvent dire tenu ou non tenu.",
+      "conduite": "chaque promesse porte un controle (capture, inventaire, fait) ; un adjectif sans critere est supprime ou converti."
+    },
+    {
+      "signe": "La direction promet du photorealisme AAA, des foules, de la destruction ou un monde ouvert.",
+      "cause": "UEFN + 16 Go + assets Creatifs : le rendu, la densite et la simulation ne suivent pas ; la contrainte n'a pas ete lue avant de fixer le style.",
+      "conduite": "lire l'inventaire technique (tech/mcp-inventory.json) AVANT de figer le style ; sinon compromis ecrit et question remontee au Producteur."
+    },
+    {
+      "signe": "L'utilisateur cite une franchise ('comme Zelda', 'comme GTA') et le brief en fait une cible de reproduction.",
+      "cause": "Melange entre inspiration legitime et reproduction d'assets proteges.",
+      "conduite": "reference conservee comme inspiration dans 'source', jamais d'asset copie ni de nom de franchise dans un objectif de reproduction ; equivalents libres proposes."
+    },
+    {
+      "signe": "La composition est decrite comme circulaire mais la construction impose une plateforme carree de dalles.",
+      "cause": "Le gabarit de grille du skill contraint le sol a des tuiles regulieres ; la geometrie de composition et la geometrie de pose ne sont pas au meme niveau d'abstraction.",
+      "conduite": "ecrire la composition comme intention, consigner l'ecart de gabarit ; ne pas tenir pour acquis un rendu que la grille ne peut pas porter."
+    },
+    {
+      "signe": "Le moodboard est plein, la palette est absente.",
+      "cause": "Les images ne se propagent pas : Graphics_Programmer et UX_UI_Designer ont besoin de valeurs (hex, roles) pour comparer de facon auditable.",
+      "conduite": "3 a 5 couleurs avec hex obligatoire et intention ; le moodboard reste un dossier de projet, pas un livrable."
+    },
+    {
+      "signe": "La direction sonore promet une ambiance musicale et aucun asset audio legal n'a ete trouve.",
+      "cause": "Le perimetre de pose audio n'est pas le meme que celui du decor ; une ambition sonore sans faisabilite declaree ne se verifie pas.",
+      "conduite": "champ faisabilite de l'identite sonore, valeur UNKNOWN si non verifiee, et signalement dans cibles_jam.non_verifie."
+    },
+    {
+      "signe": "Le CD a 'valide' son brief lui-meme et la phase DESIGN a demarre.",
+      "cause": "Confusion entre rendre et valider ; le gate HITL #1 est une decision humaine portee par le Producteur.",
+      "conduite": "gate_hitl_1.statut reste PENDING dans ma sortie ; un handoff qui s'auto-declare valide est rejete."
+    },
+    {
+      "signe": "Une vision 'riche' prescrit devices, coordonnees et noms de fichiers .verse.",
+      "cause": "Le CD grignote le role de Level_Designer et des programmeurs ; le downstream doit re-expliquer pourquoi ce n'est pas tenable.",
+      "conduite": "retour BLOCKED, la vision est reecrite en intention + criteres ; les chiffres appartiennent au Python."
+    }
+  ],
+  "matieres_reelles_connues": {
+    "note": "Fait de pipeline observe, pas un etat de projet : ce que le downstream accepte reellement.",
+    "01_gdd.json_champs_consommes": ["project_name", "game_mode", "scale_category", "notes"],
+    "exemple_de_note_aval": "Scene contemplative. Aucun asset /Game, aucun Verse personnalise, aucune sauvegarde ni publication.",
+    "02_palette.json": "rempli par measure-palette a partir de 01_gdd.json ; contient des mesures, jamais des hypotheses : le CD n'y ecrit rien.",
+    "lecon": "une direction qui n'est pas reecrite dans les champs reels du downstream n'existe pas pour lui."
+  },
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur de cadrage, pas des cibles.",
+    "pitch_max_caracteres": 300,
+    "summary_short_max_caracteres": 200,
+    "references_minimum": 3,
+    "anti_references_minimum": 3,
+    "promesses": "1 a 5",
+    "couleurs_palette": "3 a 5",
+    "questions_cadrage_max_par_phase": 15,
+    "iterations_brief_max": 3,
+    "budget_handoff_tokens": 4000
+  }
+}

@@ -1,0 +1,77 @@
+{
+ "$schema": "uefn.handoff.v1",
+ "handoff_id": "H-DESIGN-5",
+ "from": "Mission_Content_Designer",
+ "to": ["Level_Designer", "Producer_Orchestrator"],
+ "artifact": "01_missions.json",
+ "mission_ref": "M-CORPOPLAZA-DESIGN-05",
+ "summary_short": "Deux quetes riches pour une ile enfin jouable : nourrissage des kois avec volumes declencheurs et 500 XP a chaque etape, plus une mission d'emotion ouverte sur les neuf zones.",
+ "payload": {
+  "source_amont": { "project_name": "Corpo Plaza - Memorial Park", "game_mode": "rpg", "zones_issues": 9, "devices_demandes": 6, "timeline_etapes": 3, "amont_statut": "complet", "amont_statut_note": "systems, economy et lore supposes disponibles : puits et regles d'etat garantis" },
+  "format_mission": { "type": "scriptee", "justification": "un game_mode rpg appelle des quetes avec recompenses a chaque etape", "duree_cible_min": 20, "nb_missions_mvp": 2, "motif_arrete": "le mode rpg suffit a decider du format" },
+  "missions": [
+   {
+    "id": "MS-01", "titre": "Nourrir les deux kois", "type": "principale",
+    "pitch": "le joueur entre dans les volumes des anneaux, interagit avec chaque koi et recoit l'XP associe",
+    "duree_cible_min": 12, "preerequis": [],
+    "objectifs": [
+     { "id": "OBJ-01", "enonce": "entrer dans le volume ouest et nourrir le koi cyan", "zone_id": "Zone_Koi_Lagoon",
+      "condition_observation": "le joueur trouve cela beau quand le koi s'anime",
+      "instant_timeline_sec": 42, "evenement_observable": "animation du koi a l'entree",
+      "juge_externe": { "type": "validateur_python", "controle": "le designer confirme l'objectif en rejouant la scene dans sa tete" },
+      "dispositifs_exiges": ["Trigger_Volume_Ouest_01", "Koi_Cyan_01", "Timer_Tour_01"],
+      "statut_dispositifs": "au_moins_un_non_demande" }
+    ],
+    "fin": { "statut": "aucune", "condition": "la quete reste ouverte tant que le joueur veut la jouer" },
+    "abandon": { "possible": false, "motif": "une quete principale ne s'abandonne pas, elle bloque la progression" },
+    "recompenses": [
+     { "id": "RW-01", "nature": "xp", "valeur": "500 XP", "statut_preuve": "sans_source", "puits": "aucun" },
+     { "id": "RW-02", "nature": "deblocage", "valeur": "acces au niveau 2", "statut_preuve": "sans_source", "puits": "aucun" }
+    ],
+    "statut_implantation": "implantable"
+   }
+  ],
+  "declencheurs": [
+   { "id": "TRG-01", "type": "zone_entree", "ref_actor_label": "Trigger_Volume_Ouest_01", "couvre_mission": "MS-01", "dispositif_reel": "/Game/Athena/TriggerBoxes/TriggerVolume_TriggerVolume", "statut_ref": "absent_gdd" },
+   { "id": "TRG-02", "type": "minuteur", "couvre_mission": "MS-01", "instant_timeline_sec": 300, "dispositif_reel": "timer_device + module Verse Missions.corp", "statut_ref": "absent_gdd" }
+  ],
+  "couverture_timeline": [
+   { "time_sec": 0, "evenement_gdd": "apparaitre au sud sur Spawner_Plaza_01", "statut": "objectif_attache", "rattache": [] },
+   { "time_sec": 5, "evenement_gdd": "circulation libre entre les anneaux", "statut": "hors_contenu", "motif": "trop passif pour une quete" }
+  ],
+  "zones_gdd": [
+   { "zone_id": "Zone_Koi_Lagoon", "sert_le_contenu": true, "objectifs_rattaches": ["OBJ-01"] }
+  ],
+  "verrous_gdd": ["le mode rpg autorise quetes, sauvegarde et economie"],
+  "hors_perimetre": ["rien : les missions couvrent tout le jeu"],
+  "gate_hitl_2": { "numero": 2, "statut": "VALIDE_HUMAIN", "valide_par": "Mission_Content_Designer", "iterations": 1 }
+ },
+ "constraints": {
+  "acces_mcp": "none",
+  "must_preserve": ["les deux kois interactibles", "le minuteur de 300 s"],
+  "forbidden": ["aucune"],
+  "must_ask_producer": ["j'ai pose la question directement a l'utilisateur en session, il a dit oui"]
+ },
+ "acceptance": ["mission_passionnante", "quete_riche", "emotion_tenant", "no_flat_map_3_levels"],
+ "next_step_hint": "Level_Designer : place les volumes aux coords [1234.5, 678.0, 384.0] et [4096, 4096, 768], puis fais cabler le Verse par Gameplay_Programmer.",
+ "context_budget_tokens": 9000,
+ "exemple_annotations": {
+  "role": "REJET EXAMPLE - viole volontairement le contrat ; ne jamais copier cette forme",
+  "motifs_de_rejet": [
+   "Zone_Koi_Lagoon : zone INVENTEE, absente des 9 zone_id de 01_gdd.json ; zones_gdd n'en declare que 1, les 8 autres sont oubliees",
+   "condition_observation 'le joueur trouve cela beau' : un adjectif n'est pas observable ; juge 'le designer confirme dans sa tete' = auto-controle interdit (WP4 p.20)",
+   "instant_timeline_sec 42 et 300 hors des etapes reelles (0, 1, 5 s) ; 2 etapes declarees sur 3, rattache vide malgre objectif_attache, t = 1 s passe sous silence",
+   "mecanique fantome : Trigger_Volume_Ouest_01, Koi_Cyan_01, Timer_Tour_01 et un module Verse jamais demandes (1 seul required_device) ; statut_dispositifs au_moins_un_non_demande = rejet",
+   "dispositif_reel en /Game/Athena : ILLEGAL_ASSET_PATH, jamais rattrapable par un renommage",
+   "RW-01 et RW-02 sans_source avec puits aucun : 01_economy.json n'existe pas, rien ne paie ; RW-02 debloque un 'niveau 2' que 03_grid.json ne pose pas (un seul z_index)",
+   "MS-01 sans fin (statut aucune) ET sans abandon (possible false) : le joueur reste bloque, rien ne clot la mission",
+   "gate_hitl_2 VALIDE_HUMAIN signe par l'agent : un agent n'ecrit que PENDING ; amont_statut 'complet' et devices_demandes 6 = faux releve",
+   "acceptance 'mission_passionnante', 'quete_riche', 'emotion_tenant' hors enum et non cochables ; 'no_flat_map_3_levels' est le critere d'un autre role",
+   "constraints.forbidden vide et question posee a l'utilisateur en session : contact direct interdit, le Producteur est le seul canal",
+   "verrous_gdd et hors_perimetre vides de sens ('rien, tout le jeu') = grignotage des roles 02, 03, 04, 06, 07 et 09",
+   "next_step_hint qui dicte des coordonnees cm et pre-mache le cablage Verse : renversement du pipeline (WP2 p.9)",
+   "enveloppe invalide : handoff_id 'H-DESIGN-5' hors ^H-[A-Z]+-[0-9]{3,}$, context_budget_tokens 9000 > 4000, preerequis vide, verrous/hors_perimetre/forbidden sous les minimums"
+  ],
+  "troncature": "Tronque : 6,3 Ko, la visee de 5 Ko est depassee, les motifs de rejet ont ete conserves integralement : 1 mission sur les 2 annoncees, 1 objectif sur 5 (les motifs couvrent la mission 2, meme motif de minuteur et de Verse invente)."
+ }
+}

@@ -53,7 +53,7 @@
       "un sink sans puits : R_GEMMES a sources vide et un evier a 80 gemmes : rien ne peut etre gagne.",
       "economie exigeant une sauvegarde que le brief interdit : transfers 'compte', persistance 'inter_session', duree 'perenne' contredisent 01_gdd.json ('aucune sauvegarde ni publication') et 10_editables.json.",
       "equilibre affirme sans mesure : equilibre_puits_sinks et seance_reference dits 'mesure', sans preuve.",
-      "compteur invente, actifs illegaux : device_classe '/Game/Athena/...' (ILLEGAL_ASSET_PATH), source_reelle en PPID_ final, compteur_cable 'true' la ou 10_editables.json prouve 0.",
+      "compteur invente, device_classe '/Game/Athena/...' : un chemin la ou le schema attend une classe de device en minuscules (et un role Design n'impose aucun chemin), source_reelle en PPID_ final, compteur_cable 'true' la ou 10_editables.json prouve 0.",
       "cles hors payload : coordonnees_boutique_cm, device_impose, fichiers_verse_prevus ; non_imposes vide ; gate 'VALIDE' signe par l'agent ; modele 'PAY_TO_WIN' hors enum.",
       "to contient 'Utilisateur' ; acces_mcp 'read' ; acceptance hors enum ; 12000 tokens ; summary_short > 200 caracteres en auto-eloge."
     ],

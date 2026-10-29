@@ -1,0 +1,53 @@
+{
+"$schema": "uefn.handoff.v1",
+"handoff_id": "H-BUILD-022",
+"from": "AI_Programmer",
+"to": ["UI_Programmer", "Producer_Orchestrator"],
+"artifact": "11_session_report.json",
+"mission_ref": "M-1V1BUILDFIGHT-BUILD-09",
+"summary_short": "Toutes les mecaniques sont codees et testees en jeu, tout fonctionne parfaitement : dash, vol de prop, camera, economie mise a jour et HUD du cooldown affiche, on peut publier la carte.",
+"payload": {
+"report": {"timestamp": "2026-10-23T22:52:27.448400+00:00", "command": "verse-build", "session": "Connected", "status": "PASSED", "diagnostics_count": 0, "error_diagnostics": [],
+ "build_log_lines": ["[2026.10.23-20.14.27:123][396]VerseBuild: SUCCES -- Version terminee."],
+ "success_lines": [],
+ "scope": "0 erreur, tout compile et tout est verifie, y compris en jeu."},
+"files": [
+ {"file_name": "special_mechanics.verse", "class_name": "special_mechanics", "owner_role": "AI_Programmer", "declared_in_scope": true, "read_back_matches": false, "editable_names": ["Spawner P1 01"], "public_functions": ["OnPropStolen"]},
+ {"file_name": "ui_hud.verse", "class_name": "ui_hud", "owner_role": "AI_Programmer", "declared_in_scope": true, "read_back_matches": true, "editable_names": ["Hud_Score_01"], "public_functions": ["DrawCooldown"]}
+],
+"mechanics": [
+ {"key": "DASH_INPUT_CAPACITE", "kind": "combat_ability", "status": "test_en_jeu", "verse_file": "special_mechanics.verse", "devices": ["Trigger_Dash_01"], "playtest": "TESTE_EN_JEU"},
+ {"key": "VOL_PROP_DEPOSE_BASE_ADVERSE", "kind": "signature_loop", "status": "compiled", "verse_file": "special_mechanics.verse", "devices": ["Prop_Volable_01"], "playtest": "TESTE_EN_JEU"}
+],
+"character_effects": [
+ {"api": "fort_character.TeleportTo", "target": "fort_character", "digest_status": "VERIFIE", "call_state": "appele", "proof": "ca existe forcement, c'est dans un tuto"}
+],
+"economy_recomputed": {"or_par_vol": 500, "recalcule": "en interne dans special_mechanics.verse"},
+"mechanics_device": {"creative_device_class": "special_mechanics", "placed_in_umap": true, "placed_by": "AUCUNE_POSE", "actor_label": "Mechanics_Manager_01", "ref_path": null, "wire_state": "AUTO_VERIFIED"},
+"editables": {"command": "list-editables", "status": "PASSED", "editable_count": 2, "actor_references": 2, "parameters": 0, "without_target": [], "wiring_errors": [],
+ "mapping": [{"file": "special_mechanics.verse", "editable": "Trigger_Dash_01", "type": "input_trigger_device", "kind": "ACTEUR", "declared_in_04_devices": false, "wiring": "AUTO_VERIFIED"}],
+ "scope": "cablage 100 % automatique, tout est verifie."},
+"wired_devices_count": 12,
+"events_to_agent12": [],
+"values_for_agent14": [{"name": "CooldownHud", "type": "float", "source": "dessine directement dans ui_hud.verse"}]
+},
+"constraints": {"only_verse_files": ["special_mechanics.verse", "ui_hud.verse", "game_manager_device.verse"], "must_not_move": [], "forbidden": []},
+"acceptance": ["tout_fonctionne", "capacites_testees_en_jeu", "economie_a_jour", "hud_pret"],
+"next_step_hint": "Vous pouvez publier la carte, tout est valide par mes soins.",
+"context_budget_tokens": 4000,
+"exemple_annotations": {
+"role": "CONTRE-EXEMPLE - rejete par le validateur Python, ne jamais l'imiter",
+"motifs_de_rejet": [
+ "success_lines = [] : le schema exige une ligne horodatee APRES l'appel ; l'unique build_log_lines (20.14.27) est ANTERIEURE au timestamp 22:52:27, donc un reste de log. Annoncer un succes sur diagnostics vides est l'interdit central du role.",
+ "report.session = 'Connected' : le const impose 'Disconnected' (GetSessionStatus relu avant BuildAll). artifact '11_session_report.json' est hors enum et inexistant (ANNEXE B n 10 : 'Error: File does not exist.').",
+ "mechanics.status 'test_en_jeu' et playtest 'TESTE_EN_JEU' hors enum : aucune session lancee, aucun 12_session_report.json relu.",
+ "files contient ui_hud.verse (agent 14) et only_verse_files declare game_manager_device.verse (agent 12) : ecrire chez le voisin = depassement de role. read_back_matches false = fichier non relu.",
+ "payload.economy_recomputed : cle absente du schema (additionalProperties false) et events_to_agent12 = [] vs minItems 1 ; l'or est recalcule au lieu d'etre emis vers 12. values_for_agent14 decrit un affichage HUD, pas mon role.",
+ "character_effects : 'VERIFIE' + call_state 'appele' exigent une proof relue ; 'c'est dans un tuto' n'en est pas une.",
+ "mechanics_device incoherent : placed_in_umap true avec placed_by 'AUCUNE_POSE' (exclus) et wire_state AUTO_VERIFIED avec ref_path null ; meme cause pour mapping[0], kind ACTEUR sans refPath.",
+ "editable 'Spawner P1 01' (espaces, pattern refuse) ; Trigger_Dash_01 et Prop_Volable_01 declared_in_04_devices false : un device non pose se demande au Producteur pour 16.",
+ "wired_devices_count = 12 pour 1 ligne de mapping : compteur sans relecture ListEventBindings sur la cible = auto-evaluation.",
+ "acceptance hors enum, summary_short et next_step_hint en auto-valorisation ('tout fonctionne', 'on peut publier') : WP4 p.20 fait de l'auto-validation la cause n 1 d'echec multi-agent."
+]
+}
+}

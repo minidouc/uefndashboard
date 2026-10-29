@@ -7,6 +7,7 @@ Ce qui est verifie ici, ce sont les CONTRATS du skill — codes retour, statuts,
 accord, rapports qui disent ce qu'ils n'ont pas verifie. Un PASSED obtenu contre le mock ne
 prouve RIEN sur l'editeur reel : il prouve que le CLI tient ses propres regles.
 """
+import glob
 import json
 import os
 import shutil
@@ -786,8 +787,68 @@ pal_ill = json.load(open(os.path.join(ws_ill, "02_palette.json"), encoding="utf-
 pal_ill["assets"]["prop_ramp"]["uefn_path"] = "/Game/Environments/Asteria/NeonCity/Props/SM_BusStop.SM_BusStop"
 write(os.path.join(ws_ill, "02_palette.json"), pal_ill)
 rc, d, _ = cli(["validate-scene"], ws_ill, env)
-check("N1 validate-scene bloque les chemins /Game/ non exposes (ILLEGAL_ASSET_PATH)",
+check("N1 validate-scene bloque un /Game/ absent du catalogue (UNVERIFIED_ASSET_PATH, pas une preuve d'illegalite)",
+      rc == 1 and d and "UNVERIFIED_ASSET_PATH" in types(d), json.dumps(d)[:240])
+
+# Catalogue commun (agent-team/_commun) : les tests travaillent sur une COPIE.
+REAL_CAT = os.path.join(os.path.dirname(os.path.dirname(SKILL)), "agent-team", "_commun",
+                        "catalogue-verifie.json")
+TMP_CAT = os.path.join(ROOT, "catalogue-verifie.json")
+shutil.copy(REAL_CAT, TMP_CAT)
+env_cat = dict(env, UEFN_CATALOGUE=TMP_CAT)
+cat = json.load(open(TMP_CAT, encoding="utf-8"))
+REFUSED = cat["refuses"]["chemins"][0]
+ARME = cat["acceptes"]["objets"]["armes"]["pompe"]
+PROP = cat["acceptes"]["props"]["MilitaryBase_SolidWall_01a"]["chemin"]
+
+pal_ill["assets"]["prop_ramp"]["uefn_path"] = REFUSED
+write(os.path.join(ws_ill, "02_palette.json"), pal_ill)
+rc, d, _ = cli(["validate-scene"], ws_ill, env_cat)
+check("N1b validate-scene bloque un chemin refuse par le validateur (ILLEGAL_ASSET_PATH)",
       rc == 1 and d and "ILLEGAL_ASSET_PATH" in types(d), json.dumps(d)[:240])
+for label, chemin in (("arme /Game/Athena/Items", ARME), ("prop /Game/Creative", PROP)):
+  pal_ill["assets"]["prop_ramp"]["uefn_path"] = chemin
+  write(os.path.join(ws_ill, "02_palette.json"), pal_ill)
+  rc, d, _ = cli(["validate-scene"], ws_ill, env_cat)
+  check(f"N1c validate-scene accepte un chemin prouve du catalogue ({label})",
+        d is not None and not ({"ILLEGAL_ASSET_PATH", "UNVERIFIED_ASSET_PATH"} & set(types(d))),
+        json.dumps(d)[:240])
+pal_ill["assets"]["prop_ramp"]["uefn_path"] = "/Game/Environments/Asteria/NeonCity/Props/SM_BusStop.SM_BusStop"
+write(os.path.join(ws_ill, "02_palette.json"), pal_ill)
+rc, d, _ = cli(["validate-scene"], ws_ill, dict(env_cat, UEFN_ALLOW_UNVERIFIED="1"))
+check("N1d UEFN_ALLOW_UNVERIFIED=1 laisse essayer un /Game/ non prouve",
+      d is not None and "UNVERIFIED_ASSET_PATH" not in types(d), json.dumps(d)[:240])
+
+# check-validator : seules les lignes POSTERIEURES a la sauvegarde comptent.
+OLD_ERR = ("[2026.10.29-13.42.34:924][759]AssetCheck: Error: Generateur (...) references disallowed object "
+           "/BlastBerryWeapons/Gameplay/PumpShotgun/WID_Shotgun_Pump_Athena_BB_SR.WID_Shotgun_Pump_Athena_BB_SR. "
+           "(FortValidator_FortExposedActors)")
+OK_MARK = "[2026.10.29-13.49.20:431][776]AssetCheck: /x/MyProject Validation de la ressource"
+m.state(validator_log_before=[OLD_ERR], validator_log_after=[OK_MARK])
+rc, d, _ = cli(["check-validator"], WS, env_cat)
+check("V1 check-validator ignore les vieilles erreurs et lit la validation propre -> PASSED",
+      rc == 0 and d and d["status"] == "PASSED" and d["refused_paths"] == []
+      and os.path.exists(os.path.join(WS, "06b_validator_report.json")), json.dumps(d)[:300])
+# format REEL du journal (2026-10-29) : la ligne finit par le chemin suivi d'un point, sans suffixe
+NEW_ERR = ("[2026.10.29-13.50.01:100][800]LogValkyrieValidation: Error: Package Actor 'Fournisseur d'objets' "
+           "in World /x/MyProject.MyProject references disallowed object "
+           "/Figment_Athena_Medkit/Gameplay/Figment_Athena_Medkit.Figment_Athena_Medkit.")
+NOUVEAU = "/Nouveau_Plugin/Gameplay/WID_Test.WID_Test"
+NEW_ERR2 = ("[2026.10.29-13.50.01:101][800]AssetCheck: Error: /x/MyProject Erreurs enregistrees lors de la "
+            "validation de la ressource Package Actor 'Generateur' in World /x/MyProject.MyProject "
+            f"references disallowed object {NOUVEAU}.")
+m.state(validator_log_after=[OK_MARK, NEW_ERR, NEW_ERR2])
+rc, d, _ = cli(["check-validator", "--update-catalogue"], WS, env_cat)
+cat2 = json.load(open(TMP_CAT, encoding="utf-8"))
+check("V2 check-validator detecte une erreur posterieure -> FAILED + chemins refuses extraits",
+      rc == 1 and d and d["status"] == "FAILED" and NOUVEAU in d["refused_paths"], json.dumps(d)[:300])
+check("V3 --update-catalogue ajoute le nouveau refus au catalogue (sans doublon)",
+      d and d["catalogue_added"] == [NOUVEAU] and cat2["refuses"]["chemins"].count(NOUVEAU) == 1
+      and json.load(open(REAL_CAT, encoding="utf-8")) == cat, json.dumps(d)[:300])
+m.state(validator_log_before=[], validator_log_after=[])
+rc, d, _ = cli(["check-validator"], WS, env_cat)
+check("V4 aucune trace de validation apres sauvegarde -> UNKNOWN (pas une preuve) rc=1",
+      rc == 1 and d and d["status"] == "UNKNOWN", json.dumps(d)[:300])
 rc, d, _ = cli(["search-playsets", "--query", "neon busstop"], WS, env)
 check("N2 search-playsets retourne uniquement des chemins PPID_/PID_ legaux",
       rc == 0 and d and d["status"] == "PASSED" and d.get("total_trouves", 0) >= 1
@@ -816,7 +877,198 @@ check("N8 launch-session avec accord -> StartSession + Connected + 12_session_re
       and os.path.exists(os.path.join(WS, "12_session_report.json")), json.dumps(d)[:240])
 m.state(illegal_actors=[], session="Disconnected")
 
+rc, d, _ = cli(["list-devices", "--filter", "spawner"], WS, env)
+check("N9 list-devices -> assetPath exact du catalogue (Device.ListDeviceAssets)",
+      rc == 0 and d and d["count"] >= 1 and "PID_" in json.dumps(d["devices"]), json.dumps(d)[:240])
+rc, d, _ = cli(["list-devices", "--filter", "zzz_introuvable"], WS, env)
+check("N10 list-devices sans resultat -> DEVICE_ASSET_NOT_FOUND rc=1 (jamais un chemin approchant)",
+      rc == 1 and d and d.get("error_kind") == "DEVICE_ASSET_NOT_FOUND", json.dumps(d)[:240])
+rc, d, _ = cli(["verse-read", "--path", "/Projet/absent.verse"], WS, env)
+check("N11 verse-read d'un fichier absent -> VERSE_FILE_NOT_FOUND rc=1",
+      rc == 1 and d and d.get("error_kind") == "VERSE_FILE_NOT_FOUND", json.dumps(d)[:240])
+
 m.stop()
+
+print("\n== P. Prompts Flash compiles (agent-team/_commun/compiler_prompts.py) ==")
+COMPILER = os.path.join(os.path.dirname(os.path.dirname(SKILL)), "agent-team", "_commun",
+                        "compiler_prompts.py")
+rc, out, err = run([COMPILER, "--check"])
+check("P1 chaque prompt.flash.md est a jour avec ses sources et sous le plafond de tokens",
+      rc == 0, (out + err)[-400:])
+
+print("\n== H. Dispatch et validation des handoffs (agent-team/_commun/studio.py) ==")
+TEAM = os.path.join(os.path.dirname(os.path.dirname(SKILL)), "agent-team")
+STUDIO = os.path.join(TEAM, "_commun", "studio.py")
+
+
+def studio(args):
+  rc, out, err = run([STUDIO, *args])
+  try:
+    return rc, json.loads(out)
+  except ValueError:
+    return rc, {"brut": out + err}
+
+
+EX_DIR = os.path.join(ROOT, "studio_exemples")
+os.makedirs(EX_DIR, exist_ok=True)
+mal_juges = []
+for ex in sorted(glob.glob(os.path.join(TEAM, "*", "skill", "exemples", "*.json"))):
+  if os.sep + "Producer_Orchestrator" + os.sep in ex:
+    continue
+  dst = os.path.join(EX_DIR, os.path.basename(ex))
+  shutil.copy(ex, dst)
+  rc, d = studio(["validate", dst])
+  if (rc == 0) == os.path.basename(ex).startswith("REJET"):
+    mal_juges.append(f"{os.path.basename(ex)} rc={rc}")
+check("H1 chaque bon exemple des agents passe, chaque exemple REJET est refuse", not mal_juges,
+      "; ".join(mal_juges[:4]))
+
+with open(os.path.join(TEAM, "Level_Designer", "skill", "exemples", "grille-esplanade-21x21.json"),
+          encoding="utf-8") as f:
+  BON = json.load(f)
+HD = os.path.join(ROOT, "studio_projet", "handoff")
+liv = os.path.join(HD, "texte.json")
+os.makedirs(HD, exist_ok=True)
+with open(liv, "w", encoding="utf-8") as f:
+  f.write("Voici mon livrable :\n```json\n" + json.dumps(BON, ensure_ascii=False) + "\n```\nFin.")
+rc, d = studio(["validate", liv])
+with open(liv, encoding="utf-8") as f:
+  nettoye = json.load(f)
+check("H2 JSON entoure de texte -> extrait, fichier nettoye, brut conserve, PASSED",
+      rc == 0 and "JSON_EXTRAIT_DU_TEXTE" in types(d, "avertissements")
+      and os.path.exists(liv + ".brut.txt") and nettoye == BON, json.dumps(d)[:240])
+
+mauvais = json.loads(json.dumps(BON))
+mauvais["payload"]["chemin_test"] = "/BlastBerryWeapons/Items/Weapons/X.X"
+mauvais["payload"]["blocked_assets"] = ["/BlastBerryWeapons/Items/Weapons/X.X"]
+liv2 = write(os.path.join(HD, "illegal.json"), mauvais)
+def journal_tentatives():
+  try:
+    with open(os.path.join(HD, ".tentatives.json"), encoding="utf-8") as f:
+      return f.read()
+  except OSError:
+    return None
+
+
+avant = journal_tentatives()
+studio(["validate", liv2, "--essai"])
+rc, d = studio(["validate", liv2, "--essai"])
+check("H3a auto-controle --essai du sous-agent : meme verdict, aucune tentative comptee",
+      rc == 1 and d.get("essai") and "tentatives_echouees" not in d
+      and journal_tentatives() == avant, json.dumps(d)[:240])
+rc, d = studio(["validate", liv2])
+check("H3 chemin refuse par le validateur UEFN -> ILLEGAL_ASSET_PATH (sauf dans une liste "
+      "de blocage), REJECT + message_correctif",
+      rc == 1 and types(d, "erreurs").count("ILLEGAL_ASSET_PATH") == 1
+      and d.get("decision_conseillee") == "REJECT" and "REFUSÉ" in d.get("message_correctif", ""),
+      json.dumps(d)[:300])
+rc, d = studio(["validate", liv2])
+check("H4 le meme livrable refuse deux fois -> PAYLOAD_IDENTIQUE, HALT_PHASE",
+      rc == 1 and d.get("decision_conseillee") == "HALT_PHASE"
+      and "PAYLOAD_IDENTIQUE" in types(d, "erreurs"), json.dumps(d)[:240])
+mauvais["payload"]["chemin_test"] = "/BlastBerryWeapons/Items/Weapons/Y.Y"
+write(liv2, mauvais)
+rc, d = studio(["validate", liv2])
+check("H5 troisieme echec (payload different) -> ESCALATE_USER",
+      rc == 1 and d.get("decision_conseillee") == "ESCALATE_USER", json.dumps(d)[:240])
+
+autre = json.loads(json.dumps(BON))
+autre["from"] = "Physics_Programmer"
+liv3 = write(os.path.join(HD, "emetteur.json"), autre)
+rc, d = studio(["validate", liv3, "--agent", "Level_Designer"])
+check("H6 livrable signe par un autre agent -> MAUVAIS_EMETTEUR",
+      rc == 1 and "MAUVAIS_EMETTEUR" in types(d, "erreurs"), json.dumps(d)[:240])
+
+gros = json.loads(json.dumps(BON))
+gros["payload"]["bourrage"] = ["x" * 100] * 200
+liv4 = write(os.path.join(HD, "gros.json"), gros)
+rc, d = studio(["validate", liv4])
+check("H7 payload au-dela du budget de tokens -> HANDOFF_TROP_GROS",
+      rc == 1 and "HANDOFF_TROP_GROS" in types(d, "erreurs"), json.dumps(d)[:240])
+
+with open(os.path.join(TEAM, "Physics_Programmer", "skill", "exemples",
+                       "geometrie-21x21-auditee.json"), encoding="utf-8") as f:
+  PHY = json.load(f)
+liv5 = write(os.path.join(HD, "physique.json"), PHY)
+# validator_clean est exige par la MISSION du Producer, pas declare par l'agent.
+mis5 = write(os.path.join(HD, "mission_physique.json"),
+             {"mission_ref": PHY.get("mission_ref"), "acceptance": ["validator_clean"]})
+rc, d = studio(["validate", liv5, "--mission", mis5])
+check("H8 criteres non prouvables ici (0_overlap, validator_clean sans workspace) -> "
+      "LANCER_VERIFICATIONS avec les commandes du CLI",
+      rc == 0 and d.get("decision_conseillee") == "LANCER_VERIFICATIONS"
+      and {"0_overlap", "validator_clean"} <= {x["critere"] for x in d.get("a_lancer", [])},
+      json.dumps(d)[:300])
+WSV = os.path.join(ROOT, "studio_ws")
+write(os.path.join(WSV, "06b_validator_report.json"), {"status": "PASSED"})
+time.sleep(0.05)
+write(os.path.join(WSV, "05_props.json"), {})
+rc, d = studio(["validate", liv5, "--mission", mis5, "--workspace", WSV])
+check("H9 scene modifiee apres check-validator -> VALIDATOR_PERIME",
+      rc == 1 and "VALIDATOR_PERIME" in types(d, "erreurs"), json.dumps(d)[:240])
+time.sleep(0.05)
+write(os.path.join(WSV, "06b_validator_report.json"), {"status": "PASSED"})
+rc, d = studio(["validate", liv5, "--mission", mis5, "--workspace", WSV])
+check("H10 verdict PASSED plus recent que la scene -> validator_clean prouve",
+      rc == 0 and "validator_clean" not in [x["critere"] for x in d.get("a_lancer", [])],
+      json.dumps(d)[:240])
+
+MISSION = {"$schema": "uefn.handoff.v1", "handoff_id": "H-DESIGN-004",
+           "from": "Producer_Orchestrator", "to": ["Level_Designer"], "artifact": "03_grid.json",
+           "mission_ref": "M-test-DESIGN-004", "summary_short": "Grille de test",
+           "payload": {"taches": ["grille"], "inputs_fournis": ["design/01_gdd.json"]},
+           "acceptance": ["schema_valid"]}
+mis = write(os.path.join(HD, "H-DESIGN-004__Producer__to__Level_Designer.json"), MISSION)
+rc, d = studio(["dispatch", "--mission", mis])
+check("H11 dispatch avec un fichier d'entree absent -> ENTREE_MANQUANTE rc=1",
+      rc == 1 and "ENTREE_MANQUANTE" in types(d, "erreurs"), json.dumps(d)[:240])
+write(os.path.join(ROOT, "studio_projet", "design", "01_gdd.json"), {"ok": True})
+rc, d = studio(["dispatch", "--mission", mis])
+contenu = ""
+if rc == 0:
+  with open(d["fichier_mission"], encoding="utf-8") as f:
+    contenu = f.read()
+check("H12 dispatch -> fichier de mission autonome (prompt compile + mission + entrees + "
+      "commande de validation) et ligne a donner au sous-agent",
+      rc == 0 and "## RÔLE" in contenu and "H-DESIGN-004" in contenu and "01_gdd.json" in contenu
+      and "validate" in contenu and d["fichier_mission"] in d.get("prompt_sous_agent", ""),
+      json.dumps(d)[:300])
+rendu = d.get("rendu_attendu") or os.path.join(HD, "x.json")
+write(rendu, BON | {"mission_ref": "WRONG"})
+rc, v = studio(["validate", rendu, "--mission", mis])
+check("H13 livrable rattache a une autre mission -> MAUVAISE_MISSION",
+      rc == 1 and "MAUVAISE_MISSION" in types(v, "erreurs"), json.dumps(v)[:240])
+rc, d = studio(["dispatch", "--mission", mis])
+contenu = ""
+if rc == 0:
+  with open(d["fichier_mission"], encoding="utf-8") as f:
+    contenu = f.read()
+check("H14 re-dispatch apres refus -> les corrections du validateur sont dans la mission",
+      rc == 0 and d.get("correction_incluse") and "CORRECTIONS DEMANDÉES" in contenu
+      and "MAUVAISE_MISSION" in contenu, json.dumps(d)[:240])
+
+print("\n== T. Noms d'outils cites par les agents (agent-team/_commun/verifier_outils.py) ==")
+VERIF = os.path.join(TEAM, "_commun", "verifier_outils.py")
+rc, out, err = run([VERIF])
+check("T1 chaque commande CLI et chaque outil MCP cite dans agent-team existe", rc == 0,
+      (out + err)[-400:])
+FAUX = os.path.join(ROOT, "fausse_equipe", "Agent_X", "skill")
+os.makedirs(os.path.join(FAUX, "tool-output"), exist_ok=True)
+with open(os.path.join(FAUX, "outils.md"), "w", encoding="utf-8") as f:
+  f.write("| `list-devices --type x` | a |\n| `verse-lire` | b |\n"
+          "Appeler `Device.PlaceDevices` puis `Scene.find_actors`.\n"
+          "| `batch.exec` | n'existe pas |\n")
+with open(os.path.join(FAUX, "tool-output", "x.md"), "w", encoding="utf-8") as f:
+  f.write("Relire avec `get_actor_bounds` puis `delete_actor`.\n")
+rc, out, err = run([VERIF], env={"UEFN_AGENT_TEAM": os.path.join(ROOT, "fausse_equipe")})
+try:
+  trouves = {(p["type"], p["nom"]) for p in json.loads(out)["problemes"]}
+except ValueError:
+  trouves = set()
+attendus = {("OPTION_CLI_INCONNUE", "list-devices --type"), ("COMMANDE_CLI_INCONNUE", "verse-lire"),
+            ("OUTIL_MCP_INCONNU", "Device.PlaceDevices"), ("OUTIL_MCP_INCONNU", "delete_actor")}
+check("T2 option, commande et outils inventes detectes ; noms reels et negations ignores",
+      rc == 1 and trouves == attendus, str(sorted(trouves)) + err[-200:])
 
 print("\n== Resultat ==")
 ko = [n for n, ok, _ in results if not ok]

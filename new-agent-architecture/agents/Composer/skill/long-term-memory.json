@@ -1,0 +1,99 @@
+{
+  "$id": "uefn.longterm.Composer.v1",
+  "agent": "Composer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des faits sources du run Corpo Plaza, un lexique de statuts et des pieges propres a la partition musicale livree hors editeur.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 18, pole Audio, phase POLISH, appele apres l'Audio_Director (17).",
+    "artifact": "13_music.json",
+    "modele": "Flash ; un seul agent actif a la fois, execution strictement sequentielle sur PC 16 Go.",
+    "amont": ["Audio_Director (13_audio_direction.json)", "Creative_Director (00_vision.json, dont payload.identite_sonore)"],
+    "aval": ["Audio_Director (arbitrage de mix)", "Producer_Orchestrator (c'est lui qui fait remonter, jamais le Composer)"],
+    "frontiere_de_role": "livrer la partition et le plan de production (formes, themes, variations, durages, points d'entree/sortie, ce qui ne joue pas) ; pas le mix ni la cartographie par zone (17), pas les SFX (19), pas les voix (20), pas l'implementation (12/14).",
+    "acces_mcp": "none : agent Audio hors editeur, aucun appel MCP, aucune ecriture dans UEFN.",
+    "interdictions_transversales": [
+      "jamais de contact direct avec l'utilisateur : les questions passent par must_ask_producer",
+      "jamais de coordonnee, jamais de chemin /Game/, jamais de PPID_/PID_ final impose",
+      "donnee manquante = UNKNOWN, jamais une valeur plausible",
+      "une seule mission a la fois ; un seul handoff par passe",
+      "l'agent ne valide pas son propre JSON : validateur Python + juge Audio_Director (WP4 p.20)"
+    ],
+    "gates_hitl": 4
+  },
+  "contrats_fichiers": {
+    "enveloppe_handoff": "uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; plafond 4000 tokens ; payload = resultat, jamais de prose de raisonnement (WP3 p.18).",
+    "amont_gdd": "01_gdd.json fournit zone_id (9 zones), actor_label des devices (1 : Spawner_Plaza_01) et gameplay_timeline_sec (t=0, t=1, t=5) : ce sont les seules cibles et les seuls declencheurs reels admissibles.",
+    "amont_vision": "00_vision.json porte payload.identite_sonore (ambiances, signature, silence, interdits_sonores, faisabilite) = input amont du Composer. Absent du run : le statut_source reste UNKNOWN.",
+    "support_lecture_obligatoire": "une piece n'est livree que si support_lecture est declare (statut + commande_verification). La commande type est search-playsets --type PID sur la famille audio : sa presence prouve qu'on ne pretend pas avoir pose.",
+    "perimetre": "13_music.json ne porte ni mix global, ni SFX, ni voix, ni .verse, ni coordonnees ; tout depassement part en hors_perimetre avec le role proprietaire."
+  },
+  "lexique_statuts": {
+    "PARTITION_LIVREE": "morceau ecrit (forme, tempo, tonalite, instrumentation, duree, boucle, points d'entree/sortie) ; ne dit rien d'une pose.",
+    "NON_POSE": "rien dans l'editeur pour ce morceau : ni asset ni device verifie.",
+    "A_VERIFIER": "partition ecrite mais support de lecture non controle ; statut par defaut tant qu'aucune requete audio n'a abouti.",
+    "UNKNOWN": "indetermination assumee ; remonte en must_ask_producer, jamais remplace par une valeur plausible.",
+    "support_NON_VERIFYE": "support de lecture dans UEFN non controle ; la commande qui le verifierait est declaree, aucune ecoute n'est revendiquee.",
+    "silence_voulu": "endroit ou rien ne joue, decide et motive ; ce n'est pas un trou de production.",
+    "NON_IMPOSEE": "variation qu'on s'interdit de poser faute de declencheur reel dans le pipeline."
+  },
+  "pieges": [
+    {
+      "signe": "Une piste 'combat' ou 'boss' ou une variation 'au premier contact ennemi' est demandee dans une scene contemplative.",
+      "cause": "La decision utilisateur 4 (section 2 du journal) interdit combat, quete, economie et mecanique annexe : aucun evenement de gameplay n'existe donc a sonoriser.",
+      "conduite": "refuser la piece et la variation ; marquer le declencheur NON_IMPOSEE et le motif en must_ask_producer ; ne pas inventer un trigger."
+    },
+    {
+      "signe": "'Musique posee et entendue en session' figure dans un livrable.",
+      "cause": "Aucune recherche catalogue audio n'a ete menee (49 requetes, 0 audio), verse_modules vide et NO_VERSE_STAGED, et la session play-in-client n'etait pas connectee a la redaction (section 20).",
+      "conduite": "statut NON_VERIFYE / A_VERIFIER + commande_verification ; bannir toute revendication d'ecoute ; l'acceptance interdit ce claim."
+    },
+    {
+      "signe": "Le tempo est rendu par des adjectifs ('planant', 'epique', 'soutenu') et la duree par 'infini' ou vide.",
+      "cause": "Aucun de ces champs n'est cochable : le mix et le bouclage exigent un nombre borne.",
+      "conduite": "tempo_bpm = entier avec unite BPM ; duree_sec = entier borne ; sinon la piece est rejetee."
+    },
+    {
+      "signe": "Un PID_/PPID_ audio final est impose dans le payload (ex. PID_AudioPlayer_Music_01).",
+      "cause": "Le choix d'asset final appartient au Lead_Programmer (10-16) et doit sortir d'une vraie recherche ; l'imposer ici est un asset non verifie.",
+      "conduite": "device_audio_candidat = UNKNOWN tant qu'aucune requete n'a renvoye de candidat ; jamais un chemin /Game/ ni un PID invente."
+    },
+    {
+      "signe": "Une destination est portee en coordonnees XYZ ou en /Game/.",
+      "cause": "Le Composer ne calcule rien et n'entre pas dans l'editeur ; la cible doit rester une zone ou un label d'acteur.",
+      "conduite": "destination.kind = zone_id ou actor_label uniquement ; renvoyer les chiffres au Python aval."
+    },
+    {
+      "signe": "La prose est estetique et inverifiable ('une musique qui impose le respect').",
+      "cause": "L'esthetique n'est pas un critere ; seul le couple forme decrite + parametres numeriques est controlable.",
+      "conduite": "decrire une intention + une forme (tempo, modalite, instrumentation, courbe d'energie) ; supprimer l'adjectif decoratif."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "PAQUET LEGER : pas de skill/outils.md ni de skill/tool-output/ ; acces_mcp none, le Composer concoit et n'appelle ni MCP ni CLI.",
+    "Le mot 'audio' n'apparait nulle part dans le journal du run : aucune piste n'a ete posee ; 13_music.json n'a jamais ete emis.",
+    "00_vision.json n'existe pas dans ws_corpo_plaza : la direction sonore est reconstruite depuis l'identite_sonore du Creative_Director, statut_source UNKNOWN.",
+    "Coherence avec la decision contemplative : 0 musique d'action, 0 couche dynamique conditionnee a un evenement de gameplay.",
+    "La frontiere stable/transitoire (WP3 p.61) interdit tout etat de projet dans ce paquet : les handoffs dates vivent hors du dossier de l'agent."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur reels du run Corpo Plaza / Memorial Park, pas des cibles ; faits sources dans le journal et 01_gdd.json.",
+    "zones": 9,
+    "connects_to": 12,
+    "assets_demandes": 22,
+    "assets_demandes_tous_visuels": "tous visuels/props ; 0 asset audio demande",
+    "devices": 1,
+    "timeline_sec": [0, 1, 5],
+    "tours_couronne": "environ 16",
+    "tuile_cm": "512x512x384",
+    "requetes_catalogue": 49,
+    "requetes_catalogue_audio": 0,
+    "verse_modules": 0,
+    "etat_verse": "NO_VERSE_STAGED",
+    "memoire_pc_go": 16,
+    "gates_hitl": 4,
+    "handoff_max_tokens": 4000,
+    "niveau": "claudetest",
+    "session_play_in_client": "NON connectee a la redaction : rien de ce qui s'entend n'a ete entendu",
+    "pieces_d_action_autorisees": 0
+  }
+}

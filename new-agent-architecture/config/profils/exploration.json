@@ -1,0 +1,71 @@
+{
+  "description": "Map de decor a parcourir (ville, showcase, monde ouvert compact). Verticalite, ambiance, points de vue.",
+  "generateur": "ville",
+  "pose": {
+    "max_acteurs_par_lot": 60,
+    "portee_max_primitive_uu": 3900,
+    "z_min_primitive_uu": 256,
+    "tag_studio": "CP_STUDIO",
+    "dossier_outliner": "CP_Studio",
+    "categories_en_dernier": [
+      "environnement"
+    ],
+    "prefixes_en_dernier": [],
+    "ordre_strates": [
+      "S-1",
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "silhouette"
+    ]
+  },
+  "validation": {
+    "tolerance_contact_uu": 5,
+    "sol_z_uu": -256,
+    "marche_max_uu": 120,
+    "saut_horizontal_max_uu": 200,
+    "categories_praticables": [
+      "plancher",
+      "connecteur"
+    ],
+    "mots_non_praticables": [
+      "GARDE",
+      "RAIL",
+      "MONTANT"
+    ],
+    "mots_connecteurs_verticaux": [
+      "RAMPE",
+      "ECHELLE",
+      "GAINE",
+      "ESCALIER",
+      "ASCENSEUR"
+    ],
+    "gameplay_requis": [
+      {
+        "nom": "spawn joueur",
+        "motif": "SPAWN*",
+        "min": 1
+      }
+    ]
+  },
+  "visuel": {
+    "captures": {
+      "ensemble": {}
+    },
+    "seuils": {
+      "contraste_min": 12,
+      "bords_min": 4,
+      "ecart_camera_max_uu": 100
+    }
+  },
+  "$schema": "studio.profil.v1",
+  "ram_gate": {
+    "free_mo_min": 1500,
+    "editeur_ws_mo_max": null,
+    "cache_s": 20,
+    "polling_s": 30,
+    "fenetre_max_s": 360
+  }
+}

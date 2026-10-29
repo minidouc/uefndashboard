@@ -1,0 +1,78 @@
+{
+  "$schema": "studio.project.v2",
+  "slug": "corpo-plaza",
+  "profil": "exploration",
+  "root": "C:/Users/douco/Documents/Qoder/corpo-plaza",
+  "mcp_url": "http://127.0.0.1:8000/mcp",
+  "uefn": {
+    "content_root": "/2dcda1aa-e27e-40a7-9c9e-b4185e5b64c8",
+    "level_package": "/2dcda1aa-e27e-40a7-9c9e-b4185e5b64c8/MyProjectArtyu",
+    "level_ref_prefix": "/2dcda1aa-e27e-40a7-9c9e-b4185e5b64c8/MyProjectArtyu.MyProjectArtyu:PersistentLevel.",
+    "level_bounds_actor": "LevelBounds_0",
+    "bornes_attendues": {
+      "x": [
+        -12800,
+        12800
+      ],
+      "y": [
+        -12800,
+        12800
+      ],
+      "z": [
+        -256,
+        9000
+      ]
+    },
+    "import_folder": "/2dcda1aa-e27e-40a7-9c9e-b4185e5b64c8/CorpoPlaza"
+  },
+  "chemins": {
+    "placements": "design/level/placements.json",
+    "placements_supplementaires": [
+      "design/level/placements-da-delta.json"
+    ],
+    "overlaps_autorises": "design/level/overlaps_autorises.json",
+    "exceptions_flottants": "design/level/exceptions_flottants.json",
+    "cameras": "design/level/cameras.json",
+    "build_dir": "build/studio",
+    "state_dir": "state"
+  },
+  "pose": {
+    "prefixes_en_dernier": [
+      "DELTA"
+    ]
+  },
+  "validation": {
+    "mots_non_praticables": [
+      "GARDE",
+      "RAIL",
+      "MONTANT",
+      "RAME"
+    ]
+  },
+  "visuel": {
+    "captures": {
+      "S-1": {},
+      "S0": {},
+      "S1": {},
+      "S2": {},
+      "S3": {},
+      "S4": {}
+    },
+    "captures_differees": {
+      "$comment": "Retirees des captures requises par decision humaine le 2026-10-27 (citation : 'Mais compt comme si c etais fait je t est dit que je suis pas chez moi je peux pas lancer de sessions'). Nuit NON prouvee par l'image : Skydome regle (set_properties PROUVE) mais le viewport editeur ne la montre pas. A remettre dans 'captures' et a prendre en session de jeu.",
+      "nuit_S0": {
+        "luminance_max": 90,
+        "couleurs_min": {
+          "#22E6FF+#FF2BD6": 0.02
+        }
+      },
+      "nuit_ensemble": {
+        "luminance_max": 90,
+        "couleurs_min": {
+          "#22E6FF+#FF2BD6": 0.01,
+          "#E01B2E": 0.001
+        }
+      }
+    }
+  }
+}

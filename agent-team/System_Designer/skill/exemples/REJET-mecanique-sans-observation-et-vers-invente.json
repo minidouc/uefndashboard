@@ -28,7 +28,7 @@
 "mecanique dite en adjectifs ('immersive', 'epoustouflante') sans condition d'observation : 'ressenti du playtest' et 'c'est beau et fluide' ne sont pas binaires ; une regle non observable est une intention.",
 "SYS01 : etat declare sans aucune transition (transitions vides) - 'quete_demarree' est une etiquette, pas un etat (minItems 1) ; SYS2 : transition combat vers combat, aucun changement d'etat, critere 'le rythme est bon' non cochable",
 "api_vers = 'fn OnBegin() {...}' et 'SpawnerDevice.SpawnPlayerWave()' : noms d'API Verse inventes ecrits comme s'ils existaient ; le champ ne vaut que UNKNOWN ou aucune",
-"intention citant /Game/Environments : contenu interne non expose au catalogue Creatif (ILLEGAL_ASSET_PATH), refuse par le pattern des champs de texte",
+"intention citant un chemin d'asset (/Game/Environments/...) : un role Design ne cite aucun chemin, refuse par le pattern des champs de texte",
 "SYS01 : id 'S1' hors pattern ^SYS[0-9]{1,2}$ ; 'Trigger Zone 01' avec espaces et device_class inconnu, source '03_grid.json' allegee alors que required_devices ne donne que Spawner_Plaza_01 ; Game_Manager_01 jamais cree (NO_VERSE_STAGED)",
 "coordonnees inventees par le modele (rayon 45511.5 cm, saut 148 cm) : aucune coordonnee n'appartient a un agent Design",
 "meta-progression et sauvegarde entre sessions non declarees comme hors perimetre : elles relevent de Economy_Designer (04)",

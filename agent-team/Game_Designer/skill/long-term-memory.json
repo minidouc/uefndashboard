@@ -49,7 +49,7 @@
     "BLOCKED": "mainlevee motivee vers le Producteur, aucune diffusion.",
     "PENDING": "seule valeur de gate qu'un agent ecrit. VALIDE_HUMAIN et REJETE_HUMAIN relevent de la main de l'humain.",
     "UNKNOWN": "donnees absentes ou non sourcees. Admis par le schema, bloque le gate.",
-    "ILLEGAL_ASSET_PATH": "chemin /Game/Athena ou /Game/Environments : echec de validation d'ile au lancement de session, jamais rattrapable par un renommage.",
+    "ILLEGAL_ASSET_PATH": "chemin cite disallowed par le validateur UEFN ou liste dans agent-team/_commun/catalogue-verifie.json -> refuses : echec de validation d'ile, jamais rattrapable par un renommage. Le prefixe ne decide rien.",
     "boucle_contemplative": "apparaitre, regarder, circular : une boucle sans recompense ni etat sauvegarde, mais avec des evenements datables et donc falsifiables.",
     "tronc_de_zone": "zone portee par la boucle (celle ou l'evenement se voit) ; secondaire = zone de service ou de passage."
   },
@@ -114,7 +114,7 @@
   ],
   "legalite_catalogue": {
     "assets_autorises": "PPID_ (FortPlaysetPropItemDefinition, environ 100 418 entrees) et PID_ (FortPlaysetItemDefinition, environ 1 960 entrees)",
-    "assets_interdits": ["/Game/Athena/...", "/Game/Environments/...", "tout asset d'une autre franchise (droit d'auteur, pas seulement technique)"],
+    "assets_interdits": ["agent-team/_commun/catalogue-verifie.json -> refuses", "tout asset d'une autre franchise (droit d'auteur, pas seulement technique)"],
     "exception_toleree": "/Engine/BasicShapes/Cube pour la structure de sol uniquement, jamais pour le decor"
   },
   "chiffres_de_reference": {

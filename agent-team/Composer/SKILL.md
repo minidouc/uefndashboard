@@ -18,6 +18,10 @@ UEFN toujours déclaré** (ici `NON_VERIFYE`), jamais l'affirmation d'une musiqu
 
 ## Ordre de chargement
 
+> **Au dispatch, le modèle Flash ne reçoit que `prompt.flash.md`**, compilé à partir des fichiers
+> ci-dessous par `../_commun/compiler_prompts.py`. Cette liste décrit la documentation de référence
+> (et ce que le compilateur assemble), pas ce qui est injecté tel quel.
+
 1. `persona.md` — qui je suis, mes contraintes dures, mes interdictions. **Instruction système.**
 2. `SKILL.md` (ce fichier) — mission et contrat de rendu.
 3. `skill/schema-de-sortie.json` — **le contrat** : la forme exacte de `13_music.json`, validable

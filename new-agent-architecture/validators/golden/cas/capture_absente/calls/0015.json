@@ -1,0 +1,24 @@
+{
+ "outil": "ActorTools.get_actor_bounds",
+ "rc": 0,
+ "args": {
+  "actor": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.LevelBounds_0"
+  }
+ },
+ "payload": {
+  "returnValue": {
+   "min": {
+    "x": -12800,
+    "y": -12800,
+    "z": -256
+   },
+   "max": {
+    "x": 12800,
+    "y": 12800,
+    "z": 9000
+   },
+   "isValid": true
+  }
+ }
+}

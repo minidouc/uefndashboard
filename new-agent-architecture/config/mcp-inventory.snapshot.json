@@ -1,0 +1,3038 @@
+{
+ "generated_at": "2026-10-26T15:20:10Z",
+ "generated_by": "Engine_Programmer (mission corpo-plaza/INIT/mission-001, H-INIT-001)",
+ "mode": "LECTURE SEULE sur le niveau ; seule mutation = CVar ModelContextProtocol.PaginationPageSize 0 -> 200 (relu)",
+ "mcp_endpoint": "http://127.0.0.1:8000/mcp",
+ "mcp_port_active": 8000,
+ "editor_session_status": "Disconnected (relu live via SessionToolset.GetSessionStatus, rc=0)",
+ "active_level": "/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest (relu live via Scene.get_current_level)",
+ "stats": {
+  "toolsets": 30,
+  "toolsets_confirmes_live": "30/30 : list_toolsets relu live le 2026-10-26 (tech/_mcp_tools_list.json) correspond exactement aux 30 toolsets documentes ; IslandForgeProbe absent des deux",
+  "tools_indexes": 388,
+  "VERIFIE": 181,
+  "DANGEREUX_UNTESTE": 139,
+  "INCONNU": 68,
+  "outils_relus_live_ce_run": 17
+ },
+ "toolsets": [
+  {
+   "name": "editor_toolset.toolsets.asset.AssetTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/asset-tools.md",
+   "tools": [
+    {
+     "name": "duplicate",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree des assets dans le Content Browser"
+    },
+    {
+     "name": "move",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Renommage/deplacement d'asset dans le Content Browser"
+    },
+    {
+     "name": "create_folder",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un dossier dans le Content Browser"
+    },
+    {
+     "name": "delete",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Suppression d'asset/dossier dans le Content Browser"
+    },
+    {
+     "name": "exists",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Determines if a folder or asset exists."
+    },
+    {
+     "name": "get_asset_class",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Gets the class of an asset."
+    },
+    {
+     "name": "get_asset_tags",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Gets the asset registry tags for an asset."
+    },
+    {
+     "name": "get_dependencies",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Lists assets that the specified asset depends on."
+    },
+    {
+     "name": "get_metadata_tags",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Gets the metadata tags for an asset."
+    },
+    {
+     "name": "get_referencers",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Lists assets that reference the specified asset."
+    },
+    {
+     "name": "is_dirty",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Reverifie en phase 3 sur le package du niveau (avant/apres ecriture)."
+    },
+    {
+     "name": "list_folders",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : '/Game' -> arborescence complete ; '/' et '' -> [] ; '/Game/Fortnite' -> []",
+     "destructive": false,
+     "notes": "Lists the folders contained within a folder."
+    },
+    {
+     "name": "load_asset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Loads an asset from the project."
+    },
+    {
+     "name": "reload_asset",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Recharge depuis le disque en jetant les modifications non sauvegardees"
+    },
+    {
+     "name": "save_assets",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Sauvegarde : interdit (regle 4)"
+    },
+    {
+     "name": "update_metadata_tags",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/asset-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie les metadonnees d'un asset du projet"
+    },
+    {
+     "name": "find_assets",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : name 'PPID_' -> 200438 ; 'PID_' -> 203099 ; 'PPID_CRP' -> 21373 ; 'PPID_CRP_Sunburst' -> 348 ; asset_type exige un objet-path (/Script/Engine.MaterialInstanceConstant), chaine nue -> rc=1",
+     "destructive": false,
+     "notes": "Searches the project for assets that match specific criteria."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.curve_table.CurveTableTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/curve-table-tools.md",
+   "tools": [
+    {
+     "name": "import_file",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Importe un asset dans le Content Browser"
+    },
+    {
+     "name": "add_key",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset CurveTable"
+    },
+    {
+     "name": "rename_row",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset CurveTable"
+    },
+    {
+     "name": "set_keys",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset CurveTable"
+    },
+    {
+     "name": "add_row",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset CurveTable"
+    },
+    {
+     "name": "create",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "diff",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two CurveTable assets."
+    },
+    {
+     "name": "get_keys",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns all keys for a row."
+    },
+    {
+     "name": "remove_row",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset CurveTable"
+    },
+    {
+     "name": "list_rows",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/curve-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Lists the names of all rows in the curve table."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.data_table.DataTableTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/data-table-tools.md",
+   "tools": [
+    {
+     "name": "import_file",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Importe un asset dans le Content Browser"
+    },
+    {
+     "name": "create",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "add_rows",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset DataTable"
+    },
+    {
+     "name": "diff",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two DataTable assets."
+    },
+    {
+     "name": "get_rows",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the column values for one or more rows as a JSON string."
+    },
+    {
+     "name": "remove_rows",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset DataTable"
+    },
+    {
+     "name": "rename_rows",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset DataTable"
+    },
+    {
+     "name": "set_rows",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset DataTable"
+    },
+    {
+     "name": "get_schema",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the column schema of the data table as a JSON string."
+    },
+    {
+     "name": "list_rows",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Lists the names of all rows in the data table."
+    },
+    {
+     "name": "search_row_structs",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/data-table-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Finds structs that can be used as a DataTable schema."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.material_instance.MaterialInstanceTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/material-instance-tools.md",
+   "tools": [
+    {
+     "name": "create",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "set_parameter_override",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "set_scalar_parameter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "set_static_switch_parameter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "set_texture_parameter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "set_vector_parameter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "diff",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two MaterialInstanceConstant assets."
+    },
+    {
+     "name": "get_scalar_parameter",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Gets the current value of a scalar parameter on a material instance."
+    },
+    {
+     "name": "get_static_switch_parameter",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Gets the value of a static switch parameter on a material instance."
+    },
+    {
+     "name": "get_texture_parameter",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Gets the texture assigned to a texture parameter on a material instance."
+    },
+    {
+     "name": "get_vector_parameter",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Gets the current value of a vector parameter on a material instance."
+    },
+    {
+     "name": "set_parent",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "clear_parameters",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-instance-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset MaterialInstance"
+    },
+    {
+     "name": "list_parameters",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 sur /DaySequence/MI_24hrSky : 40 parametres types (Scalar: Moon_Intensity, Stars_Intensity, C1Skylight... ; Vector ; Texture)",
+     "destructive": false,
+     "notes": "Returns all parameters exposed by a material or instance, with their names and types."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.material.MaterialTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/material-tools.md",
+   "tools": [
+    {
+     "name": "connect_expressions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "connect_to_output",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "rename_parameter_group",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "add_expression",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "create_function",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "create_material",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "create_parameter_collection",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "delete_expression",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "delete_parameter_group",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "diff_function",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two MaterialFunction assets."
+    },
+    {
+     "name": "diff_material",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two Material assets."
+    },
+    {
+     "name": "disconnect_expressions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "disconnect_from_output",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "get_expression_inputs",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the current wiring of each input pin on a material expression."
+    },
+    {
+     "name": "get_property_input",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the expression and output pin feeding a material output property."
+    },
+    {
+     "name": "delete_unused_expressions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "get_expression_input_names",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all input pins on a material expression node."
+    },
+    {
+     "name": "get_expression_output_names",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all output pins on a material expression node."
+    },
+    {
+     "name": "get_expressions",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns all expression nodes in a Material or MaterialFunction graph."
+    },
+    {
+     "name": "get_referencing_materials",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: renvoie 242 objets AssetData vides ({}) pour SmoothCeil : serialisation cassee, aucun nom exploitable"
+    },
+    {
+     "name": "get_statistics",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns compiled shader statistics for a Material or MaterialInstance on the current shader platform: instruction counts, texture-sample counts, and ..."
+    },
+    {
+     "name": "layout_expressions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Material"
+    },
+    {
+     "name": "list_expression_classes",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns MaterialExpression subclasses valid for the given context."
+    },
+    {
+     "name": "list_parameter_groups",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the unique parameter group names defined in a Material or MaterialFunction."
+    },
+    {
+     "name": "recompile",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/material-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Recompile (et peut salir) un asset Material"
+    }
+   ]
+  },
+  {
+   "name": "PhysicsToolsets.PhysicsAssetToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/physics-asset-toolset.md",
+   "tools": [
+    {
+     "name": "SetBox",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "SetCapsule",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "SetSphere",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "AddConstraint",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "RemoveConstraint",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "RemoveShape",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "SetBodyMassScale",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "SetBodyPhysicsMode",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "AddBody",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "CreateFromMesh",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset et peut modifier le mesh source"
+    },
+    {
+     "name": "GetBodyMassScale",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer le multiplicateur d'echelle de masse du corps donne."
+    },
+    {
+     "name": "GetBodyPhysicsMode",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer le mode de simulation physique pour le corps donne."
+    },
+    {
+     "name": "GetBodyShapes",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les formes de collision attribuees a un corps."
+    },
+    {
+     "name": "RemoveBody",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "SetConstraintLimits",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset PhysicsAsset"
+    },
+    {
+     "name": "GetBodyNames",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le nom de l'os pour chaque corps rigide dans une ressource physique."
+    },
+    {
+     "name": "GetConstraints",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/physics-asset-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les contraintes de la ressource physique avec leurs limites angulaires actuelles."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.skeletal_mesh.SkeletalMeshTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/skeletal-mesh-tools.md",
+   "tools": [
+    {
+     "name": "add_socket",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "import_file",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Importe un asset dans le Content Browser"
+    },
+    {
+     "name": "rename_socket",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "set_material",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "set_socket_transform",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "assign_physics_asset",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "get_bone_children",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the direct children of a bone."
+    },
+    {
+     "name": "get_bone_parent",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the name of a bone's parent, or an empty string for the root bone."
+    },
+    {
+     "name": "get_material",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the material assigned to a named slot on a skeletal mesh."
+    },
+    {
+     "name": "get_socket_bone",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the name of the bone that a socket is attached to."
+    },
+    {
+     "name": "get_socket_transform",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the local transform of a socket relative to its parent bone."
+    },
+    {
+     "name": "remove_socket",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset SkeletalMesh"
+    },
+    {
+     "name": "get_bone_names",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all bones in a skeletal mesh in hierarchy order."
+    },
+    {
+     "name": "get_bounds",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the local-space bounding volume of a skeletal mesh."
+    },
+    {
+     "name": "get_lod_count",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the number of LODs in a skeletal mesh asset."
+    },
+    {
+     "name": "get_material_slots",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all material slots in a skeletal mesh."
+    },
+    {
+     "name": "get_morph_target_names",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all morph targets on a skeletal mesh."
+    },
+    {
+     "name": "get_physics_asset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the physics asset assigned to a skeletal mesh."
+    },
+    {
+     "name": "get_section_count",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the number of sections in a specific LOD of a skeletal mesh."
+    },
+    {
+     "name": "get_skeleton",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the skeleton asset associated with a skeletal mesh."
+    },
+    {
+     "name": "get_socket_names",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all sockets on a skeletal mesh."
+    },
+    {
+     "name": "get_vertex_count",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/skeletal-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the number of vertices in a specific LOD of a skeletal mesh."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.static_mesh.StaticMeshTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/static-mesh-tools.md",
+   "tools": [
+    {
+     "name": "import_file",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Importe un asset dans le Content Browser"
+    },
+    {
+     "name": "set_material",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "generate_lods",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "get_material",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the material assigned to a named slot on a static mesh."
+    },
+    {
+     "name": "set_lod_thresholds",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "set_nanite_enabled",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "generate_convex_collisions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "get_bounds",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the local-space bounding box of a static mesh."
+    },
+    {
+     "name": "get_lod_count",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: renvoie 0 alors que AssetTools.get_asset_tags(Cube).LODs = \"1\""
+    },
+    {
+     "name": "get_lod_thresholds",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns the screen-size thresholds at which each LOD becomes active."
+    },
+    {
+     "name": "get_material_slots",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the names of all material slots in a static mesh."
+    },
+    {
+     "name": "get_triangle_count",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: LOD index 0 is out of range."
+    },
+    {
+     "name": "get_vertex_count",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: LOD index 0 is out of range."
+    },
+    {
+     "name": "is_nanite_enabled",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: renvoie false alors que AssetTools.get_asset_tags(Cube).NaniteEnabled = \"True\""
+    },
+    {
+     "name": "remove_collisions",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    },
+    {
+     "name": "remove_lods",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/static-mesh-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset StaticMesh"
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.texture.TextureTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/assets-ressources/texture-tools.md",
+   "tools": [
+    {
+     "name": "import_file",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/texture-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Importe un asset dans le Content Browser"
+    },
+    {
+     "name": "export_png",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/texture-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Exports a Texture to a PNG file on disk."
+    },
+    {
+     "name": "get_size",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/texture-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the dimensions of a Texture2D in pixels."
+    },
+    {
+     "name": "read_texture",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/texture-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Reads a Texture and returns it as an image."
+    }
+   ]
+  },
+  {
+   "name": "ValkyrieToolset.DeviceToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/devices/device-toolset.md",
+   "tools": [
+    {
+     "name": "AddEventBinding",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Bind a source device's event to a target device's function so the event triggers it (idempotent - re-binding the same pair is a no-op)."
+    },
+    {
+     "name": "RemoveEventBinding",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Remove an event binding from a source device's event to a target device's function."
+    },
+    {
+     "name": "SetDeviceProperty",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "motif: Exige un creative_device Verse."
+    },
+    {
+     "name": "GetDeviceProperties",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Exige un creative_device Verse."
+    },
+    {
+     "name": "PlaceDevice",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Place a catalog device (classic or Verse) into the level."
+    },
+    {
+     "name": "GetBindingOptions",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Get the source events and target functions a device exposes for binding."
+    },
+    {
+     "name": "ListDeviceProperties",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Exige un creative_device Verse."
+    },
+    {
+     "name": "ListEventBindings",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/device-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "List the event bindings currently wired into a device's target functions."
+    },
+    {
+     "name": "ListDeviceAssets",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : 383 devices ; filtres : light->4 (PID_*PointLight, PID_Environment_Light_Rig), holo->2 (PID_Device_HoloScreen, PID_CP_Devices_HoloScreen), billboard->2, sky->4 (Skydome), time->6, post->1 (PID_CP_Devices_PostProcess), fog->0",
+     "destructive": false,
+     "notes": "List the project's placeable Creative devices - classic (Blueprint) and Verse (creative_device)."
+    }
+   ]
+  },
+  {
+   "name": "EditorToolset.EditorAppToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/editor-session/editor-app-toolset.md",
+   "tools": [
+    {
+     "name": "AddAssetsToCollection",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Ajouter des ressources a la collection specifiee."
+    },
+    {
+     "name": "CreateCollection",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Creer une nouvelle collection statique."
+    },
+    {
+     "name": "RemoveAssetsFromCollection",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Supprimer les ressources de la collection specifiee."
+    },
+    {
+     "name": "SetCVarValue",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : returnValue null (normal) ; preuve = relecture GetCVarValue -> '200'",
+     "destructive": true,
+     "notes": "Definir la valeur d'une variable de console."
+    },
+    {
+     "name": "SetShowFlag",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Activer/desactiver un indicateur d'affichage de moteur nomme sur le hublot actif de l'editeur de niveau (par ex."
+    },
+    {
+     "name": "CaptureAssetImage",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Rendre une vignette pour la ressource specifiee (par ex."
+    },
+    {
+     "name": "DestroyCollection",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Supprimer la collection specifiee."
+    },
+    {
+     "name": "FocusOnActors",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "Repositionner la camera de l'editeur de niveau pour faire le focus sur les acteurs specifies."
+    },
+    {
+     "name": "GetAssetThumbnails",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les vignettes mises en cache existantes des ressources (les images affichees par le navigateur de contenu) sans charger ou afficher les ..."
+    },
+    {
+     "name": "GetCollectionAssets",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les ressources de la collection specifiee."
+    },
+    {
+     "name": "GetCVarValue",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : PaginationPageSize '0' au depart, relu '200' apres ecriture",
+     "destructive": false,
+     "notes": "Lire la valeur actuelle d'une variable de console comme sa representation de chaine canonique (par ex."
+    },
+    {
+     "name": "GetShowFlag",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Lire si un indicateur d'affichage de moteur nomme est actuellement active sur le hublot actif de l'editeur de niveau."
+    },
+    {
+     "name": "OpenEditorForAsset",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | echec]",
+     "destructive": true,
+     "notes": "erreur: Failed to open editor for asset: /Engine/BasicShapes/Cube.Cube"
+    },
+    {
+     "name": "ScreenCoordsToWorld",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Rechercher la position dans le monde de l'objet solide le plus proche a un ensemble donne de coordonnees d'espace de visualisation normalisees."
+    },
+    {
+     "name": "SearchCVars",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Rechercher toutes les variables de console qui contiennent un nom donne."
+    },
+    {
+     "name": "SelectActors",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Selectionne les acteurs specifies dans la scene actuelle."
+    },
+    {
+     "name": "SelectAssets",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Selectionner les ressources specifiees dans le navigateur de contenu."
+    },
+    {
+     "name": "SelectOutlinerFolders",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | echec]",
+     "destructive": true,
+     "notes": "erreur: Folder(s) not found in any outliner: /Background"
+    },
+    {
+     "name": "SetCameraTransform",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Definir la position et la rotation de la camera du hublot de niveau."
+    },
+    {
+     "name": "SetContentBrowserPath",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "motif: Failed to navigate content browser to '/Engine/BasicShapes': ended up at ''."
+    },
+    {
+     "name": "SetEditorMode",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Activer le mode d'editeur specifie."
+    },
+    {
+     "name": "SetViewportViewMode",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Definir le mode d'affichage du hublot actif de l'editeur de niveau (par ex."
+    },
+    {
+     "name": "ShowNotification",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "motif: Toast Slate : aucun outil ne relit l'UI, verification seulement si le message est journalise."
+    },
+    {
+     "name": "WorldPosToScreenCoords",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Convertir une position dans l'espace du monde en espace-ecran normalise base sur la camera du hublot de l'editeur."
+    },
+    {
+     "name": "CaptureEditorImage",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Capturer une image de toute l'application de l'editeur telle que l'utilisateur la voit."
+    },
+    {
+     "name": "CaptureViewport",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : image/png base64 1 005 012 chars -> PNG valide 1300x589, 753 759 o, sauve tech/_capture_viewport_preuve.png",
+     "destructive": false,
+     "notes": "Capturer le hublot de niveau avec des annotations facultatives."
+    },
+    {
+     "name": "GetActiveEditorModes",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les identifiants des modes d'editeur actuellement actifs."
+    },
+    {
+     "name": "GetCameraTransform",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : location (6189.5, 6868.7, 33019.1), pitch -90, yaw 7.4",
+     "destructive": false,
+     "notes": "Renvoyer la position et la rotation de la camera du hublot de niveau."
+    },
+    {
+     "name": "GetContentBrowserPath",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Le chemin a change entre deux lectures (racine du projet → /Fortnite/Meshes/BasicShapes), probablement par ..."
+    },
+    {
+     "name": "GetOpenAssets",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Obtenir la liste des ressources actuellement ouvertes dans les editeurs de ressources."
+    },
+    {
+     "name": "GetSelectedActors",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Obtenir les acteurs actuellement selectionnes dans l'editeur de niveau."
+    },
+    {
+     "name": "GetSelectedAssets",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Obtenir la liste des ressources selectionnees dans le navigateur de contenu."
+    },
+    {
+     "name": "GetSelectedOutlinerFolders",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Obtenir les chemins d'acces aux dossiers selectionnes dans tous les organiseurs de scene ouverts."
+    },
+    {
+     "name": "GetVisibleActors",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer tous les acteurs du niveau actuel dont les limites se recoupent avec le frustum du hublot."
+    },
+    {
+     "name": "ListCollections",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Repertorier toutes les collections dans le navigateur de contenu."
+    },
+    {
+     "name": "ListEditorModes",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Repertorier les identifiants de tous les modes d'editeur enregistres (par ex."
+    },
+    {
+     "name": "ListShowFlags",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/editor-app-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Repertorier chaque indicateur d'affichage du moteur avec son nom d'affichage et son groupe d'editeur."
+    }
+   ]
+  },
+  {
+   "name": "EditorToolset.LogsToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/editor-session/logs-toolset.md",
+   "tools": [
+    {
+     "name": "SetVerbosity",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/logs-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Definir le niveau de verbosite d'une categorie de journal."
+    },
+    {
+     "name": "GetLogCategories",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/logs-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer une liste triee des categories de journaux enregistrees."
+    },
+    {
+     "name": "GetLogEntries",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/logs-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les entrees de journal du fichier de registre de la session actuelle."
+    },
+    {
+     "name": "GetVerbosity",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/logs-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le niveau de verbosite actuel pour une categorie de journal."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.programmatic.ProgrammaticToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/editor-session/programmatic-toolset.md",
+   "tools": [
+    {
+     "name": "execute_tool_script",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : 3 scripts sandbox 100% lecture (batch ListDeviceAssets/find_assets) ; convention execute_tool('<toolset>.<tool>', json) confirmee",
+     "destructive": true,
+     "notes": "Execute a Python script against the toolset APIs."
+    },
+    {
+     "name": "get_execution_environment",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/programmatic-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Get details about execution environment."
+    }
+   ]
+  },
+  {
+   "name": "ValkyrieToolset.SessionToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/editor-session/session-toolset.md",
+   "tools": [
+    {
+     "name": "GetClientLogEntries",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: No client log was found; start a play-in-client session first."
+    },
+    {
+     "name": "GetGameState",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Get the state of the in-game match on the connected server."
+    },
+    {
+     "name": "GetSessionStatus",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : returnValue 'Disconnected'",
+     "destructive": false,
+     "notes": "Get the connection status of the play-in-client session."
+    },
+    {
+     "name": "PushChanges",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Push Changes : interdit (regle 4)"
+    },
+    {
+     "name": "StartGame",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Controle de match sur serveur connecte (interdit)"
+    },
+    {
+     "name": "StartSession",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Upload du projet + lancement de session : interdit (a deja bloque le pont)"
+    },
+    {
+     "name": "StopGame",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Controle de match sur serveur connecte (interdit)"
+    },
+    {
+     "name": "StopSession",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/session-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Controle de session play-in-client (interdit, regle 4)"
+    }
+   ]
+  },
+  {
+   "name": "ValkyrieToolset.ValkyriePythonToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/editor-session/valkyrie-python-toolset.md",
+   "tools": [
+    {
+     "name": "EnablePythonInUEFN",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/valkyrie-python-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un reglage du projet (Python deja active)"
+    },
+    {
+     "name": "IsPythonEnabledInUEFN",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/valkyrie-python-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Renvoie true, mais le bac a sable de ProgrammaticToolset.execute_tool_script n'expose que json, re, time, copy ..."
+    }
+   ]
+  },
+  {
+   "name": "GameplayTagsToolset.GameplayTagsToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/gameplay-tags-toolset.md",
+   "tools": [
+    {
+     "name": "FindReferencersByTag",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/gameplay-tags-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Pour \"Creative\" : un seul referent (/CRD_DBNO/Device_DBNO_V2.Device_DBNO_V2_C) ; aucun outil sur ne permet de recouper."
+    },
+    {
+     "name": "GetTagInfo",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/gameplay-tags-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer des informations detaillees sur une balise de jeu en particulier."
+    },
+    {
+     "name": "ListTags",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/gameplay-tags-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les balises de jeu enregistrees dans le projet."
+    },
+    {
+     "name": "ListTagsInSource",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/gameplay-tags-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les balises de jeu definies dans une source de balises specifique."
+    }
+   ]
+  },
+  {
+   "name": "MVVMToolset.MVVMToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/mvvm-toolset.md",
+   "tools": [
+    {
+     "name": "CreateViewBinding",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "CreateViewEventBinding",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "AddViewModelProperty",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset ViewModel"
+    },
+    {
+     "name": "SetBindingMode",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "AddViewModelToWidget",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "GetWidgetViewConfig",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer la configuration de la vue MVVM."
+    },
+    {
+     "name": "ListBindableWidgetProperties",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertorier les chemins de proprietes pouvant etre lies sur un widget (candidats comme source/destination de liaison)."
+    },
+    {
+     "name": "RemoveWidgetViewBinding",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "SetWidgetViewConfig",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "FixupMVVMData",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Regenere les graphes d'un asset WidgetBlueprint"
+    },
+    {
+     "name": "ListConversionFunctions",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertorier les fonctions de conversion disponibles pour un WidgetBlueprint qui lient une propriete source a une propriete de destination"
+    },
+    {
+     "name": "ListViewModels",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Repertorier tous les ViewModel sous le chemin de recherche"
+    },
+    {
+     "name": "ListWidgetViewBindings",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertorier toutes les liaisons de vue sur le WidgetBlueprint"
+    },
+    {
+     "name": "ListWidgetViewEvents",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertoriez les proprietes d'evenement disponibles pour un WidgetBlueprint (c'est-a-dire un delegue de multidiffusion)"
+    },
+    {
+     "name": "ListWidgetViewModels",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/mvvm-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertorier tous les ViewModel sur le WidgetBlueprint"
+    }
+   ]
+  },
+  {
+   "name": "NiagaraToolsets.NiagaraToolset_Assets",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/niagara-toolset-assets.md",
+   "tools": [
+    {
+     "name": "FindNiagaraScripts",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-assets.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: 3 AssetData renvoyes, 3 vides ({}) : serialisation des AssetData cassee"
+    },
+    {
+     "name": "GetNiagaraScriptDigest",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-assets.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoie les metadonnees de balise du registre des ressources decodees pour une ressource de script Niagara."
+    },
+    {
+     "name": "GetAssetDiscoveryInfo",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-assets.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: Renvoie [] (aucun groupe de decouverte) ; rien a recouper."
+    }
+   ]
+  },
+  {
+   "name": "NiagaraToolsets.NiagaraToolset_Component",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/niagara-toolset-component.md",
+   "tools": [
+    {
+     "name": "SetSystem",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-component.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Definit le systeme Niagara pour un composant."
+    },
+    {
+     "name": "GetVariable",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-component.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Obtenir la valeur actuelle d'une variable utilisateur specifique sur le composant."
+    },
+    {
+     "name": "SetVariable",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-component.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Definit la valeur d'une variable utilisateur sur le composant."
+    },
+    {
+     "name": "GetUserVariables",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-component.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les valeurs de variables d'utilisateur actuellement definies sur le composant."
+    }
+   ]
+  },
+  {
+   "name": "NiagaraToolsets.NiagaraToolset_Info",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/niagara-toolset-info.md",
+   "tools": [
+    {
+     "name": "UEnum_Info",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-info.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer des informations sur un UEnum et toutes ses valeurs."
+    }
+   ]
+  },
+  {
+   "name": "NiagaraToolsets.NiagaraToolset_System",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/niagara-toolset-system.md",
+   "tools": [
+    {
+     "name": "AddEmitter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "ApplyStackIssueFix",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "CreateNiagaraSystem",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "AddModule",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "AddRenderer",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "AddSetParameterEntry",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "AddSetParametersModule",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "AddUserVariables",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "RemoveSetParameterEntry",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "RemoveUserVariables",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "SetEmitterData",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "SetModuleEnabled",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "SetRendererData",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "SetStackInputData",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "SetSystemData",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "GetAvailableDynamicInputs",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les ressources de module d'entree dynamique disponibles compatibles avec le type donne."
+    },
+    {
+     "name": "GetDataInterfaceSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema de propriete pour une classe d'interface de donnees specifique."
+    },
+    {
+     "name": "GetDynamicInputChain",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la chaine recursive complete pour une entree dynamique : les metadonnees de topologie et les valeurs resolues a chaque niveau L'entree de ..."
+    },
+    {
+     "name": "GetDynamicInputSchema",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": false,
+     "notes": "Renvoyer le schema d'un module d'entree dynamique dans la pile."
+    },
+    {
+     "name": "GetDynamicInputSchemaFromAsset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema pour une ressource d'entree dynamique."
+    },
+    {
+     "name": "GetEmitterData",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les valeurs de propriete d'emetteur sous la forme d'un blob de chaine JSON unique dans PropertyValues."
+    },
+    {
+     "name": "GetEmitterInputValues",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les valeurs d'entree resolues pour chaque module sur les quatre piles de scripts d'emetteurs."
+    },
+    {
+     "name": "GetEmitterSummary",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les metadonnees legeres de l'emetteur : nom, etat active, cible de simulation, classes de rendu."
+    },
+    {
+     "name": "GetEmitterTopology",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la topologie complete de l'emetteur : quatre piles de scripts avec tous les modules et les entrees, references au moteur de rendu."
+    },
+    {
+     "name": "GetModuleInputValues",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les valeurs d'entree resolues pour un seul module."
+    },
+    {
+     "name": "GetModuleSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema d'un module et de toutes ses entrees."
+    },
+    {
+     "name": "GetModuleSchemaFromAsset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema d'une ressource de module."
+    },
+    {
+     "name": "GetModuleTopology",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la topologie du module : les metadonnees et toutes les entrees (nom/type/visibilite uniquement, pas de valeurs)."
+    },
+    {
+     "name": "GetRendererData",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les valeurs de propriete du moteur de rendu."
+    },
+    {
+     "name": "GetRendererSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema de propriete pour une classe d'outil de rendu specifique."
+    },
+    {
+     "name": "GetScriptStackInputValues",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer toutes les valeurs d'entree resolues pour chaque module de la pile de scripts donnee."
+    },
+    {
+     "name": "GetScriptStackTopology",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la topologie de la pile de scripts : tous les modules et leurs entrees dans l'ordre d'execution."
+    },
+    {
+     "name": "GetStackInputData",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la valeur d'entree d'un module de pile."
+    },
+    {
+     "name": "GetStackInputSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema pour une seule entree de module dans la pile."
+    },
+    {
+     "name": "GetStackInputTopology",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la topologie d'entree de pile : nom, type, visibilite, adaptabilite."
+    },
+    {
+     "name": "GetStackIssues",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer tous les problemes de pile (erreurs, avertissements, informations) de la pile du module Niagara, y compris ceux qui ont ete ignores."
+    },
+    {
+     "name": "GetSystemCompileState",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer l'etat de compilation actuel d'un systeme Niagara : statut agrege, evenements de compilation par script et indicateurs recapitulatifs."
+    },
+    {
+     "name": "GetSystemData",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les valeurs de propriete systeme."
+    },
+    {
+     "name": "GetSystemDependencies",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer les quatre ensembles Used* (rendus, interfaces de donnees, modules, entrees dynamiques) recueillis aupres de tous les emetteurs et scripts ..."
+    },
+    {
+     "name": "GetSystemSummary",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer des metadonnees systeme legeres : nom, variables utilisateur et une entree recapitulative par emetteur."
+    },
+    {
+     "name": "GetUserVariables",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: DefaultSystem n'a aucune variable utilisateur : [] coherent avec GetSystemSummary.userVariables, mais aucune valeur non ..."
+    },
+    {
+     "name": "RemoveEmitter",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "RemoveModule",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "RemoveRenderer",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset Niagara"
+    },
+    {
+     "name": "GetEmitterSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema de propriete pour l'emetteur Niagara."
+    },
+    {
+     "name": "GetSystemSchema",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/niagara-toolset-system.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer le schema de propriete pour le systeme Niagara."
+    }
+   ]
+  },
+  {
+   "name": "UMGToolSet.UMGToolSet",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/umg-toolset.md",
+   "tools": [
+    {
+     "name": "MoveUIComponent",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "SetNamedSlotContent",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "AddUIComponent",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "AddWidget",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "CreateWidgetBlueprint",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "MoveWidget",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "RemoveUIComponent",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "RenameWidget",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "ReplaceWidgetWithNamedSlot",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "ReplaceWidgetWithTemplate",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "WrapWidgets",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "RemoveWidget",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "ReplaceWidgetWithChild",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "CompileWidgetBlueprint",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Compile (et donc salit) un asset WidgetBlueprint"
+    },
+    {
+     "name": "GetNamedSlots",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer les emplacements nommes disponibles et leur contenu, le cas echeant (distincts de la hierarchie d'arborescence)."
+    },
+    {
+     "name": "GetWidgetClassInfo",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Renvoyer la categorie, la description et s'il s'agit d'un panneau pour une classe de widget unique."
+    },
+    {
+     "name": "GetWidgetDescription",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Vidage complet des proprietes de chaque widget dans l'arborescence."
+    },
+    {
+     "name": "GetWidgets",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer les informations de blueprint et tous les widgets dans l'ordre d'un parcours en profondeur."
+    },
+    {
+     "name": "GetWidgetTreeDepth",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Renvoyer la profondeur maximale de l'arbre de widgets."
+    },
+    {
+     "name": "ListWidgetBlueprints",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Repertorier les blueprints de widget dans un dossier de contenu."
+    },
+    {
+     "name": "ListWidgetClasses",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/umg-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Repertorier les classes de widgets disponibles, filtrees en option par sous-chaine de nom."
+    }
+   ]
+  },
+  {
+   "name": "WidgetAnimationToolset.WidgetAnimationToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/effets-ui/widget-animation-toolset.md",
+   "tools": [
+    {
+     "name": "AddWidgetToAnimation",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "RenameWidgetAnimation",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Renomme dans un asset WidgetBlueprint"
+    },
+    {
+     "name": "CreateWidgetAnimation",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "FindWidgetAnimation",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Trouver une animation par nom interne."
+    },
+    {
+     "name": "RemoveWidgetAnimation",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Supprime dans un asset WidgetBlueprint"
+    },
+    {
+     "name": "RemoveWidgetBinding",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "SetWidgetAnimationDisplayLabel",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "SetWidgetAnimationLength",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "GetWidgetAnimationBindings",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Obtenir toutes les liaisons sur une animation de widget en tant qu'entrees FMovieSceneBindingProxy"
+    },
+    {
+     "name": "ListWidgetAnimations",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/widget-animation-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Lister toutes les animations sur un blueprint de widget"
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.object.ObjectTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/objet-proprietes/object-tools.md",
+   "tools": [
+    {
+     "name": "get_properties",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : safeZoneFinalPosBrush (brosse Slate, pas un volume) + bEnableWorldBoundsChecks=true",
+     "destructive": false,
+     "notes": "Returns the values of one or more properties on an object."
+    },
+    {
+     "name": "reset_properties",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/object-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Resets one or more properties on an object to their default values, removing any per-instance overrides."
+    },
+    {
+     "name": "set_properties",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/object-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Sets the values of properties on an object."
+    },
+    {
+     "name": "get_class",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/object-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the class of an Unreal object."
+    },
+    {
+     "name": "list_properties",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 sur FortWorldSettings : 201 proprietes (fichier tech/_fortworldsettings_props.json)",
+     "destructive": false,
+     "notes": "Returns a list of properties that are on the specified object."
+    },
+    {
+     "name": "search_subclasses",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/object-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Finds all subclasses of a given class."
+    }
+   ]
+  },
+  {
+   "name": "VerseFieldsToolset.VerseFieldsToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/objet-proprietes/verse-fields-toolset.md",
+   "tools": [
+    {
+     "name": "BindWidgetPropertyToVerseField",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie un asset WidgetBlueprint"
+    },
+    {
+     "name": "EditVerseField",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie et recompile un asset WidgetBlueprint"
+    },
+    {
+     "name": "AddVerseField",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie et recompile un asset WidgetBlueprint"
+    },
+    {
+     "name": "DuplicateVerseField",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie et recompile un asset WidgetBlueprint"
+    },
+    {
+     "name": "RemoveVerseField",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie et recompile un asset WidgetBlueprint"
+    },
+    {
+     "name": "ListVerseFields",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Lists the Verse-authored fields on a Widget Blueprint."
+    },
+    {
+     "name": "GetSupportedVerseFieldTypes",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/verse-fields-toolset.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Accepted Spec.Type / Spec.EventParameterTypes values."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.actor.ActorTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/scene-acteur/actor-tools.md",
+   "tools": [
+    {
+     "name": "add_component",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a component to an actor instance or blueprint."
+    },
+    {
+     "name": "add_tag",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a tag to an actor."
+    },
+    {
+     "name": "diff",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns a unified text diff between two actors."
+    },
+    {
+     "name": "has_tag",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns whether an actor has a specific tag."
+    },
+    {
+     "name": "look_at",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Rotates an actor so its forward vector points at a world-space position."
+    },
+    {
+     "name": "remove_tag",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Removes a tag from an actor."
+    },
+    {
+     "name": "set_actor_transform",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Updates the position, rotation, and/or scale of an actor."
+    },
+    {
+     "name": "set_label",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Sets the human-friendly name of the actor."
+    },
+    {
+     "name": "get_actor_bounds",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 sur Brush_0 : min(-128,-128,-36) max(128,128,220) isValid=true",
+     "destructive": false,
+     "notes": "Returns the bounding box of an actor."
+    },
+    {
+     "name": "get_actor_transform",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the position, rotation, and scale of an actor."
+    },
+    {
+     "name": "get_component_actor",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the actor that owns the specified component."
+    },
+    {
+     "name": "get_components",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the components that an actor contains."
+    },
+    {
+     "name": "get_label",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the actor's human friendly name as it appears in the editor."
+    },
+    {
+     "name": "get_parent_component",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the parent component that this component is attached to, if any."
+    },
+    {
+     "name": "get_root_component",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the root component of an actor, if any."
+    },
+    {
+     "name": "get_tags",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the list of tags on an actor."
+    },
+    {
+     "name": "remove_component",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Removes a component from an actor instance or blueprint."
+    },
+    {
+     "name": "set_parent_component",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/actor-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Sets the parent for the specified scene component."
+    }
+   ]
+  },
+  {
+   "name": "ValkyrieToolset.EntityToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/scene-acteur/entity-toolset.md",
+   "tools": [
+    {
+     "name": "SetComponentProperty",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Write one property on a component, by its friendly Verse name."
+    },
+    {
+     "name": "AddComponent",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Attach a component to a Verse entity."
+    },
+    {
+     "name": "CreateEntity",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Create a Verse entity in the current editor scene."
+    },
+    {
+     "name": "GetComponentProperty",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Read a component's editable property value, by its friendly Verse name."
+    },
+    {
+     "name": "RemoveComponent",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Remove a component from a Verse entity."
+    },
+    {
+     "name": "SetEntityTransform",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Set a Verse entity's world transform (adds a transform component if it has none)."
+    },
+    {
+     "name": "DeleteEntity",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [ecriture | echec]",
+     "destructive": true,
+     "notes": "erreur: Cannot delete the root entity."
+    },
+    {
+     "name": "GetComponents",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "List the components attached to a Verse entity."
+    },
+    {
+     "name": "GetEntityTransform",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Get a Verse entity's world transform."
+    },
+    {
+     "name": "ListComponentProperties",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "List a Verse component's editable properties."
+    },
+    {
+     "name": "FindEntities",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Find Verse entities in the current editor scene, optionally scoped and filtered."
+    },
+    {
+     "name": "ListComponentClasses",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "List the concrete Verse component classes that can be attached (verse::component subclasses), optionally filtered."
+    },
+    {
+     "name": "ListEntityClasses",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/entity-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "List the concrete Verse entity classes that can be instantiated (verse::entity subclasses), optionally filtered."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.primitive.PrimitiveTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/scene-acteur/primitive-tools.md",
+   "tools": [
+    {
+     "name": "add_cone",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/primitive-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a cone-shaped StaticMeshComponent to an actor."
+    },
+    {
+     "name": "add_cube",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/primitive-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a cube-shaped StaticMeshComponent to an actor."
+    },
+    {
+     "name": "add_cylinder",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/primitive-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a cylinder-shaped StaticMeshComponent to an actor."
+    },
+    {
+     "name": "add_sphere",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/primitive-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Adds a sphere-shaped StaticMeshComponent to an actor."
+    }
+   ]
+  },
+  {
+   "name": "editor_toolset.toolsets.scene.SceneTools",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/scene-acteur/scene-tools.md",
+   "tools": [
+    {
+     "name": "add_to_scene_from_asset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Creates a new actor in the scene from an asset."
+    },
+    {
+     "name": "add_to_scene_from_class",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Creates a new instance of the specified object at the specified transform."
+    },
+    {
+     "name": "add_actors_to_data_layer",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "Adds actors to a data layer, creating its instance in the current world if it has none yet."
+    },
+    {
+     "name": "diff",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | echec]",
+     "destructive": false,
+     "notes": "erreur: SceneTools.diff: level (World) diff is not yet supported: /d2c00ace-96a8-49df-b878-4900ea8ef303/MCP_TestLevel"
+    },
+    {
+     "name": "remove_actors_from_data_layer",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "Removes actors from a data layer."
+    },
+    {
+     "name": "rename_folder",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Renames a folder in the outliner."
+    },
+    {
+     "name": "replace_actors_with_asset",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Replaces actors in the scene with new actors created from an asset (e.g."
+    },
+    {
+     "name": "replace_actors_with_class",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Replaces actors in the scene with new instances of a native Actor class, matching the editor's \"Replace Selected Actors With...\" command."
+    },
+    {
+     "name": "set_actor_folder",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Assigns an actor to the specified folder in the outliner."
+    },
+    {
+     "name": "set_actor_hidden",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Shows or hides the actor in the editor viewport and outliner."
+    },
+    {
+     "name": "trace_world",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Traces a line through the world and returns the distance to the first hit."
+    },
+    {
+     "name": "create_data_layer_asset",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset dans le Content Browser"
+    },
+    {
+     "name": "create_level",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un asset niveau et change de niveau (risque de boite modale de sauvegarde)"
+    },
+    {
+     "name": "delete_folder",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Deletes a folder from the outliner."
+    },
+    {
+     "name": "find_actors",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : 594 acteurs avec bounds isValid=true (fichier tech/_find_actors_full.json) ; params requis name+collision_channels ({} -> rc=1, schema renvoye dans l'erreur)",
+     "destructive": false,
+     "notes": "Searches the scene for actors that match specific criteria."
+    },
+    {
+     "name": "get_actor_asset_path",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns the content path that identifies this actor on disk."
+    },
+    {
+     "name": "get_actors_in_data_layer",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "Returns descriptors for the loaded actors assigned to a data layer."
+    },
+    {
+     "name": "get_actors_in_folder",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns descriptors for the actors in the specified outliner folder."
+    },
+    {
+     "name": "is_actor_hidden",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns whether the actor is hidden in the editor viewport and outliner."
+    },
+    {
+     "name": "load_actors",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "motif: non execute : les seuls acteurs modifiables (MCPTEST_*) ne sont jamais sauvegardes (Save interdit) ; decharger un ..."
+    },
+    {
+     "name": "load_level",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Change de niveau (risque de boite modale de sauvegarde)"
+    },
+    {
+     "name": "remove_from_scene",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Deletes an actor from the scene."
+    },
+    {
+     "name": "save_actor",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Sauvegarde sur disque : interdit (regle 4)"
+    },
+    {
+     "name": "unload_actors",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [ecriture | inconnu]",
+     "destructive": true,
+     "notes": "motif: non execute : les seuls acteurs modifiables (MCPTEST_*) ne sont jamais sauvegardes (Save interdit) ; decharger un ..."
+    },
+    {
+     "name": "get_collision_channels",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : 13 channels ObjectTypeQuery1..ObjectTypeQuery13",
+     "destructive": false,
+     "notes": "Returns all available collision channels for use with find_actors."
+    },
+    {
+     "name": "get_current_level",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : returnValue '/dc587e05-5351-4d88-b9bd-dc21fbb17a81/claudtest'",
+     "destructive": false,
+     "notes": "Returns the path to the current level asset."
+    },
+    {
+     "name": "get_data_layers",
+     "statut": "INCONNU",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | inconnu]",
+     "destructive": false,
+     "notes": "motif: aucun outil de lecture independant des data layers"
+    },
+    {
+     "name": "get_folders",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/scene-tools.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Returns all folder paths currently in use in the outliner."
+    }
+   ]
+  },
+  {
+   "name": "ValkyrieToolset.VerseToolset",
+   "doc_source": "C:/Users/douco/Downloads/uefn-dashboard/skill/uefn_map_creator/mcp_tools/verse/verse-toolset.md",
+   "tools": [
+    {
+     "name": "Copy",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree des fichiers dans le projet"
+    },
+    {
+     "name": "Replace",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie le code source Verse du projet"
+    },
+    {
+     "name": "WriteFile",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Modifie le code source Verse du projet"
+    },
+    {
+     "name": "Delete",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Supprime des fichiers du projet"
+    },
+    {
+     "name": "Grep",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Search .verse files for a pattern."
+    },
+    {
+     "name": "ListFiles",
+     "statut": "VERIFIE",
+     "preuve_relue": "LIVE 2026-10-26 rc=0 : racine Verse -> 5 entrees dont /dc587e05-5351-4d88-b9bd-dc21fbb17a81",
+     "destructive": false,
+     "notes": "List a directory's .verse files and subdirectories (other files are omitted)."
+    },
+    {
+     "name": "Move",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Renomme des fichiers du projet"
+    },
+    {
+     "name": "CreateDirectory",
+     "statut": "DANGEREUX_UNTESTE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [DANGEREUX | inconnu] ; DANGER: crash editeur documente - INTERDIT d'appel",
+     "destructive": true,
+     "notes": "motif: Cree un dossier dans le projet"
+    },
+    {
+     "name": "ReadFile",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [lecture | verifie]",
+     "destructive": false,
+     "notes": "Read a .verse file."
+    },
+    {
+     "name": "BuildAll",
+     "statut": "VERIFIE",
+     "preuve_relue": "index officiel mcp_tools/verse-toolset.md (dump describe_toolset + campagne de test) : [ecriture | verifie]",
+     "destructive": true,
+     "notes": "Compile all Verse code in the project."
+    }
+   ]
+  }
+ ],
+ "erreurs_appel_brutes_du_run": [
+  "Prog.GetCVarValue rc=1 : 'Unknown tool GetCVarValue' -> les CVar sont dans EditorToolset.EditorAppToolset sur CE pont (divergence avec long-term-memory.json)",
+  "Asset.ListFiles rc=1 : 'Unknown tool ListFiles' -> arborescence via list_folders/find_assets",
+  "Probe.chercher_playsets rc=1 : \"Toolset 'IslandForgeProbe' not found\" -> CLI search-playsets inutilisable sur ce pont",
+  "Scene.find_actors '{}' rc=1 : schema d'entree exige name + collision_channels (schema complet renvoye dans le message d'erreur)",
+  "Asset.find_assets asset_type='MaterialInstanceConstant' rc=1 : 'not a valid object path' -> passer '/Script/Engine.MaterialInstanceConstant'"
+ ],
+ "capability_answers": {
+  "Q01_pose_d_acteurs": {
+   "reponse": "OUI, pose libre a transform donne : SceneTools.add_to_scene_from_class(actor_type,name,xform,parent,...) et add_to_scene_from_asset(asset_path,name,xform,parent,...) acceptent un xform complet (position/rotation/scale), sans passer par une grille ; DeviceToolset.PlaceDevice(assetPath,transform) pour les devices. Contrainte de legalite : seuls PPID_*/PID_*/Engine/BasicShapes//Fortnite/ passent FortValidator_FortExposedAssets (les /Game/ bruts sont rejetes).",
+   "statut": "VERIFIE",
+   "outil_concerne": "SceneTools.add_to_scene_from_class / add_to_scene_from_asset ; DeviceToolset.PlaceDevice",
+   "preuve_relue": "index officiel (dump describe_toolset) : parametres reels (asset_path*,name*,xform*,parent,snap_to_ground) [ecriture|verifie en campagne] ; journal de reference : add_to_scene_from_asset appele 35 fois. NON rejoue sur cette mission (lecture seule sur le niveau).",
+   "methode_alternative_si_inconnu": null
+  },
+  "Q02_readback_geometrie": {
+   "reponse": "OUI, bornes REELLES non vides : ActorTools.get_actor_bounds renvoie min/max/isValid vrais (teste live sur Brush_0 : min(-128,-128,-36) max(128,128,220) isValid=true) ; SceneTools.find_actors inline deja les bounds de chaque acteur (594 acteurs relus). Cle de voute 0_overlap/0_floating operationnelle. Ne PAS utiliser AssetData/stats de mesh cooke (connus vides/faux).",
+   "statut": "VERIFIE",
+   "outil_concerne": "ActorTools.get_actor_bounds ; SceneTools.find_actors ; ActorTools.get_actor_transform",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : get_actor_bounds Brush_0 -> min(-128,-128,-36) max(128,128,220) isValid=true ; find_actors -> 594 acteurs, bounds isValid=true, fichier tech/_find_actors_full.json",
+   "methode_alternative_si_inconnu": null
+  },
+  "Q03_capture_viewport": {
+   "reponse": "OUI : EditorAppToolset.CaptureViewport(captureTransform,annotations,bShowUI) produit une image PNG exploitable (live : 1300x589, 753 759 o, sauvee sur disque). L'image revient en base64 dans la reponse MCP (pas de fichier ecrit par l'editeur) : c'est le client qui la sauve. Cadrage : GetCameraTransform relu live ; SetCameraTransform [ecriture|verifie campagne] et parametre captureTransform de CaptureViewport permettent un angle precis - non rejoues ici (lecture seule, ne pas alterer le viewport utilisateur).",
+   "statut": "VERIFIE",
+   "outil_concerne": "EditorAppToolset.CaptureViewport / GetCameraTransform / SetCameraTransform / CaptureEditorImage / CaptureAssetImage",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : CaptureViewport {} -> image/png b64 1 005 012 chars, PNG valide sauve tech/_capture_viewport_preuve.png ; GetCameraTransform -> location(6189.5, 6868.7, 33019.1) pitch -90",
+   "methode_alternative_si_inconnu": " cadrage exact via captureTransform : a trancher par le SPIKE (1 appel lecture, sans bouger la camera editeur)"
+  },
+  "Q04_materiaux_instances": {
+   "reponse": "Les outils d'ECRITURE existent et sont enumerés : MaterialInstanceTools.set_scalar_parameter, set_vector_parameter, set_texture_parameter, set_static_switch_parameter, set_parameter_override, set_parent, clear_parameters, create. Ce qu'on peut ecrire = scalar, vecteur (couleur/emissif SI expose par le materiau parent), texture, static switch, override on/off. Limite structurelle : seuls les parametres EXPOSES par le parent sont ecrivables (list_parameters les enumere). Cote LECTURE prouve live (40 parametres types sur MI_24hrSky). Cote ecriture : TOUT est [DANGEREUX|inconnu] - jamais appele en campagne, interdit sur cette mission -> non verifiable sans ecrire.",
+   "statut": "DANGEREUX_UNTESTE",
+   "outil_concerne": "MaterialInstanceTools.* ; MaterialTools.* (graphe : add_expression, connect_to_output) ; ObjectTools.set_properties",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : list_parameters(/DaySequence/MI_24hrSky) -> 40 params (Scalar Moon_Intensity/Stars_Intensity/C1Skylight..., Vector, Texture) ; index officiel : set_* [DANGEREUX|inconnu], get_scalar_parameter/get_vector_parameter [lecture|verifie]",
+   "methode_alternative_si_inconnu": "SPIKE-VISUAL-CAPACITY : create() une instance de test + set_vector_parameter/set_scalar_parameter + relecture get_* + CaptureViewport, avec save prealable et gate HITL Producer"
+  },
+  "Q05_emissif_et_neon": {
+   "reponse": "Chemin devices NATIF legal VERIFIE (catalogue relu) : PID_CP_Devices_PointLight, PID_Device_PointLight, PID_Device_PointOfLight, PID_Environment_Light_Rig + PlaceDevice [ecriture|verifie campagne]. Chemin materiau emissif : set_vector_parameter sur parametre emissif expose, ou graphe MaterialTools (connect_to_output vers EmissiveColor) - tout [DANGEREUX|inconnu]. Assets neon existants vus dans le registre (M_RR_SimpleNeonSign, SunStroke_NeonSignFish) mais en chemins bruts non-PPID_ -> legalite de pose douteuse ; 348 PPID_CRP_Sunburst_* a echantillonner pour des neons legaux.",
+   "statut": "DANGEREUX_UNTESTE",
+   "outil_concerne": "DeviceToolset.PlaceDevice + PID_ lumiere ; MaterialInstanceTools.set_vector_parameter ; MaterialTools.connect_to_output",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : ListDeviceAssets('light') -> 4 PID_ lumiere ; find_assets('Neon') -> 7269 assets (echantillon M_RR_SimpleNeonSign, BP/SM/MI SunStroke) ; find_assets('PPID_CRP_Sunburst') -> 348",
+   "methode_alternative_si_inconnu": "SPIKE : (1) echantillonner PPID_CRP_Sunburst_* (signage/neon) + pose + capture ; (2) instance de materiau emissif via set_vector_parameter + relecture ; (3) defaut : light_rig/point lights PID_"
+  },
+  "Q06_hologrammes": {
+   "reponse": "OUI pour un chemin natif legal : devices holographiques RELUS au catalogue - PID_Device_HoloScreen, PID_CP_Devices_HoloScreen, PID_Device_Billboard, PID_CP_Devices_Billboard (+ BP_Cybercity_Sign_HoloIcon / CM_Cybercity_Billboard_HoloIcon vus dans /CRP_Sunburst, mais bruts non-PPID_). PlaceDevice [ecriture|verifie campagne]. Volume holographique CUSTOM translucide anime : Niagara disponible (Component.SetVariable [ecriture|verifie], CreateNiagaraSystem [DANGEREUX|inconnu]) + materiau translucent anime = non teste. Rendu visuel reel : non verifiable sans poser + capturer.",
+   "statut": "VERIFIE",
+   "outil_concerne": "DeviceToolset.PlaceDevice (PID_*HoloScreen, PID_*Billboard) ; NiagaraToolsets.* ; MaterialInstanceTools.set_*",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : ListDeviceAssets('holo') -> PID_Device_HoloScreen (/CreativeCoreDevices) + PID_CP_Devices_HoloScreen (/CR_Legacy/Playsets) ; ListDeviceAssets('billboard') -> 2 PID_ ; find_assets('Holo') -> 2711 assets dont CM_Cybercity_Billboard_HoloIcon, T_CP_Building_Scifi_01_DoorHologram, holoscreen_device",
+   "methode_alternative_si_inconnu": "SPIKE : PlaceDevice HoloScreen/Billboard + SetDeviceProperty/Object.set_properties + CaptureViewport ; si rendu insuffisant : Niagara user variables (SetVariable [verifie campagne]) ou instance de materiau translucent anime par Verse"
+  },
+  "Q07_reflexion_sol_mouille": {
+   "reponse": "AUCUN outil dedie reflection/Lumen/plan de reflection dans les 30 toolsets exposes (relus via list_toolsets live). Candidats non testes : (1) parametres scalar roughness/metallic d'une instance de materiau SI le parent les expose (ecriture DANGEREUX_UNTESTE) ; (2) PID_CP_Devices_PostProcess (catalogue relu) regle via Object.set_properties [ecriture|verifie campagne] ou SetDeviceProperty [ecriture|inconnu] ; (3) props/materiaux 'wet' existants en PPID_ a chercher. SetShowFlag [ecriture|verifie] = viewport editeur seulement, non exporte au jeu. Verdict honnete : INCONNU.",
+   "statut": "INCONNU",
+   "outil_concerne": "MaterialInstanceTools.set_scalar_parameter ; DeviceToolset.PlaceDevice (PID_CP_Devices_PostProcess) ; ObjectTools.set_properties",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : ListDeviceAssets('post') -> PID_CP_Devices_PostProcess ; ListDeviceAssets('fog') -> 0 ; index officiel : aucun toolset reflection/Lumen ; set_scalar_parameter [DANGEREUX|inconnu]",
+   "methode_alternative_si_inconnu": "SPIKE : (a) list_parameters sur materiaux de sol poses -> si Roughness/Metallic/Wetness exposes : set_scalar_parameter + relecture + CaptureViewport ; (b) configurer PID_CP_Devices_PostProcess (reflections SSR) ; (c) find_assets name 'Wet'/'Puddle'/'Reflect' dans PPID_CRP_*"
+  },
+  "Q08_eclairage_nuit_froide": {
+   "reponse": "OUI par devices legaux (catalogue relu live) : PID_Device_Skydome/PID_CP_Devices_Skydome (ciel nocturne), PID_Environment_Light_Rig (rig de lumiere), PID_CP_Devices_PostProcess (etalonnage froid), PID_Devices_RealTimeClock_V2 (heure). Parametres de ciel relus live sur MI_24hrSky : Moon_Intensity, Stars_Intensity, Sun_Intensity, C1Skylight, Fog Offset... (40 params). Ecriture des reglages : Object.set_properties [ecriture|verifie campagne] / SetDeviceProperty [ecriture|inconnu]. Brouillard : 0 device nomme 'fog' (relu) -> passer par PostProcess/Skydome ou Niagara, INCONNU. Couleurs cyan/magenta/rouge : via light devices et post-process (reglages a trancher en spike).",
+   "statut": "VERIFIE",
+   "outil_concerne": "DeviceToolset.PlaceDevice (Skydome/Light_Rig/PostProcess/RealTimeClock) ; ObjectTools.set_properties ; MaterialInstanceTools.set_scalar_parameter",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : ListDeviceAssets('sky') -> 4 (PID_Device_Skydome, PID_CP_Devices_Skydome...) ; ('post') -> PID_CP_Devices_PostProcess ; ('light') -> PID_Environment_Light_Rig ; ('time') -> 6 dont PID_Devices_RealTimeClock_V2 ; list_parameters(MI_24hrSky) -> Moon_Intensity/Stars_Intensity/C1Skylight",
+   "methode_alternative_si_inconnu": " brouillard : candidat PostProcess device / Niagara fog ; a trancher par le SPIKE"
+  },
+  "Q09_decouverte_assets_et_pid": {
+   "reponse": "Chemin fiable RELU LIVE : (1) ValkyrieToolset.DeviceToolset.ListDeviceAssets(nameFilter) = catalogue des 383 devices posables (PID_, classiques et Verse) ; (2) AssetTools.find_assets(name) = registre complet par sous-chaine : PPID_ -> 200 438, PID_ -> 203 099, PPID_CRP -> 21 373, PPID_CRP_Sunburst -> 348. Playsets /CRP_* INCLUS et confirms (/CRP_LazyLinks, /CRP_Sunburst, /CRP_Covert ; motif /<mount>/SetupAssets/PlaysetProps/PPID_CRP_*). Ces deux outils ne sont pas plafonnes a 200 malgre PaginationPageSize=200 (383 et 200438 rendus). Voie CASSEE : CLI search-playsets -> 'Toolset IslandForgeProbe not found' (rc=1 brut). Bases SQLite Downloads non consultees (incompletes/divergentes, consigne mission).",
+   "statut": "VERIFIE",
+   "outil_concerne": "DeviceToolset.ListDeviceAssets ; AssetTools.find_assets ; AssetTools.list_folders/get_asset_class/get_dependencies",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : compteurs 383/200438/203099/21373/348 (tech/_probe_devices_palette.json, _probe_legal_palette.json) ; rc=1 brut Probe.chercher_playsets : \"Toolset 'IslandForgeProbe' not found\"",
+   "methode_alternative_si_inconnu": null
+  },
+  "Q10_grande_hauteur_et_echelle": {
+   "reponse": "Bornes REELLES relues live via l'acteur LevelBounds_0 du niveau (find_actors/get_actor_bounds) : X [-12800.0, +13110.2], Y [-12800.0, +13109.8], Z [-256, +8999.99] uu (100 uu = 1 m) -> ~259 m x 259 m, hauteur utile ~92,6 m. Le contenu existant touche deja le plafond (CP_Building_Scifi_01 max Z = 9000). 4+ Z-slices praticables tiennent dans 92,6 m (ex. 4 niveaux de ~20 m). INCONNU : limite de scale par acteur (set_actor_transform non testable en lecture seule) et possibilite de deplacer/etendre LevelBounds. Mega-tours 'demesurees' : plafonnees a ~90 m au-dessus du plancher, ou a defaut via scale d'acteur (a trancher).",
+   "statut": "VERIFIE",
+   "outil_concerne": "SceneTools.find_actors + ActorTools.get_actor_bounds (LevelBounds_0) ; SceneTools.trace_world pour sondes physiques",
+   "preuve_relue": "LIVE 2026-10-26 rc=0 : LevelBounds_0 bounds min(-12800.0,-12800.0,-256) max(13110.2,13109.8,8999.99) isValid=true (tech/_find_actors_full.json) ; IslandSettings_0 (Device_ExperienceSettings_V2_UEFN_C) present",
+   "methode_alternative_si_inconnu": "SPIKE : set_actor_transform scale croissant sur acteur temporaire + relecture get_actor_bounds ; test de deplacement LevelBounds (avec gate HITL) ; trace_world pour limites physiques"
+  }
+ },
+ "known_limitations": [
+  "Toutes les ecritures MaterialInstanceTools (set_scalar/vector/texture/static_switch/parameter_override, create, set_parent, clear_parameters) sont [DANGEREUX|inconnu] : jamais appelees. Le neon emissif, le verre et le sol mouille par materiau sont donc NON TRANCHES -> SPIKE obligatoire.",
+  "Edition de graphe MaterialTools (add_expression, connect_to_output, create_material...) : tout [DANGEREUX|inconnu].",
+  "Toolset IslandForgeProbe ABSENT de ce pont (rc=1 brut : \"Toolset 'IslandForgeProbe' not found\") -> le CLI search-playsets est inutilisable ; l'enumeration legale passe par ListDeviceAssets + find_assets.",
+  "Divergence alias documentee : GetCVarValue/SetCVarValue sont dans EditorToolset.EditorAppToolset sur CE pont, pas dans ProgrammaticToolset (rc=1 'Unknown tool GetCVarValue' via alias Prog). long-term-memory.json est caduc sur ce point.",
+  "AssetTools n'expose pas ListFiles (rc=1 'Unknown tool ListFiles') ; arborescence = list_folders + find_assets.",
+  "Aucun outil dedie reflection/Lumen/plan de reflection (30 toolsets relus live) ; 0 device nomme 'fog' au catalogue -> sol mouille reflechissant et brouillard = INCONNU, methodes candidates proposees.",
+  "Scene.find_actors exige name + collision_channels (appel {} -> rc=1) ; le schema d'entree complet est renvoye dans le message d'erreur (exploitable).",
+  "Aucun outil ne lit les bornes officielles constructibles de l'ile ; bornes relues depuis l'acteur LevelBounds_0 (X/Y ±12800..13110 uu, Z -256..9000 uu). Limite de SCALE par acteur : INCONNU.",
+  "Fenetres modales non observables (aucun outil MCP) -> modal_windows_blocking = UNKNOWN ; un thread principal bloque ne serait pas detecte.",
+  "PaginationPageSize regle a 200 (relu), mais find_assets (200 438 entrees) et ListDeviceAssets (383) rendent au-dela de 200 : la CVar ne plafonne pas ces outils (fait observe, non explique).",
+  "GetDynamicInputSchema : crash editeur documente (DANGER:editor_crash dans l'index) - interdit, jamais appele.",
+  "SceneTools.diff [echec] en campagne : 'level (World) diff is not yet supported'.",
+  "RAM a 82 % au preflight (12 729 / 15 515 Mo, mesure 2026-10-26) : sous le seuil 85 % mais elevee -> recontroler avant toute vague d'appels du SPIKE.",
+  "AssetData / stats de mesh cooke : connus vides ou faux (consigne mission) - ne jamais s'y fier ; readback = get_actor_bounds/find_actors uniquement.",
+  "PCG absent et 'import unreal' non fonctionnel (testes 2026-10-19, non rejoues sur cette mission) ; BuildAll hors session echoue.",
+  "Le niveau claudtest contient deja 594 acteurs dont des chemins bruts /Game/Athena et /Game/Creative (poses hors de cette mission) : leur legalite au regard de FortValidator_FortExposedAssets n'est pas tranchee (audit-legality non lance, hors perimetre).",
+  "Legalite de pose DIRECTE des blueprints CP_* des mounts /CRP_* (ex. CP_Building_Scifi_01 de /CRP_Sunburst, deja present dans le niveau) non tranchee en lecture seule ; la regle CLI n'autorise que PPID_/PID_ -> a faire trancher par audit-legality en spike."
+ ],
+ "palette_assets_legaux": {
+  "source_verifiee": "Registre d'assets de l'editeur VIVANT via AssetTools.find_assets + catalogue devices via ValkyrieToolset.DeviceToolset.ListDeviceAssets (relus live le 2026-10-26, rc=0, pont 8000)",
+  "methode_enumeration": "find_assets {'name':'PPID_'} -> 200 438 props legaux ; {'name':'PID_'} -> 203 099 ; ListDeviceAssets('') -> 383 devices posables ; filtres par playset : 'PPID_CRP_Sunburst' -> 348 (palette cyberpunk Sunburst : signage, buildings scifi, hologrammes) ; 'PPID_CRP' -> 21 373",
+  "playsets_CRP_inclus": true,
+  "limites_connues": [
+   "Pas d'outil d'enumeration des mounts racine (list_folders '/' -> []) : les mounts /CRP_* sont decouverts par la recherche de nom",
+   "Recherche par sous-chaine de nom uniquement, pas de filtre semantique ni par categorie",
+   "Legalite de pose = prefixe PPID_/PID_ (regle FortValidator_FortExposedAssets reprise par uefn_spatial_cli.is_legal_uefn_path) ; chemins bruts /Game/, /CRP_* (BP_/CM_/T_) refuses",
+   "search-playsets CLI indisponible (IslandForgeProbe absent) - l'enumeration brute ci-dessus la remplace",
+   "Bases SQLite du dossier Downloads volontairement non exploitees (incompletes et divergentes)",
+   "Les echantillons 'cyberpunk' bruts vus (CM_Cybercity_Billboard_HoloIcon, BP_Cybercity_Sign_HoloIcon, M_RR_SimpleNeonSign) ne sont PAS directement posables ; chercher leurs equivalents PPID_ (348 candidats PPID_CRP_Sunburst_*)"
+  ]
+ },
+ "bornes_ile_relues": {
+  "X_min": -12800.0,
+  "X_max": 13110.2,
+  "Y_min": -12800.0,
+  "Y_max": 13109.8,
+  "Z_min": -256.0,
+  "Z_max": 9000.0,
+  "unite": "Unreal Units (100 uu = 1 m) -> ~259 m x 259 m, hauteur ~92,6 m",
+  "source": "LIVE 2026-10-26 : borne de l'acteur LevelBounds_0 (/dc587e05-.../claudtest.claudtest:PersistentLevel.LevelBounds_0) relue via Scene.find_actors, fichier tech/_find_actors_full.json. Le contenu existant touche Z=9000 (CP_Building_Scifi_01). Ce sont les bornes du volume LevelBounds du niveau actuel, pas une limite d'edition garantie immuable (deplacement de LevelBounds : INCONNU).",
+  "limite_scale_acteur": "UNKNOWN (set_actor_transform non testable en lecture seule)"
+ }
+}

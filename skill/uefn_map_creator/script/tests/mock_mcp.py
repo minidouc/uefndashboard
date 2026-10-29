@@ -58,6 +58,7 @@ CFG = {"session": "Disconnected", "props": DEFAULT_PROPS, "symbols": ["GetGameSt
 # etat simule de l'editeur
 ACTORS = {}      # refPath -> {label, asset, xform, tags, kind}
 PROPS = {}       # refPath -> {nom: valeur}
+SAVED = {"n": 0}  # nombre d'appels save_assets (le journal du validateur n'avance qu'apres)
 BINDINGS = {}    # refPath cible -> [ {sourceDevice, sourceEvent, targetFunction} ]
 VERSE = {}       # chemin -> contenu
 CVARS = {"ModelContextProtocol.PaginationPageSize": "0"}
@@ -273,7 +274,18 @@ def tool(tool_name: str, args: dict):
   if t == "GetLogEntries":
     if args.get("category") == "VerseBuild":
       return c["build_log"]
+    # journal du validateur (check-validator) : lignes horodatees comme l'editeur reel.
+    # validator_log_before = deja dans le journal avant la sauvegarde ;
+    # validator_log_after  = ecrit par la sauvegarde (n'apparait qu'apres save_assets).
+    if "AssetCheck" in str(args.get("pattern", "")):
+      return list(c.get("validator_log_before", [])) + (
+          list(c.get("validator_log_after", [])) if SAVED["n"] else [])
+    if args.get("maxEntries") == 1 and args.get("pattern", "") == "":
+      return [c.get("log_last", "[2026.10.29-13.49.00:000][700]LogTemp: derniere ligne avant sauvegarde")]
     return [{"severity": "Info", "message": "mock log"}]
+  if t == "save_assets":
+    SAVED["n"] += 1
+    return True
 
   if t == "SetCameraTransform":
     return True

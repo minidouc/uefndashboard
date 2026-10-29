@@ -1,0 +1,137 @@
+{
+ "$schema": "studio.lot.v2",
+ "lot_id": "lot_01",
+ "statut": "POSE_TERMINEE",
+ "acteurs": [
+  {
+   "id_placement": "S0_SOL",
+   "segment": 0,
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_SOL",
+   "statut": "POSE",
+   "support_prevu": "PrimitiveTools.add_cube",
+   "support_reel": "PrimitiveTools.add_cube",
+   "preuve_pose": "calls/0001.json",
+   "preuve_bounds": "calls/0002.json",
+   "bounds": {
+    "min": {
+     "x": -2000,
+     "y": -2000,
+     "z": -100
+    },
+    "max": {
+     "x": 2000,
+     "y": 2000,
+     "z": 0
+    },
+    "isValid": true
+   }
+  },
+  {
+   "id_placement": "S0_RAMPE_1",
+   "segment": 0,
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_RAMPE_1",
+   "statut": "POSE",
+   "support_prevu": "PrimitiveTools.add_cube",
+   "support_reel": "PrimitiveTools.add_cube",
+   "preuve_pose": "calls/0005.json",
+   "preuve_bounds": "calls/0006.json",
+   "bounds": {
+    "min": {
+     "x": 1000,
+     "y": -200,
+     "z": 0
+    },
+    "max": {
+     "x": 2000,
+     "y": 200,
+     "z": 500
+    },
+    "isValid": true
+   }
+  },
+  {
+   "id_placement": "S1_PLANCHER",
+   "segment": 0,
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S1_PLANCHER",
+   "statut": "POSE",
+   "support_prevu": "PrimitiveTools.add_cube",
+   "support_reel": "PrimitiveTools.add_cube",
+   "preuve_pose": "calls/0007.json",
+   "preuve_bounds": "calls/0008.json",
+   "bounds": {
+    "min": {
+     "x": 2000,
+     "y": -1000,
+     "z": 400
+    },
+    "max": {
+     "x": 3000,
+     "y": 1000,
+     "z": 500
+    },
+    "isValid": true
+   }
+  },
+  {
+   "id_placement": "S0_POTEAU",
+   "segment": 0,
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_POTEAU",
+   "statut": "POSE",
+   "support_prevu": "PrimitiveTools.add_cube",
+   "support_reel": "PrimitiveTools.add_cube",
+   "preuve_pose": "calls/0009.json",
+   "preuve_bounds": "calls/0010.json",
+   "bounds": {
+    "min": {
+     "x": -1000,
+     "y": 500,
+     "z": 0
+    },
+    "max": {
+     "x": -900,
+     "y": 600,
+     "z": 800
+    },
+    "isValid": true
+   }
+  },
+  {
+   "id_placement": "S0_LUM_1",
+   "segment": 0,
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_LUM_1",
+   "statut": "POSE",
+   "support_prevu": "PrimitiveTools.add_cube",
+   "support_reel": "PrimitiveTools.add_cube",
+   "preuve_pose": "calls/0011.json",
+   "preuve_bounds": "calls/0012.json",
+   "bounds": {
+    "min": {
+     "x": 500,
+     "y": 1500,
+     "z": 1200
+    },
+    "max": {
+     "x": 550,
+     "y": 1550,
+     "z": 1250
+    },
+    "isValid": true
+   }
+  }
+ ],
+ "gaps": [],
+ "cloture": {
+  "save": {
+   "preuve": "calls/0013.json"
+  },
+  "is_dirty": {
+   "preuve": "calls/0014.json"
+  },
+  "bornes_niveau": {
+   "preuve": "calls/0015.json"
+  },
+  "find_actors": {
+   "preuve": "calls/0016.json"
+  }
+ }
+}

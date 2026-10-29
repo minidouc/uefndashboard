@@ -40,9 +40,9 @@
 | `verse-*` (`verse-scan`, `verse-write`, `verse-build`), `list-editables`, `wire-devices` | 12 / 13 / 14 (`Gameplay_Programmer`, `AI_Programmer`, `UI_Programmer`) | aucun Verse, aucun câblage de device |
 | `apply-properties` | `Graphics_Programmer` (ambiance) / 12 (gameplay) | je ne règle pas les devices |
 | `compile-transforms`, `validate-grid`, `audit-scene --live` | `Physics_Programmer`, `Level_Designer` | hors périmètre de préflight |
-| `Asset.find_assets` dans `/Game/Athena`, `/Game/Environments` | — | assets Epic non exposés → échec de validation d'île |
+| Juger un asset légal ou illégal d'après son chemin | — | seul le journal du validateur fait foi (`../../_commun/legalite-assets.md`) ; `find_assets` est autorisé |
 | `GetDynamicInputSchema` hors session | — | **crash connu de l'éditeur** ; les schémas se lisent dans la doc de skill |
-| `launch-session`, `Save`/`SaveAll`, `Publish`, redémarrage de l'éditeur | `Producer_Orchestrator` via gate HITL utilisateur | destructeur / publication / perte de contexte |
+| `launch-session`, `check-validator` sans `--no-save`, `Asset.save_assets`, `Scene.save_actor`, publication (aucun outil MCP : faite à la main), redémarrage de l'éditeur | `Producer_Orchestrator` via gate HITL utilisateur | destructeur / publication / perte de contexte |
 | `batch.exec`, `editor.undo`, `validate_folder` | — | **n'existent pas** : mentions caduques |
 | tout outil classé `DANGEREUX_UNTESTE` (138 dans l'inventaire de référence) | — | jamais appelé, donc non.allowlisté |
 

@@ -1,0 +1,10 @@
+{
+ "outil": "AssetTools.is_dirty",
+ "rc": 0,
+ "args": {
+  "asset_path": "/Game/Golden"
+ },
+ "payload": {
+  "returnValue": false
+ }
+}

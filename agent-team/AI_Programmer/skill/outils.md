@@ -14,7 +14,7 @@
 |---|---|---|---|
 | `verse-scan` | **avant** toute écriture : ce que le projet Verse contient réellement | `--root ""` `--recursive` | `_verse_files.json` : `files` (dossiers + `.verse`). 606 entrées pour 0 `.verse` = rien à relire |
 | `verse-grep` | vérifier **chaque** signature que j'appelle (`MoveTo`, `Damage`, `Hide`, `NavigateTo`…) | `--symbols a,b` ou `--pattern`, `--path-glob "/Fortnite.com (Fortnite)/**"` | `_verse_grep.json` : `resolved` (`filePath`, `span`, `lineText`), `not_found`. Un `[]` ne prouve PAS l'absence |
-| `verse-read` *(via `Verse.ReadFile`)* | relire le texte écrit ; comparer à mon fichier local | `path` du `.verse` monté | texte brut ; `isError` + `file does not exist: '…'.` = fichier absent (expected avant écriture) |
+| `verse-read --path <chemin>` *(via `Verse.ReadFile`)* | relire le texte écrit ; comparer à mon fichier local | `path` du `.verse` monté | texte brut ; `isError` + `file does not exist: '…'.` = fichier absent (expected avant écriture) |
 | `GetSessionStatus` | **obligatoire avant `verse-build`** | — | `Disconnected` attendu ; toute autre valeur = STOP |
 | `list-editables` | table `@editable` → cible, **sans rien écrire** | `verse/` + `04_devices.json` + `_placed.json` | `10_editables.json` : `without_target`, `wiring_errors`, `mapping` (`kind`, `wiring`) ; `NO_VERSE_STAGED` si rien n'est stageable |
 | `Object.list_properties` / `get_properties` | retrouver le **nom exact** d'une propriété, relire une valeur | `{"instance": {"refPath": …}}` | liste réelle (parfois avec espaces : `interaction Text`) ; `PROPERTY_NOT_FOUND` + `nearest` |
@@ -43,13 +43,13 @@
 | `03_grid.json` (matrice, zones) | `Level_Designer` (09) | je lis les zones d'action, je ne les redessine pas |
 | `game_manager_device.verse`, boucle globale, économie, boutique, quêtes, sauvegarde, timers | `Gameplay_Programmer` (12) | j'**appelle** ses fonctions et je lui **rend** des événements |
 | `ui_hud.verse`, `ui_menus.verse`, `canvas`, `text_block`, menus | `UI_Programmer` (14) | j'expose des **valeurs** (`values_for_agent14`), je ne dessine pas |
-| `StartSession`, `StopSession`, `PushChanges`, `launch-session`, `Publish` | `Producer_Orchestrator` (gate HITL utilisateur) | destructeur / publication ; et `verse-build` exige `Disconnected` |
+| `StartSession`, `StopSession`, `PushChanges`, `launch-session`, publication (aucun outil MCP : faite à la main) | `Producer_Orchestrator` (gate HITL utilisateur) | destructeur / publication ; et `verse-build` exige `Disconnected` |
 | `SetDeviceProperty`, `ListDeviceProperties`, `GetDeviceProperties` *(hors flux `list-editables --apply`)* | — | statut **« inconnu »** sur un device Verse : jamais revérifiés hors ce chemin |
 | `GetClientLogEntries` hors session | — | statut **« echec »** : `No client log was found; start a play-in-client session first.` |
 | `GetDynamicInputSchema` hors session | — | **crashe l'éditeur** (mémoire de projet) |
 | `Object.search_subclasses {"name":"fort_character"}` | — | crash éditeur signalé : je passe par le digest Verse |
 | `batch.exec`, `editor.undo`, `validate_folder`, `verse.set_property`, injection `.t3d` | — | **n'existent pas** : mentions caduques d'un Bridge disparu |
-| `Asset.find_assets` dans `/Game/Athena`, `/Game/Environments` ; `WID_` posé en acteur | — | assets illégaux en UEFN ; un `WID_` s'assigne à un `item_granter_device` |
+| `WID_` posé en acteur ; juger un asset légal ou illégal d'après son chemin | — | un `WID_` s'assigne à un `item_granter_device` (recette : `Gameplay_Programmer/skill/tool-output/devices-objets-et-ile.md`) ; légalité = journal du validateur (`../../_commun/legalite-assets.md`) |
 | Toolsets `effets-ui` (Niagara / UMG / MVVM), `AssetTools` en écriture | hors périmètre | deux outils sur trois y sont `inconnu` ; un Niagara custom n'est pas ma voie |
 
 ## Toolsets MCP sous le CLI (pour comprendre, pas pour appeler en direct)

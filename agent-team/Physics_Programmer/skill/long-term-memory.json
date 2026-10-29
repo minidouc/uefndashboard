@@ -33,7 +33,7 @@
     "regles_non_negociables": [
       "Un seul appel MCP a la fois, jamais en parallele, jamais deux agents sur l'editeur.",
       "Ne tenir pour vrai que ce qui a ete relu par un second appel ; une reponse vide ([] / null / false) vaut 'inconnu'.",
-      "Aucun asset /Game/Athena ou /Game/Environments : uniquement PPID_ / PID_ du catalogue creatif (validate-scene et measure-palette bloquent ILLEGAL_ASSET_PATH).",
+      "Uniquement des chemins de 02_palette.json ; la legalite est le verdict du validateur UEFN lu apres sauvegarde (agent-team/_commun/legalite-assets.md), jamais le prefixe : des /Game/Creative/... et /Game/Athena/... sont legaux, des /BlastBerryWeapons/... ne le sont pas.",
       "Sauvegarde, publication, lancement de session et cleanup sont des gates HITL : accord explicite requis.",
       "Ne jamais modifier un fichier du skill pendant une run."
     ]

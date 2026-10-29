@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.longterm.Engine_Programmer.v1",
+  "agent": "Engine_Programmer",
+  "description": "Memoire longue terme d'Engine_Programmer (agent 10). Contient UNIQUEMENT des faits stables : constantes d'environnement, contrats d'outils, lexique de statuts, pieges observes, decisions de pipeline. Aucun etat de projet, aucune valeur d'une run particuliere : l'etat d'une run vit dans le handoff, pas ici.",
+  "langue": "fr",
+  "constantes_environnement": {
+    "machine": "PC portable 16 Go, GPU integre de la famille Radeon 8040M (la fiche d'archive mentionne 840M : difference non resolue, a relire sur la machine avant d'en faire une contrainte)",
+    "ram_totale_mb_reference": 15515,
+    "ram_seuil_alerte_percent": 85,
+    "ram_seuil_block_percent": 90,
+    "ports_mcp_documentes": [8000, 8001],
+    "port_mcp_reellement_actif_dans_la_run": 8001,
+    "port_8000_comportement": "reponse impossible, message OFFLINE, code retour 2 (rien n'est execute)",
+    "url_mcp": "http://127.0.0.1:<port>/mcp",
+    "variable_denvironnement": "UEFN_MCP_URL",
+    "harnais_cli": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu>",
+    "niveau_interne_de_la_run": "claudetest",
+    "note_niveau": "le nom charge (claudtest dans le guide d'acteurs) peut differer du nom affiche dans l'UI ; seul le returnValue de Scene.get_current_level fait preuve",
+    "cvar_pagination": "ModelContextProtocol.PaginationPageSize",
+    "cvar_pagination_valeur_cible": "200",
+    "cvar_pagination_value_0": "0 = troncature silencieuse des listes, aucun message d'erreur : etat dangereux",
+    "python_requis": "Python 3 disponible cote harnais ; aucune dependance installee par l'agent",
+    "inventaire_outils_mcp": {
+      "outils_detectes": 388,
+      "toolsets": 30,
+      "verifies": 182,
+      "echecs_constates": 11,
+      "inconnus": 195,
+      "dangereux_jamais_appelles": 138,
+      "note": "Reinventorier en debut de session : un outil inconnu n'est pas un outil absent, et un outil non teste ne se declare pas disponible."
+    },
+    "harnais_hors_editeur": {
+      "commande": "python script/tests/verify.py",
+      "resultat_attendu": "122/122 OK",
+      "ce_que_valide_le_harnais": "les contrats internes des artefacts (schemas, transformations, registres), PAS l'etat de l'editeur ni la connexion MCP",
+      "divergence_documentee": "references/mcp-routing.md de la skill uefn_map_creator annonce encore 110/110 : chiffre caduque, le journal de run et le SKILL.md font foi (122/122)."
+    }
+  },
+  "contrats_outils": {
+    "codes_retour_harnais": {
+      "0": "PASSED : l'appel a reussi, la sortie est exploitable",
+      "1": "FAILED : l'appel a tourne et a echoue, l'etat de la scene est connu",
+      "2": "OFFLINE : editeur injoignable, RIEN n'a ete execute, la scene est intacte",
+      "3": "TIMEOUT : etat INCONNU, ne peut pas etre interprete comme un echec net ni comme un succes"
+    },
+    "validation_des_schemas": "un appel MCP n'est valide qu'apres controle client-side de l'inputSchema ET de l'outputSchema ; une sortie sans returnValue attendu est traites comme UNKNOWN",
+    "outils_d_etat_prouves": [
+      "ValkyrieToolset.SessionToolset.GetSessionStatus",
+      "Scene.get_current_level",
+      "ProgrammaticToolset.GetCVarValue",
+      "ProgrammaticToolset.SetCVarValue",
+      "EditorAppToolset (etat / capture)",
+      "Prog.get_execution_environment"
+    ],
+    "alias_utilises": {
+      "get_current_level": "Scene.get_current_level",
+      "GetCVarValue": "ProgrammaticToolset.GetCVarValue",
+      "SetCVarValue": "ProgrammaticToolset.SetCVarValue",
+      "cleanup": "ActorTools.remove_from_scene (destructif, passe par refPath)"
+    },
+    "get_current_level_sortie": "un objet {\"returnValue\": \"<guide>/<niveau>\"} ; le nom du niveau est le dernier segment",
+    "getcvarvalue_sortie": "{\"returnValue\": \"<chaine>\"} - la valeur est une CHAINE, jamais un nombre",
+    "setcvarvalue_sortie": "{\"returnValue\": null} sans isError : le null n'est PAS un succes prouve, seule la relecture compte",
+    "remove_from_scene_sortie": "{\"returnValue\": true} - le vrai succes se verifie ensuite par find_actors / get_actor_bounds",
+    "taille_sortie_max": "au-dela de 4000 tokens la sortie est renversee sur fichier et l'agent ne lit que le chemin"
+  },
+  "lexique_statuts": {
+    "READY": "toutes les cases de checks sont OK ou NON_BLOQUANT avec preuve relue ; error_log vide",
+    "ERROR": "au moins une mesure manquante ou un appel en echec ; error_log non vide ; le pipeline s'arrete",
+    "UNKNOWN": "valeur de substitution obligatoire quand aucune sortie d'outil ne prouve le champ ; n'est JAMAIS remplace par une valeur plausible",
+    "OFFLINE": "code 2 : editeur injoignable, rien n'a ete execute",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3 : appel parti ou non repondu, etat de la scene indetermine",
+    "SESSION_CONNECTED": "GetSessionStatus renvoie Connected : les outils d'ecriture peuvent etre appelles (avec gate HITL)",
+    "DANGEREUX_UNTESTE": "outil classe dangereux dans l'inventaire et jamais appele de la run : ne pas le mettre sur la allowlist",
+    "OUTPUT_TOO_LARGE": "sortie depassee, conservee sur fichier ; le chemin remplace le contenu",
+    "WORKSPACE_INSIDE_SKILL": "le CLI refuse un workspace situe dans le dossier de la skill : erreur de configuration, pas un bug MCP",
+    "NO_VERSE_STAGED": "aucun script Verse pret a compiler : etat normal en amont des agents 12/13/14"
+  },
+  "pieges_environnement": [
+    {
+      "signe": "Le pont ne repond pas sur 8000 alors que la documentation mentionne 8000.",
+      "cause": "L'editeur expose le pont MCP sur un port choisi au demarrage ; la valeur documentaire n'est pas un etat.",
+      "conduite": "Pinger les deux ports, declarer dans le handoff le port qui a REPONDU et le code retour de l'autre ; ne jamais corriger le handoff pour coller a la doc."
+    },
+    {
+      "signe": "Les listes d'outils ou d'acteurs reviennent courtees, sans message d'erreur.",
+      "cause": "ModelContextProtocol.PaginationPageSize vaut 0 : troncature silencieuse.",
+      "conduite": "GetCVarValue, puis SetCVarValue a 200, puis RELURE ; consigner les trois valeurs. Sans relecture, la case pagination n'est pas OK."
+    },
+    {
+      "signe": "SetCVarValue renvoie returnValue null.",
+      "cause": "C'est la sortie normale de l'outil : il ne confirme pas la valeur.",
+      "conduite": "Traiter null comme 'pas de preuve' ; seule la relecture par GetCVarValue valide l'ecriture."
+    },
+    {
+      "signe": "list_toolsets echoue avec 'Output too large' (790,8 Ko).",
+      "cause": "La sortie depasse le budget de contexte et est renversee sur un fichier temporaire.",
+      "conduite": "Garder le chemin du fichier dans le handoff, inventorier a partir du fichier ou par toolsets successifs ; ne pas reinterroger l'editeur en boucle."
+    },
+    {
+      "signe": "L'editeur se ferme ou se fige pendant un appel.",
+      "cause": "GetDynamicInputSchema appele hors session : plantage connu de l'editeur.",
+      "conduite": "Ne jamais appeler GetDynamicInputSchema ; les schemas se lisent dans la documentation de la skill et dans les sorties relues."
+    },
+    {
+      "signe": "Le nom du niveau affiche dans l'UI ne correspond pas au niveau charge.",
+      "cause": "L'UI et le guide d'acteurs n'exposent pas le meme identifiant (claudetest vs claudtest).",
+      "conduite": "Toujours lire Scene.get_current_level, reporter le returnValue brut, et faire confirmer aupres de l'utilisateur via Producer_Orchestrator."
+    },
+    {
+      "signe": "WinError 10054 pendant un appel long.",
+      "cause": "Connexion TCP reinitalisee par l'editeur ; le harnais renvoie un timeout.",
+      "conduite": "Code 3, etat UNKNOWN : ne pas rejouer l'ecriture a l'identique sans avoir relu l'etat reel (acteur orphelin possible)."
+    },
+    {
+      "signe": "La RAM annoncee ne correspond pas a ce que vit la machine.",
+      "cause": "Chiffre recopie d'une mission precedente ; la RAM est une mesure instantanee.",
+      "conduite": "Mesurer a chaque preflight, horodater la mesure, consigner le process editeur et sa working set ; sinon UNKNOWN."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Engine_Programmer ne valide jamais son propre JSON : la validation est delegate au validateur du pipeline (Producteur ou agent de QA attache).",
+    "Un preflight est perime : il ne se recopie pas d'une mission a l'autre, il se rejoue.",
+    "Le pont MCP n'est jamais demarre ni redemarre par l'agent ; un OFFLINE remonte en ERROR avec le code retour brut.",
+    "Le harnais hors editeur (verify.py) est execute sans l'editeur : il prouve les contrats, pas l'environnement. Les deux signaux sont distincts et ne se remplacent pas.",
+    "Toute ecriture destructive dans la scene (cleanup) exige une demande explicite du Producer, une save prealable et l'inventaire des refPath retires.",
+    "L'allowlist d'outils est etablie par usage preuve : un outil jamais appele et non documente reste hors allowlist.",
+    "La RAM haute n'est pas une raison pour tuer l'editeur : elle est une raison pour remonter DEGRADE ou ERROR et laisser le Producteur decider."
+  ],
+  "chiffres_de_reference": {
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "appels_mcp_de_la_run_de_reference": 5376,
+    "repartition_des_appels_dominants": "ActorTools.get_actor_bounds 4089, get_actor_transform 865, set_actor_transform 134, execute_tool_script 58, IslandForgeProbe.chercher_playsets 50, add_tag 37, remove_from_scene 37, add_to_scene_from_asset 35, GetSessionStatus 24, verifier_legalite_scene 9",
+    "grille_defaut_uefn": "512 x 512 x 384 (variantes 512 x 512 x 512 selon le device)",
+    "duree_typique_appels_etat_ms": "316 a 332 ms pour get_current_level / GetCVarValue / SetCVarValue / GetSessionStatus ; jusqu'a 182 ms en appel repete"
+  }
+}

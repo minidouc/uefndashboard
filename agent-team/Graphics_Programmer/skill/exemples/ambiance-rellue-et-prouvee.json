@@ -122,7 +122,7 @@
     "must_preserve": ["Lamp_01", "Sign_Vertical_01", "Koi_Holo_Cyan", "Spawner_Plaza_01"],
     "forbidden": [
       "aucun reglage manuel dans l'editeur hors spec",
-      "aucun chemin /Game/Athena ou /Game/Environments",
+      "aucun chemin refuse par le validateur UEFN (journal relu apres sauvegarde)",
       "aucun device pose hors 05_visuals.json",
       "aucune propriete declaree appliquee sans relecture",
       "aucun MaterialInstanceTools.set_* sans accord Engine_Programmer + Producer"
@@ -159,7 +159,7 @@
     "pourquoi_il_passe": [
       "aucune propriete n'est declaree appliquee : status NON_TENTE ou liste vide, et le rapport reste le verbatim PASSED -- la discipline 'rien d'ecrit sans relecture' est visible dans le document",
       "verdict 'approxime' appuye sur deux PNG relus (image_lue true, bytes, camera_read_back) : le manque d'holographie est ecrit, pas maquille",
-      "chaque asset_path porte un identifiant PPID_ : le motif du schema exclut de fait /Game/Athena",
+      "chaque asset_path porte un identifiant PPID_ issu d'une recherche archivee (le motif est un choix de perimetre, la legalite reste prouvee par le validateur)",
       "not_sourced enonce les trois limites (catalogue, outils lumiere, proprietes jamais listees) au lieu de les laisser implicites",
       "summary_short : des comptes et des statuts relus, aucun adjectif d'auto-evaluation"
     ]

@@ -37,10 +37,10 @@
 | `verse-scan`, `verse-write`, `verse-build`, `list-editables`, `wire-devices` | 12 / 13 / 14 | aucun Verse, aucun câblage |
 | `measure-palette` | `Lead_Programmer` | les tailles/pivots ne sont pas ma source |
 | `apply-properties` | `Graphics_Programmer` (ambiance) / 12 (gameplay) | je ne règle pas les devices |
-| `launch-session`, `Save`/`SaveAll`, `Publish` | Producteur via gate HITL utilisateur | destructeur / publication |
+| `launch-session`, `check-validator` sans `--no-save`, `Asset.save_assets`, `Scene.save_actor`, publication (aucun outil MCP : faite à la main) | Producteur via gate HITL utilisateur | destructeur / publication |
 | `GetDynamicInputSchema` hors session | — | crashe l'éditeur (mémoire de projet) |
 | `batch.exec`, `editor.undo`, `validate_folder` | — | **n'existent pas** : mentions caduques |
-| `Asset.find_assets` dans `/Game/Athena`, `/Game/Environments` | — | assets Epic non exposés → échec de validation d'île |
+| Poser un chemin absent de `02_palette.json` | `Lead_Programmer` | la palette porte des chemins mesurés et dont la légalité est prouvée par le validateur (`../../_commun/legalite-assets.md`) |
 | Toolsets `effets-ui` (Niagara/UMG/MVVM) | hors périmètre | deux outils sur trois y sont inconnus |
 
 ## Toolsets MCP sous le CLI (pour comprendre, pas pour appeler en direct)

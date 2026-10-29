@@ -1,0 +1,8 @@
+{
+ "exceptions": [
+  {
+   "motif": "*_LUM_*",
+   "justification": "lumiere ponctuelle suspendue"
+  }
+ ]
+}

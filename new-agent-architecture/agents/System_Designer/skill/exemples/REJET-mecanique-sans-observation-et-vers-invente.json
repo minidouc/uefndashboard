@@ -1,0 +1,42 @@
+{
+"$schema": "uefn.handoff.v1",
+"handoff_id": "H-DESIGN-3",
+"from": "System_Designer",
+"to": ["Gameplay_Programmer", "Mission_Content_Designer"],
+"artifact": "01_systems.json",
+"mission_ref": "M-CORPOPLAZA-DESIGN-66",
+"summary_short": "Quete immersive et combat de couronne ajoutes a la place contemplative, avec API Verse, coords et decor de reference.",
+"payload": {
+"bilan_systemes": "regles_de_presence_seules",
+"declare_aucune_mecanique": true,
+"mechanics": [
+{"id": "S1", "nom": "Quete des koi", "type": "declencheur", "intention": "Experience immersive et epoustouflante quand le joueur approche du bassin, avec un decor repris de /Game/Environments pour le rendu.", "etat": {"initial": "quete_demarree", "transitions": []}, "entrees": [{"depuis": "zone", "evenement": "le joueur sent que quelque chose se passe"}], "sorties": [{"vers": "joueur", "effet": "250 degats infliges, sensation de puissance"}], "observation": {"preuve": "ressenti general du playtest", "critere": "c'est beau et fluide", "qui_verifie": "autre_agent", "verifiable_en_jam": true}, "besoin_vers": "module_requis", "api_vers": "fn OnBegin() { Player.TeleportTo(\"Spawn_2\") }", "dependances_devices": [{"actor_label": "Trigger Zone 01", "device_class": "unknown_volume", "source": "03_grid.json"}], "chiffres_cles": ["rayon de 45511.5 cm", "hauteur de saut 148 cm"]},
+{"id": "SYS2", "nom": "Combat de couronne", "type": "regle_perpetuelle", "intention": "Les tours deviennent une arene de tir pour 12 joueurs.", "etat": {"initial": "combat", "transitions": [{"de": "combat", "a": "combat", "quand": "rien ne change jamais"}]}, "entrees": [{"depuis": "joueur", "evenement": "tir"}], "sorties": [{"vers": "device", "effet": "score mis a jour"}], "observation": {"preuve": "le Game_Manager_01 gere les vagues", "critere": "le rythme est bon", "qui_verifie": "validateur_python", "verifiable_en_jam": true}, "besoin_vers": "module_requis", "api_vers": "SpawnerDevice.SpawnPlayerWave()", "dependances_devices": [{"actor_label": "Game_Manager_01", "device_class": "game_manager", "source": "UNKNOWN"}]}
+],
+"jalons_observation": [],
+"tuning": {"philosophie": "TTK court, arcade neon, progression exponentielle.", "parametres": [{"cle": "TTK_Cible", "valeur": "TBD", "unite": "s", "source": "intuition"}, {"cle": "degats_base", "valeur": "250", "source": "standard_genre_non_source"}, {"cle": "xp_curve", "valeur": "level^5", "unite": "u", "source": "01_gdd.json"}], "coherence": [], "sensibilite": ["si le joueur joue 2x mieux : rien"]},
+"hors_portee": [],
+"contradictions_amont": []
+},
+"constraints": {"acces_mcp": "none", "must_preserve": ["immersion maximale"], "forbidden": []},
+"acceptance": ["quete epique", "each_mechanic_has_state_transition"],
+"next_step_hint": "Gameplay : implemente OnBegin, les coords sont deja calculees et le Game Manager existe.",
+"context_budget_tokens": 9000,
+"exemple_annotations": {
+"role": "REJET - viole volontairement le contrat ; ne jamais copier cette forme",
+"motifs_de_rejet": [
+"mecanique dite en adjectifs ('immersive', 'epoustouflante') sans condition d'observation : 'ressenti du playtest' et 'c'est beau et fluide' ne sont pas binaires ; une regle non observable est une intention.",
+"SYS01 : etat declare sans aucune transition (transitions vides) - 'quete_demarree' est une etiquette, pas un etat (minItems 1) ; SYS2 : transition combat vers combat, aucun changement d'etat, critere 'le rythme est bon' non cochable",
+"api_vers = 'fn OnBegin() {...}' et 'SpawnerDevice.SpawnPlayerWave()' : noms d'API Verse inventes ecrits comme s'ils existaient ; le champ ne vaut que UNKNOWN ou aucune",
+"intention citant /Game/Environments : contenu interne non expose au catalogue Creatif (ILLEGAL_ASSET_PATH), refuse par le pattern des champs de texte",
+"SYS01 : id 'S1' hors pattern ^SYS[0-9]{1,2}$ ; 'Trigger Zone 01' avec espaces et device_class inconnu, source '03_grid.json' allegee alors que required_devices ne donne que Spawner_Plaza_01 ; Game_Manager_01 jamais cree (NO_VERSE_STAGED)",
+"coordonnees inventees par le modele (rayon 45511.5 cm, saut 148 cm) : aucune coordonnee n'appartient a un agent Design",
+"meta-progression et sauvegarde entre sessions non declarees comme hors perimetre : elles relevent de Economy_Designer (04)",
+"incoherence de bilan : declare_aucune_mecanique true avec un combat de couronne et une quete ; game_mode rpg et notes contemplatives jamais contestes - contradictions_amont vide, hors_portee vide, jalons_observation vide alors que le GDD donne 0 s, 1 s, 5 s",
+"tuning : 'TTK_Cible' hors pattern ^[a-z][a-z0-9_]*$, valeur 'TBD' placeholder, unite absente, source 'intuition' hors enum ; coherence vide (minItems 1) ; 250 degats poses sans equation HP / DPS",
+"acceptance : 'quete epique' non cochable par du code, 2 criteres pour un minimum de 4 ; constraints.forbidden vide (minItems 1)",
+"handoff_id 'H-DESIGN-3' hors pattern ^H-[A-Z]+-[0-9]{3,}$ ; context_budget_tokens 9000 au-dessus du plafond 4000",
+"next_step_hint qui premache une API inventee et des coords a Gameplay_Programmer sans passer le Producteur : renversement du pipeline"
+]
+}
+}

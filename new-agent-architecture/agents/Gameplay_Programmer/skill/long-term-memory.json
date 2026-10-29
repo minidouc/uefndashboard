@@ -1,0 +1,151 @@
+{
+  "$id": "uefn.longterm.Gameplay_Programmer.v1",
+  "agent": "Gameplay_Programmer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des faits d'editeur et de l'outil Verse, des contrats de CLI et des decisions de pipeline actees.",
+  "langue": "fr",
+  "constantes_verse": {
+    "classe_principale": "une classe de type creative_device par fichier ; le nom du fichier .verse est celui autorise par 02_palette.json / verse_architecture",
+    "imports_formes": [
+      "using { /Fortnite.com/Devices }",
+      "using { /Fortnite.com/Characters }",
+      "using { /Verse.org/Simulation }",
+      "using { /Verse.org/Random }",
+      "using { /UnrealEngine.com/Temporary/Diagnostics }",
+      "using { /UnrealEngine.com/Temporary/SpatialMath }"
+    ],
+    "syntaxes_validees_harnais": [
+      "variable mutable : var Nom : type = valeur puis set Nom = nouvelle_valeur",
+      "acces sur : un acces Tableau[Index] ou un appel <decides> se fait dans un if (X := Tableau[0]):",
+      "Sleep() seulement dans une fonction <suspends> ou un bloc spawn{}",
+      "un Grep sans resultat renvoie [] sans erreur : verifier le motif sur un nom connu avant de conclure"
+    ],
+    "convention_editable": "chaque @editable porte exactement l'actor_label de 04_devices.json (reference verse-qa-standard.md section 1)",
+    "types_parametre": ["logic", "bool", "int", "float", "string", "message", "locale", "type"],
+    "kind_reference_acteur": "ACTEUR : une cible refPath est obligatoire ; sans refPath l'editable part dans without_target",
+    "build_all_portee": "Verse.BuildAll compile TOUT le Verse du projet : le rapport n'est pas mon perimetre, mes fichiers sont declares dans payload.files",
+    "build_all_duree": "environ 6 s sur un projet vide (mesure du harnais, 2026-10-19)",
+    "categories_logs": {"compilation": "VerseBuild", "session": "LogValkyrie et LogValkyrieValidation (la categorie litterale 'Valkyrie' n'existe pas)"},
+    "lignes_succes_localisees": [
+      "VerseBuild: Compilation terminee.",
+      "VerseBuild: Liaison terminee.",
+      "VerseBuild: SUCCES -- Version terminee."
+    ],
+    "detecteur_de_succes_cli": "le CLI cherche le motif insensible a la casse succ|termin|success|complete dans les lignes relues"
+  },
+  "contrats_outils": {
+    "point_entree_unique": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]",
+    "serveur_mcp": "http://127.0.0.1:8000/mcp par defaut ; le pont a ete observe sur 8001 - verifier UEFN_MCP_URL avant d'affirmer un OFFLINE",
+    "codes_retour": {
+      "0": "PASSED - continuer",
+      "1": "FAILED ou partiel - l'appel A ETE TRAITE : relire l'etat avant de rejouer",
+      "2": "OFFLINE - rien n'a ete execute",
+      "3": "TIMEOUT / etat inconnu - relire l'etat, jamais relancer a l'aveugle"
+    },
+    "sequentiel_verse": "verse-scan / verse-grep (lecture) -> verse-write --i-agree-to-modify-project (ecriture, puis ReadFile) -> verse-build (GetSessionStatus, BuildAll, Logs.GetLogEntries VerseBuild) -> list-editables (puis --live / --apply avec accord) -> wire-devices (GetBindingOptions source, AddEventBinding, ListEventBindings CIBLE)",
+    "historiques_sur_disque": {
+      "_verse_files.json": "inventaire Verse.ListFiles (root, recursive, at, files) - un scan vide est un inconnu, pas une absence",
+      "_verse_grep.json": "resolved / not_found par symbole, avec pathGlob et scope",
+      "_verse_written.json": "un enregistrement par verse-write : verse_path, local_file, bytes, read_back_matches, status",
+      "_placed.json": "label -> refPath, asset, kind, xform relue : la source de tout cablage"
+    },
+    "journalisation": "chaque appel CLI est trace dans <workspace>/_mcp_calls.jsonl ; un appel direct via mcp_client.py ne l'est qu'avec --log ou UEFN_MCP_LOG",
+    "workspace": "toujours HORS du skill (un workspace a l'interieur est refuse : WORKSPACE_INSIDE_SKILL)",
+    "regles_non_negociables": [
+      "Un seul appel MCP a la fois, jamais en parallele, jamais deux agents sur l'editeur.",
+      "Ne tenir pour vrai que ce qui a ete relu par un second appel ; une reponse vide ([] / null / false) vaut 'inconnu'.",
+      "Aucun fichier .verse ecrit sans --i-agree-to-modify-project : VerseToolset.WriteFile est classe DANGEREUX et modifie le code source du projet.",
+      "Sauvegarde, publication, lancement de session et PushChanges sont des gates HITL : accord explicite requis, et la session releve du Producer.",
+      "Aucun parametre de gameplay hard-coded : toute valeur vient des specs 01_*.",
+      "Ne jamais modifier un fichier du skill pendant une run."
+    ]
+  },
+  "lexique_statuts": {
+    "SESSION_CONNECTED": "une session de jeu tourne : verse-build est refuse, AUCUN appel d'editeur n'est parti",
+    "CONSENT_REQUIRED": "verse-write sans --i-agree-to-modify-project : rien n'est ecrit (code 1)",
+    "FILE_NOT_FOUND": "verse-write : le fichier local du workspace n'existe pas",
+    "NO_VERSE_STAGED": "aucun .verse dans workspace/verse/ : list-editables echoue la-dessus, sans objet quand la scene n'a pas de module",
+    "DEVICE_NOT_PLACED": "list-editables --live / --apply exige que le creative_device soit pose (ou trouvable via ListDeviceAssets avec --apply)",
+    "EDITABLE_PROPERTY_NOT_FOUND": "le nom de l'editable n'apparait pas dans Device.ListDeviceProperties : la liste reelle est renvoyee dans 'available'",
+    "EDITABLE_READBACK_MISMATCH": "valeur ecrite puis relue differente sur un @editable : le cablage reste MANUEL",
+    "SET_DEVICE_PROPERTY_FAILED": "Device.SetDeviceProperty a leve une erreur sur l'editable concerne",
+    "AUTO_VERIFIED": "seul statut qui prouve un @editable cable : ecrit puis RECU par une relecture",
+    "MANUEL": "cablage non prouve : a annoncer comme tel, jamais comme un succes",
+    "NO_BINDING_DECLARED": "aucun bindings dans 04_devices.json ; --allow-empty ecrit un PASSED honnete",
+    "BINDING_EVENT_UNKNOWN": "event absent des sourceEvents de GetBindingOptions (la liste reelle est dans le rapport)",
+    "BINDING_FUNCTION_UNKNOWN": "function absente des targetFunctions de GetBindingOptions",
+    "BINDING_NOT_READ_BACK": "AddEventBinding appele mais lien absent de ListEventBindings sur la CIBLE",
+    "NOT_PLACED": "device declare dans 04_devices.json mais absent de _placed.json : aucun appel editeur ne l'a touche",
+    "PROPERTY_NOT_FOUND": "nom absent de Object.list_properties : ne jamais inventer un autre nom",
+    "PROPERTY_MISMATCH": "valeur ecrite par set_properties puis relue differente par get_properties",
+    "PROPERTY_UNREADABLE": "get_properties ne renvoie pas la cle : valeur INCONNUE, pas valeur absente",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3 : l'action a peut-etre eu lieu, relire avant toute relance",
+    "WORKSPACE_INSIDE_SKILL": "workspace place dans le skill : refuse"
+  },
+  "pieges_signe_cause_conduite": [
+    {
+      "signe": "diagnostics_count: 0 et status annonce 'compile'.",
+      "cause": "BuildAll renvoie une liste de diagnostics ; une liste vide signifie seulement qu'aucune erreur n'a ete SIGNALEE sur cet appel. Le log VerseBuild, lui, garde les builds precedents.",
+      "conduite": "Exiger success_lines non vide ET comparer l'horodatage de la ligne au timestamp de l'appel. 09_verse_report.json du harnais : 'une liste de diagnostics vide ne suffit PAS'."
+    },
+    {
+      "signe": "Les lignes relues s'affichent avec un caractere de remplacement ('termin?e', 'SUCC?S') dans la console.",
+      "cause": "Le rapport est ecrit en UTF-8 avec les libelles localises de l'editeur (les trois lignes verbatim de constantes_verse.lignes_succes_localisees) ; une console Windows en cp1252 ne rend pas ces octets. Le champ scope du CLI, lui, est en ASCII sans accents.",
+      "conduite": "Comparer les octets du fichier ou le motif succ|termin du CLI, jamais l'affichage du terminal ; ne pas 'corriger' un libelle qui parait casse."
+    },
+    {
+      "signe": "Un editable annonce cable alors que without_target n'est pas vide.",
+      "cause": "Le cablage automatique des references d'acteurs repose sur l'hypothese savedActor, jamais prouvee sur un creative_device de ce projet ; Device.SetDeviceProperty / ListDeviceProperties / GetDeviceProperties sont statut 'inconnu' (exige un creative_device Verse).",
+      "conduite": "list-editables sans --apply = table a cabler a la main. N'appeler --apply qu'avec accord explicite du Producer, puis verifier que chaque ligne ACTEUR est passee en AUTO_VERIFIED avec relecture."
+    },
+    {
+      "signe": "Un lien wire-devices 'reussi' alors que rien ne se passe en jeu.",
+      "cause": "AddEventBinding est idempotent et ne renvoie pas de preuve : le lien apparait sur le device CIBLE, pas sur l'emetteur.",
+      "conduite": "Relecture obligatoire par Device.ListEventBindings sur la cible ; BINDING_NOT_READ_BACK = lien non prouve, a annoncer tel quel."
+    },
+    {
+      "signe": "Object.set_properties renvoie une erreur mais une partie des valeurs est appliquee.",
+      "cause": "Comportement observe pendant la campagne de tests du harnais : une erreur n'invalide pas l'effet.",
+      "conduite": "Toujours relire par get_properties, meme apres une erreur ; values est une CHAINE JSON, pas un objet."
+    },
+    {
+      "signe": "Device PlaceDevice semble ignorer l'orientation demandee.",
+      "cause": "Piege prouve : yaw 0 demande, yaw 90 relu sur un device.",
+      "conduite": "Ce n'est pas mon role : je consomme les refPath de 04_devices.json et j'alerte le Producteur si un device parait mal oriente. Aucun set_actor_transform de ma main."
+    },
+    {
+      "signe": "Timeout (code 3) pendant une ecriture Verse ou un cablage.",
+      "cause": "Le pont a deja traite l'appel : l'editeur a pu ecrire le fichier ou poser le device sans que la reponse revienne (StartSession a deja bloque le pont plus de 60 s).",
+      "conduite": "Relire (verse-scan, _placed.json, 10_editables.json, GetSessionStatus) avant toute relance ; ne jamais rappeler a l'aveugle."
+    },
+    {
+      "signe": "Logs.GetLogEntries repond 'Log category ... not found.'",
+      "cause": "La categorie litterale demandee n'existe pas ; le nom reel est different (Valkyrie -> LogValkyrie / LogValkyrieValidation ; compilation -> VerseBuild).",
+      "conduite": "Appeler Logs.GetLogCategories avec un filtre, lire les vrais noms, puis relancer la lecture."
+    },
+    {
+      "signe": "GetClientLogEntries renvoie 'No client log was found; start a play-in-client session first.'",
+      "cause": "Outil statut 'echec' hors session : aucun client lance.",
+      "conduite": "Aucune affirmation de comportement 'teste en jeu' sans session pilotee par le Producteur ; le handoff reste sur la preuve de compilation."
+    },
+    {
+      "signe": "list_toolsets ou ListDeviceProperties renvoie une sortie demesuree.",
+      "cause": "Les schemas complets des toolsets et des devices remplissent la fenetre (790,8 Ko observes pour list_toolsets).",
+      "conduite": "Sortie redirigee sur fichier, lecture ciblee par Grep ; jamais la sortie brute dans un handoff (budget 4000 tokens)."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "L'agent 12 intervient APRES la pose : il consomme 04_devices.json (labels + refPath) et n'invente jamais une reference.",
+    "Verifier l'API dans les digests avant d'ecrire, ecrire puis relire, compiler puis recouper le log : quatre temps, pas un.",
+    "Le 13 (mechaniques temps reel, fort_character, cameras, entites) et le 14 (canvas / text_block) ne touchent pas mes fichiers ; je leur livre des noms exacts de fonctions et d'evenements.",
+    "verse-build est un rapport PROJET : la ligne de succes couvre tout le Verse, le perimetre de chacun est declare dans payload.files.",
+    "Aucune session, aucune sauvegarde, aucune publication tant que le Producer n'a pas obtenu l'accord de l'utilisateur.",
+    "Un livrable technique n'est jamais auto-valide : les criteres d'acceptation sont cochables par un validateur Python."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur observes sur la run de reference ws_corpo_plaza (2026-10-24), scene contemplative SANS module Verse : 5 376 appels MCP traces, 569 acteurs dans _placed.json dont 1 device (Spawner_Plaza_01), verse-scan = 606 entrees de repertoire pour 0 fichier .verse stage, list-editables = NO_VERSE_STAGED, wire-devices lance avec --allow-empty (wired: []), 09_verse_report.json PASSED avec diagnostics_count 0 et ligne de succes recente.",
+    "build_all_vide_ms": "environ 6000",
+    "timeout_pont_defaut_s": 60,
+    "lots_execute_tool_script": 10,
+    "max_editables_par_fichier": "aucune limite d'outil ; la limite est le budget contexte du handoff"
+  }
+}

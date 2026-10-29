@@ -1,0 +1,380 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Creative_Director.v1",
+  "title": "Creative_Director - contrat du livrable 00_vision.json",
+  "description": "Schema de sortie de l'agent Creative_Director (agent 01, pole Design, phase CADRAGE). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte la direction creative arretee. Chaque champ est choisi pour etre cochable par un validateur Python ou un juge externe, jamais pour plaire : pas de critere esthetique, pas d'auto-validation. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset final, aucun device impose.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Creative_Director"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "00_vision.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pitch",
+        "theme",
+        "references",
+        "palette",
+        "identite_visuelle",
+        "identite_sonore",
+        "promesses",
+        "non_negotiables",
+        "anti_references",
+        "ecarts_assumes",
+        "cibles_jam",
+        "gate_hitl_1"
+      ],
+      "properties": {
+        "pitch": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 300,
+          "description": "La direction en une phrase de 300 caracteres max, engageante et falsifiable : ce que l'ile EST et ce qu'elle ne sera pas."
+        },
+        "theme": { "$ref": "#/definitions/theme" },
+        "references": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/definitions/reference" }
+        },
+        "palette": { "$ref": "#/definitions/palette" },
+        "emotions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Palette emotionnelle recherchee (recueillement, vertige calme...). Ne remplace pas les criteres : elle les explique."
+        },
+        "identite_visuelle": { "$ref": "#/definitions/identite_visuelle" },
+        "identite_sonore": { "$ref": "#/definitions/identite_sonore" },
+        "promesses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "$ref": "#/definitions/promesse" },
+          "description": "Promesses faites au joueur. 1 a 5 : au-dela, plus rien n'est tenu pendant une jam."
+        },
+        "non_negotiables": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Piliers creatifs non negociables : ce qui ne bouge pas sans nouvelle decision HITL."
+        },
+        "anti_references": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Ce que le projet NE VEUT PAS etre. Trois minimum : sans elles, la direction n'est pas arretee."
+        },
+        "ecarts_assumes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ecart" },
+          "description": "Ce que la vision ne peut pas tenir tel quel (reference sans equivalent legal au catalogue). Un ecart connu s'ecrit ici ; un ecart tu est une faute de pipeline."
+        },
+        "cibles_jam": { "$ref": "#/definitions/cibles_jam" },
+        "gate_hitl_1": { "$ref": "#/definitions/gate_hitl_1" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": {
+          "const": "none",
+          "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur."
+        },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous transmis en aval : les elements que chaque role suivant applique sans redemander le contexte amont."
+        },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        },
+        "variations_proposees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Variantes de direction envisagees et ecartees, avec leur motif."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "pitch_present_max_300_chars",
+          "theme_and_references_declared",
+          "references_convertible_to_legal_assets",
+          "non_negotiables_listed",
+          "anti_references_listed",
+          "palette_with_hex_codes",
+          "visual_identity_and_audio_identity_present",
+          "promises_count_1_to_5",
+          "promises_each_has_check",
+          "assumed_gaps_listed",
+          "jam_scope_unverified_declared",
+          "no_coordinate_or_asset_path",
+          "brief_gate_hitl_1_pending"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nom_projet", "univers", "lieu", "epoque", "ton"],
+      "properties": {
+        "nom_projet": { "type": "string", "minLength": 3 },
+        "univers": { "type": "string", "minLength": 3 },
+        "lieu": { "type": "string", "minLength": 3 },
+        "epoque": { "type": "string", "minLength": 1 },
+        "ton": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "ce_que_ce_nest_pas": { "type": "string", "minLength": 3 }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titre", "source", "pourquoi", "equivalent_creatif", "statut_conversion"],
+      "properties": {
+        "titre": { "type": "string", "minLength": 3 },
+        "source": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Medium et origine de la reference (jeu, film, architecture, capture consultee)."
+        },
+        "pourquoi": { "type": "string", "minLength": 10 },
+        "equivalent_creatif": {
+          "type": "string",
+          "pattern": "^(?!.*(/Game/|Athena|Environments)).+$",
+          "minLength": 6,
+          "description": "Famille d'assets Creatifs (PPID_/PID_) qui reproduit la reference, ou UNKNOWN. Un chemin /Game/ est refuse par le pattern : la direction serait fausse."
+        },
+        "statut_conversion": {
+          "enum": ["convertie", "approximee", "introuvable"],
+          "description": "convertie = reproduite par un asset legal trouve au catalogue ; approximee = rendu different assume (doit apparaitre dans ecarts_assumes) ; introuvable = aucune recherche concluante (doit apparaitre dans ecarts_assumes)."
+        },
+        "recherches_catalogue": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Requetes reellement tentees quand le statut n'est pas 'convertie'."
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["couleurs"],
+      "properties": {
+        "couleurs": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["hex", "role", "intention"],
+            "properties": {
+              "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+              "role": { "type": "string", "minLength": 3 },
+              "intention": { "type": "string", "minLength": 3 }
+            }
+          }
+        }
+      }
+    },
+    "identite_visuelle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["style", "rendu_cible", "signatures"],
+      "properties": {
+        "style": { "type": "string", "minLength": 3 },
+        "rendu_cible": { "type": "string", "minLength": 3 },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Elements reconnaissables a distance, non negotes, que Level_Designer et Graphics_Programmer doivent retrouver."
+        },
+        "composition": { "type": "string", "minLength": 3 },
+        "interdits_visuels": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "identite_sonore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ambiances", "signature"],
+      "properties": {
+        "ambiances": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "type": "string", "minLength": 3 }
+        },
+        "signature": { "type": "string", "minLength": 3 },
+        "silence": { "type": "string", "minLength": 3 },
+        "interdits_sonores": { "type": "array", "items": { "type": "string" } },
+        "faisabilite": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Ce qui est realisable avec des assets audio-legaux ou du non-pose, declare comme tel. UNKNOWN si non verifie."
+        }
+      }
+    },
+    "promesse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "promesse", "controle"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^P[0-9]{1,2}$" },
+        "promesse": { "type": "string", "minLength": 10, "maxLength": 200 },
+        "controle": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Comment un juge externe verifie : sur quelle capture, quel fait, quel inventaire. Un adjectif ne suffit pas."
+        },
+        "verifiable_en_jam": { "type": "boolean" }
+      }
+    },
+    "ecart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "attendu", "obtenu", "motif"],
+      "properties": {
+        "reference": { "type": "string", "minLength": 3 },
+        "attendu": { "type": "string", "minLength": 3 },
+        "obtenu": { "type": "string", "minLength": 3 },
+        "motif": { "type": "string", "minLength": 8 },
+        "statut": { "enum": ["approxime", "remplace", "abandonne"] }
+      }
+    },
+    "cibles_jam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["jam", "perimetre", "non_verifie"],
+      "properties": {
+        "jam": { "type": "string", "minLength": 3 },
+        "perimetre": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "non_verifie": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Ce qui NE SERA PAS verifie et ne peut donc pas etre promis comme tenu. Liste vide = claim de tout verifier = rejet."
+        },
+        "contrainte_technique": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "gate_hitl_1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "description": "Gate HITL #1 (brief valide par l'humain via le Producteur). L'agent ne peut ecrire que PENDING : VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain, jamais celle du modele.",
+      "properties": {
+        "numero": { "const": 1 },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+        "valide_par": { "type": "string", "minLength": 1 },
+        "date_validation": { "type": "string" },
+        "iterations": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    }
+  }
+}

@@ -72,9 +72,9 @@ de GDD, c'est un problème de brief, et il remonte au Producteur.
   que le script ne lit pas n'existe pas pour lui, une clé attendue et absente casse la génération.
 - **Toute grandeur est un indice de tuile** (`[23, 23, 1]`, `min`/`max` en tuiles). La conversion en
   centimètres est faite par le Python côté Technique (WP2 p.9).
-- **Rien de légal hors catalogue Créatif** : `PPID_` / `PID_` (structure de sol : primitive moteur
-  tolérée). `/Game/Athena`, `/Game/Environments` = `ILLEGAL_ASSET_PATH`, et l'île échoue à la
-  validation de session.
+- **Rien de légal sans preuve** : je pars du catalogue commun (`../_commun/catalogue-verifie.json`,
+  armes et soins inclus) ; un autre candidat est `UNVERIFIED` jusqu'à ce que `Lead_Programmer` le
+  fasse passer au validateur UEFN. Le chemin ne prouve rien (`../_commun/legalite-assets.md`).
 - **Un mode déclaré n'est pas une mécanique.** Le run réel a porté `game_mode: "rpg"` sur une scène
   sans quête : ce décalage s'écrit dans `notes` et remonte en question, il ne se laisse pas en héritage
   silencieux à `Economy_Designer` et `Mission_Content_Designer`.

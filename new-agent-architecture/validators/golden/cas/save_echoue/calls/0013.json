@@ -1,0 +1,12 @@
+{
+ "outil": "AssetTools.save_assets",
+ "rc": 1,
+ "args": {
+  "asset_paths": [
+   "/Game/Golden"
+  ]
+ },
+ "payload": {
+  "returnValue": false
+ }
+}

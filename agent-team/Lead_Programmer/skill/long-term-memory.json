@@ -15,8 +15,12 @@
       "sortie": "asset_path exact du device, a recopier tel quel dans uefn_path",
       "exemple_prouve": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner"
     },
-    "interdits_absolus": ["/Game/Athena", "/Game/Environments"],
-    "raison_interdiction": "FortValidator_FortExposedAssets : les assets Epic non exposes aux createurs font echouer la validation d'ile au lancement de session, meme s'ils s'affichent dans l'editeur",
+    "critere_de_legalite": "le verdict du validateur UEFN (FortValidator_FortExposedActors / FortExposedAssets) lu dans le journal apres sauvegarde, JAMAIS le prefixe du chemin. Regle et procedure : agent-team/_commun/legalite-assets.md ; assets prouves : agent-team/_commun/catalogue-verifie.json",
+    "prefixes_dementis_le_2026_10_29": {
+      "acceptes_malgre_le_prefixe": ["/Game/Athena/Items/Weapons/WID_*_Ore_T03", "/Game/Athena/Items/Consumables/*/Athena_*", "/Game/Athena/BuildingActors/...", "/Game/Athena/Apollo/...", "/Game/Creative/...", "/Game/Building/ActorBlueprints/..."],
+      "refuses_malgre_un_chemin_de_plugin": ["/BlastBerryWeapons/...", "/Figment_Athena_*/...", "/JethroWeaponGameplay/..."],
+      "toujours_inconnus": ["/Game/Athena/.../SM_* (maillages bruts)", "/Game/Environments/..."]
+    },
     "playsets_editeurs_CRP": {
       "statut": "couverts par une decision memorisee du pipeline",
       "condition": "acceptes seulement si l'item est un PPID_/PID_ expose par la recherche ET que le fichier search_<motif>.json est cite dans la palette",
@@ -49,7 +53,9 @@
     "FAILED": "code 1 : la commande a tourne et a echoue, l'etat est connu",
     "OFFLINE": "code 2 : editeur injoignable, rien n'a ete execute",
     "TIMEOUT_OUTCOME_UNKNOWN": "code 3 : etat inconnu ; ni succes ni echec net",
-    "ILLEGAL_ASSET_PATH": "chemin hors catalogue expose (/Game/Athena, /Game/Environments) : bloque, non mesure, signale",
+    "ILLEGAL_ASSET_PATH": "chemin cite dans une ligne 'AssetCheck: Error ... references disallowed object' posterieure a la derniere sauvegarde, ou present dans catalogue-verifie.json -> refuses : bloque, retire, signale avec une alternative 'acceptes'",
+    "UNVERIFIED": "chemin trouve par recherche mais jamais vu par une validation propre : utilisable a l'essai, la pose n'est DONE qu'apres sauvegarde + journal sans erreur",
+    "WRONG_ASSET_CLASS": "l'asset n'est pas du type attendu (ex. FortGameFeatureData au lieu d'une ItemDefinition) : ce n'est pas une illegalite, c'est le mauvais asset",
     "PALETTE_EMPTY": "aucun asset demande : je ne choisis pas a la place du design",
     "NULL_BOUNDS": "bounds min=max={0,0,0} avec isValid true : asset non mesurable, remplace ou bloque",
     "NO_SEARCH_RESULT": "count 0, results [] : le nom du design n'existe pas dans le catalogue expose",
@@ -71,9 +77,14 @@
       "conduite": "une seule reformulation avec un nom de famille (ex. 'neon fish'), fichier de preuve a l'appui ; si toujours 0, NO_SEARCH_RESULT remonte au Producteur pour arbitrage du design."
     },
     {
-      "signe": "Un asset demande n'existe que sous /Game/Athena ou /Game/Environments.",
-      "cause": "c'est un asset Epic non expose aux createurs.",
-      "conduite": "ILLEGAL_ASSET_PATH : bloque et signale, avec une alternative PPID/PID proposee. Ne pas 'tester quand meme', la validation d'ile casse au lancement de session."
+      "signe": "L'editeur accepte l'asset (pose ou liste de device OK), mais apres sauvegarde le journal contient 'AssetCheck: Error ... references disallowed object <chemin>' (FortValidator_FortExposedActors).",
+      "cause": "l'asset n'est pas expose aux createurs. Le chemin ne permet PAS de le deviner : le 2026-10-29, /BlastBerryWeapons/... et /Figment_Athena_*/... ont ete refuses, /Game/Athena/Items/... accepte.",
+      "conduite": "ILLEGAL_ASSET_PATH : retirer, remplacer par un asset 'acceptes' du catalogue commun, re-sauvegarder, relire le journal en ne gardant que les lignes posterieures a cette sauvegarde (les vieilles erreurs restent affichees). Ajouter le chemin a 'refuses'."
+    },
+    {
+      "signe": "Le journal montre encore des lignes 'disallowed' alors que l'asset a ete retire.",
+      "cause": "le journal est cumulatif : les erreurs d'une sauvegarde precedente restent visibles.",
+      "conduite": "filtrer par horodatage : seule la validation lancee par la DERNIERE sauvegarde (ligne 'AssetCheck: ... Validation de la ressource') fait foi."
     },
     {
       "signe": "Apres un WinError 10054 ou un timeout, un acteur MEASURE_ est encore dans l'Outliner.",

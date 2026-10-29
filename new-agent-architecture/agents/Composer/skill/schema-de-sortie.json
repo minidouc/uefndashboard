@@ -1,0 +1,266 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Composer.v1",
+  "title": "Composer - contrat du livrable 13_music.json",
+  "description": "Schema de sortie de l'agent Composer (agent 18, pole Audio, phase POLISH). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte une PARTITION et un plan de production musicale, jamais une ecoute. Chaque champ est choisi pour etre cochable par un validateur Python ou par l'Audio_Director (17), jamais pour plaire : pas de prose estetique, pas d'auto-validation. Regle propre au role : une piece n'est livree que si son support de lecture dans UEFN est DECLARE (statut + commande de verification) ; ici NON_VERIFYE tant qu'aucune recherche catalogue audio n'a ete faite. Agent Audio hors editeur : acces_mcp = none, donc aucune coordonnee, aucun chemin /Game/, aucun PPID_/PID_ final impose, aucune affirmation de musique posee.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": { "const": "uefn.handoff.v1" },
+    "handoff_id": { "type": "string", "pattern": "^H-[A-Z]+-[0-9]{3,}$" },
+    "from": { "const": "Composer" },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": { "const": "13_music.json" },
+    "mission_ref": { "type": "string", "minLength": 1 },
+    "summary_short": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction_recue",
+        "pieces",
+        "variations",
+        "silences_voulus",
+        "support_lecture",
+        "hors_perimetre"
+      ],
+      "properties": {
+        "direction_recue": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Ce que l'Audio_Director (17) impose en amont. Si 13_audio_direction.json n'existe pas, statut_source = UNKNOWN et l'intention est reconstruite depuis l'identite_sonore du Creative_Director, pas inventee.",
+          "required": ["statut_source", "contrainte_contemplative", "faisabilite"],
+          "properties": {
+            "source_artefact": { "type": "string", "minLength": 3 },
+            "statut_source": { "enum": ["RECU", "UNKNOWN"] },
+            "note": { "type": "string" },
+            "contrainte_contemplative": {
+              "type": "string",
+              "minLength": 8,
+              "description": "Rappel de la decision utilisateur qui interdit combat, quete, economie et mecanique annexe : elle borne la musique possible."
+            },
+            "ambiances": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+            "signature": { "type": "string", "minLength": 3 },
+            "silence": { "type": "string" },
+            "interdits_sonores": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+            "faisabilite": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Realisable ou non avec des assets audio-legaux et un support verifie. UNKNOWN si non verifie : jamais un OK de complaisance."
+            }
+          }
+        },
+        "pieces": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/piece" },
+          "description": "Morceaux de la partition. Tableaux vide autorise : une scene contemplative peut assumer le silence. Une piece d'action ou liee a un evenement de gameplay inexistant est hors decision et sera rejetee par acceptance."
+        },
+        "variations": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/variation" },
+          "description": "Couches ou changements conditionnels. Chaque declencheur doit exister dans le pipeline (EVENEMENT_PIPELINE reference un champ reel, ex. timeline du 01_gdd.json) ou etre NON_IMPOSEE. Aucun declencheur de gameplay : la scene n'a ni combat, ni quete, ni score."
+        },
+        "silences_voulus": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/silence" },
+          "description": "Endroits ou rien ne joue, et pourquoi. Le silence est une decision musicale livree, pas un trou."
+        },
+        "support_lecture": { "$ref": "#/definitions/support_lecture" },
+        "hors_perimetre": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hors_perimetre" },
+          "description": "Ce que le Composer ne fait pas, avec le role proprietaire (mix et cartographie = 17, SFX = 19, voix = 20, implementation = 12/14). Liste vide = empietement = rejet."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": { "const": "none", "description": "Agent Audio hors editeur : aucun appel MCP, aucune ecriture dans UEFN." },
+        "must_preserve": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "must_ask_producer": { "type": "array", "items": { "type": "string" }, "description": "Questions remontees au Producteur (jamais posees a l'utilisateur en direct)." }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "toutes_pistes_duree_bornee",
+          "toutes_pistes_tempo_numerique_unite",
+          "toutes_pistes_destination_zone_ou_actor",
+          "toutes_pistes_statut_declare",
+          "variations_declencheur_reel_ou_non_imposee",
+          "support_lecture_statut_declare",
+          "commande_verification_presente_sans_affirmation_de_pose",
+          "aucune_revendication_ecoute",
+          "aucune_reference_asset_audio_non_verifie",
+          "aucune_musique_d_action_ni_couche_gameplay",
+          "perimetre_hors_roles_declare",
+          "acces_mcp_none"
+        ]
+      },
+      "description": "Criteres cochables par du code. Interdit de revendiquer une ecoute : la session play-in-client n'etait pas connectee pendant le run."
+    },
+    "next_step_hint": { "type": "string", "maxLength": 400 },
+    "context_budget_tokens": { "type": "integer", "maximum": 4000 }
+  },
+  "definitions": {
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "valeur"],
+      "description": "Cible d'une piece ou d'un silence : une zone du 01_gdd.json ou un label d'acteur existant. Jamais de coordonnee : le champ kind n'admet pas de triplet XYZ.",
+      "properties": {
+        "kind": { "enum": ["zone_id", "actor_label"] },
+        "valeur": { "type": "string", "minLength": 3 }
+      }
+    },
+    "piece": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "destination", "forme", "tempo_bpm", "tonalite", "instrumentation", "duree_sec", "boucle", "points_entree_sortie", "statut"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^MUS_[A-Z0-9_]+$" },
+        "destination": { "$ref": "#/definitions/destination" },
+        "forme": {
+          "type": "string",
+          "minLength": 12,
+          "description": "Description d'intention + forme : structure, courbe d'energie, ce qui entre et sort. Remplace la prose estetique non verifiable par une forme decrite."
+        },
+        "tempo_bpm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bpm"],
+          "description": "Tempo = un nombre avec unite. Un adjectif ('planant', 'epique') ne passe pas : bpm est un entier borne.",
+          "properties": {
+            "bpm": { "type": "integer", "minimum": 20, "maximum": 240 },
+            "indication": { "type": "string" }
+          }
+        },
+        "tonalite": { "type": "string", "minLength": 2 },
+        "instrumentation": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 2 } },
+        "duree_sec": { "type": "integer", "minimum": 1, "maximum": 600, "description": "Duree bornee en secondes. Une piste sans duree bornee est inmixable : le validateur la refuse." },
+        "boucle": { "type": "boolean" },
+        "points_entree_sortie": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entree_sec", "sortie_sec"],
+          "properties": {
+            "entree_sec": { "type": "integer", "minimum": 0 },
+            "sortie_sec": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "statut": {
+          "enum": ["PARTITION_LIVREE", "NON_POSE", "A_VERIFIER", "UNKNOWN"],
+          "description": "Etat de production de la piece. PARTITION_LIVREE = ecrite ; NON_POSE = nothing in editor ; A_VERIFIER = ecrit mais support de lecture non controle ; UNKNOWN = indetermination assumee."
+        }
+      }
+    },
+    "variation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "piece_ref", "declencheur", "nature"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^VAR_[A-Z0-9_]+$" },
+        "piece_ref": { "type": "string", "pattern": "^MUS_[A-Z0-9_]+$" },
+        "declencheur": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "reference"],
+          "description": "kind = EVENEMENT_PIPELINE (reference un champ reel du pipeline, ex. timeline t=0 du 01_gdd.json) ou NON_IMPOSEE (aucune couche dynamique). Un declencheur de gameplay inexistant (combat, quete, score) est refuse.",
+          "properties": {
+            "kind": { "enum": ["EVENEMENT_PIPELINE", "NON_IMPOSEE"] },
+            "reference": { "type": "string", "minLength": 3 }
+          }
+        },
+        "nature": { "type": "string", "minLength": 3 }
+      }
+    },
+    "silence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination", "motif"],
+      "properties": {
+        "destination": { "$ref": "#/definitions/destination" },
+        "motif": { "type": "string", "minLength": 5 }
+      }
+    },
+    "support_lecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut", "commande_verification"],
+      "description": "Le support de lecture UEFN de la musique, DECLARE et non affirme. Une partition ne se livre que si ce champ existe. Aucun statut VERIFIE n'est permis sans une vraie recherche catalogue audio + un device reellement trouve.",
+      "properties": {
+        "statut": { "enum": ["NON_VERIFYE", "VERIFIE", "UNKNOWN"] },
+        "device_audio_candidat": { "type": "string", "description": "PID_/PPID_ audio candidate, seulement si une recherche l'a reellement renvoyee. UNKNOWN sinon." },
+        "commande_verification": {
+          "type": "string",
+          "minLength": 5,
+          "description": "La commande qui verifierait le support (ex. search-playsets --type PID sur la famille audio). Presente = on ne pretend pas avoir pose ni entendu."
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "hors_perimetre": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["element", "motif"],
+      "properties": {
+        "element": { "type": "string", "minLength": 3 },
+        "motif": { "type": "string", "minLength": 5, "description": "Le role proprietaire de cet element (17 mix/cartographie, 19 SFX, 20 voix, 12/14 implementation)." }
+      }
+    }
+  }
+}

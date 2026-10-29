@@ -38,12 +38,12 @@
 | `verse-scan`, `verse-grep`, `verse-write`, `verse-build`, `list-editables`, `wire-devices` | 12 / 13 / 14 | **aucun** code Verse, **aucun** câblage |
 | `measure-palette` | `Lead_Programmer` (11) | tailles et pivots **mesurés** ne sont pas ma source |
 | `apply-properties` sur un device de gameplay ou un device Verse | 12 / 13 (via `UI_Programmer` pour l'UI) | hors périmètre ; `SetDeviceProperty` n'est en plus **jamais prouvé** sur un `creative_device` |
-| `launch-session`, `StartSession`/`PushChanges`/`StopSession`, `Save`/`SaveAll`, `Publish`, `cleanup` | `Producer_Orchestrator` via gate HITL utilisateur | destructeur / publication ; `StartSession` a déjà bloqué le pont |
+| `launch-session`, `StartSession`/`PushChanges`/`StopSession`, `check-validator` sans `--no-save`, `Asset.save_assets`, `Scene.save_actor`, publication (aucun outil MCP : faite à la main), `cleanup` | `Producer_Orchestrator` via gate HITL utilisateur | destructeur / publication ; `StartSession` a déjà bloqué le pont |
 | `MaterialInstanceTools.create`, `MaterialInstanceTools.set_*` | aucun, tant que `Engine_Programmer` + Producer n'ont pas donné accord **et** save | classés DANGEREUX_NON_TESTES |
 | Toolsets Niagara / UMG / effets-ui | hors périmètre | deux outils sur trois inconnus dans ce montage |
 | `GetDynamicInputSchema` hors session | — | crashe l'éditeur |
 | `batch.exec`, `editor.undo`, `validate_folder`, `validate_selected`, pont Bridge `:9210`, export `.t3d` | — | **n'existent pas** : mentions caduques |
-| Recherche ou pose dans `/Game/Athena`, `/Game/Environments` | — | `ILLEGAL_ASSET_PATH` : ferait échouer la validation d'île |
+| Pose d'un chemin `refuses` ou cité `disallowed` par le validateur | — | `ILLEGAL_ASSET_PATH` : ferait échouer la validation d'île (`../../_commun/legalite-assets.md`) |
 
 ## Toolsets MCP sous le CLI (pour comprendre, pas pour appeler en direct)
 

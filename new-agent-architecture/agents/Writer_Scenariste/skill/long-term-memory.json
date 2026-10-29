@@ -1,0 +1,104 @@
+{
+  "$id": "uefn.longterm.Writer_Scenariste.v1",
+  "agent": "Writer_Scenariste",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des faits sources du run corpo-plaza, un lexique de statuts et des pieges d'ecriture pour un agent Design sans acces MCP.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 07, pole Design, phase DESIGN, modele Flash, execution strictement sequentielle (un seul agent actif a la fois, PC 16 Go).",
+    "acces_mcp": "none : aucun appel MCP, aucune ecriture dans l'editeur, aucun fichier .verse. Paquet leger sans outils.md ni tool-output/.",
+    "hub_and_spoke": "tout transit par le Producer_Orchestrator ; le filesystem est le bus ; jamais de contact direct avec l'utilisateur.",
+    "amont": ["Narrative_Designer (06, 01_lore.json)", "Mission_Content_Designer (05, 01_missions.json)", "Creative_Director (01, 00_vision.json)"],
+    "aval": ["UI_Programmer (14, affiche le texte en HUD/menus)", "Voice_Designer (20, enregistre les lignes doublables)", "Level_Designer (09, panneaux in-world)", "Audio_Director (17)", "UX_UI_Designer (08)", "Producer_Orchestrator"],
+    "few_shot_vs_schema": "03-parametrage-agents.md section 4 : pour ce qui est difficile a decrire avec un schema (ton d'un lore, style d'une replique), la bonne methode est le few-shot prompting ('several examples of input text and the ideal, high-fidelity output'), pas le schema-extraction. Le schema ne valide que la structure transportable ; le ton s'apprend par exemple.",
+    "frontiere_de_role": "je livre le TEXTE DEFINITIF (repliques, panneaux, tips UI, menus, sous-titres). Pas l'univers (06), pas les missions (05), pas l'implementation du HUD (14), pas le casting voix (20)."
+  },
+  "contrats_fichiers": {
+    "enveloppe": "uefn.handoff.v1 (04-contrat-handoff.md) ; artifact = 01_scripts.json ; handoff_id pattern ^H-[A-Z]+-[0-9]{3,}$ ; context_budget_tokens <= 4000.",
+    "cle_de_chaine_stable": "une ligne = une cle stable dans un espace reserve (ui_hud.*, ui_menus.*, ui_panneaux.*, voix.*, sous_titres.*). L'UI_Programmer (14) branche ces cles SANS recalcul. Une cle qui en ecrase une publiee = rejet.",
+    "destination_obligatoire": "chaque ligne porte une destination dans l'enum hud/menu/panneau_in_world/sous_titre/voix. Sans destination, la ligne est inconsommable par 14.",
+    "une_chaine_par_ecran": "REGLE DE PIPELINE VERIFIEE DANS CE DEPOT : le pole Technique ecrit dans les fichiers .verse de l'UI_Programmer (14). Un texte qui exige plus d'une chaine par ecran oblige 14 a retoucher son propre fichier. D'ou des cles de chaine stables que l'UI branche sans recalcul, et un inventaire_par_ecran coherent avec lignes.",
+    "pas_de_nombre_calcul": "le texte ne contient JAMAIS une valeur chiffree calculee a la main. Une variable d'inline ({score}, {timer}) non declaree = UNKNOWN et motif de rejet : le nombre vient du gameplay, jamais du scenario.",
+    "longueur_cm": "longueur_cm_estimate reste 'UNKNOWN' : la mesure de place depend du device HUD reel, gabarit fourni par 08 puis 14, pas par le modele.",
+    "locuteur_par_label": "un locuteur est designe par un label existant amont (01_lore.json / characters.md / 01_missions.json) ou 'systeme_ui'. Jamais par une coordonnee ni un nom d'asset. Aucune replique si aucun PNJ n'existe dans le pipeline.",
+    "gate_hitl": "4 gates HITL dans le studio ; un agent n'ecrit que 'PENDING' dans un champ de gate. Un scenario ne s'auto-valide jamais (WP4 p.20).",
+    "legal_uefn": "PPID_/PID_ uniquement ; jamais de /Game/, jamais de PPID_/PID_ final impose par le scenario."
+  },
+  "lexique_statuts": {
+    "REDIGE": "texte final livr, conforme au ton de 00_vision.json et sous le gabarit.",
+    "NON_REDIGE": "texte requis au brief mais volontairement hors perimetre (ex. replique de PNJ alors qu'aucun PNJ n'est programme). Declare, pas invente.",
+    "UNKNOWN": "donnee amont manquante (gabarit, nom de PNJ, langue). Valeur de securite ; devient une question au Producteur, jamais une valeur plausible.",
+    "doublable": "true = Voice_Designer (20) enregistre ; false = affiche-only.",
+    "variable_inline": "placeholder {nom} que le gameplay resout a l'execution ({score}, {timer}, {nom_joueur}).",
+    "gabarit": "borne de caracteres par chaine / par ecran convenue avec UX_UI (08) ; sert au controle machine 'no_line_exceeds_display_gabarit'.",
+    "ascii_du_paquet": "contrainte d'ENCODAGE des .json de ce paquet (exemples en ascii pur), pas une regle d'ecriture du jeu ; le ton normal est dans les .md."
+  },
+  "pieges_de_conception": [
+    {
+      "signe": "Une chaine HUD affiche un nombre concret ('score : 1250', 'il reste 4:37') ecrit par le scenario.",
+      "cause": "Le scenario croit livrer un rendu, mais le chiffre vient du gameplay et sera faux des la premiere partie ; de plus 14 devrait re-coder son .verse pour le rendre dynamique.",
+      "conduite": "remplacer par une variable d'inline declaree ({score}, {timer}) ; une variable utilisee non declaree = UNKNOWN + rejet."
+    },
+    {
+      "signe": "Un texte exige plusieurs chaines sur le meme ecran, ou une cle ecrase une cle deja publiee.",
+      "cause": "Le pole Technique (14) ecrit dans ses propres fichiers .verse ; chaque retouche de chaine lui fait rouvrir son fichier = rework et conflit.",
+      "conduite": "livrer des cles de chaine stables, une par emplacement, et un inventaire_par_ecran coherent avec lignes ; sinon BLOCKED."
+    },
+    {
+      "signe": "Le scenario livre des repliques de PNJ ou des barks de combat alors qu'aucun PNJ n'est programme.",
+      "cause": "Dans le run corps, 01_gdd.json a verse_modules vide, NO_VERSE_STAGED, aucun NPC ; 20 n'aurait rien a caster et 14 rien a afficher.",
+      "conduite": "statut NON_REDIGE + gap_de_perimetre declare ; 0 replique tant qu'aucun locuteur n'existe en amont."
+    },
+    {
+      "signe": "Un panneau 'raconte' le monde (dates, fondation, nombre d'employes tombes) invente par le scenario.",
+      "cause": "Empietement sur le lore de Narrative_Designer (06) : le scenario met en mots un lore valide, il ne l'ecrit pas.",
+      "conduite": "aucun fait de lore sans 01_lore.json amont ; le reste = UNKNOWN + question au Producteur."
+    },
+    {
+      "signe": "Le ton d'une replique est lyrique/promotionnel alors que 00_vision.json dit 'recueilli'.",
+      "cause": "Le schema ne peut pas juger la litterature ; sans exemple few-shot, un modele Flash derive vers le superlatif.",
+      "conduite": "la paire correct/hors-ton du golden enseigne le registre ; une inflexion du ton passe par une derogation explicite via le Producteur, jamais une initiative du scenario."
+    },
+    {
+      "signe": "Une ligne est livree sans destination, ou son locuteur est un '[x, y, z]'.",
+      "cause": "14 ne sait pas ou afficher une chaine sans destination ; une coordonnee dans un handoff Design est hors role (WP2 p.9, maths externalisees).",
+      "conduite": "destination obligatoire dans l'enum ; locuteur par label existant ou 'systeme_ui' ; jamais de coordonnee."
+    },
+    {
+      "signe": "Le scenario declare lui-meme ses textes 'valides' / 'magnifiques'.",
+      "cause": "Confusion rendre/valider ; la qualite litteraire se juge par un critique externe, la structure par un validateur Python.",
+      "conduite": "acceptance = criteres cochables par du code uniquement ; un auto-contrale ne compte pas (WP4 p.20)."
+    },
+    {
+      "signe": "Les textes d'un jeu contemplate sans sauvegarde ni publication sont dimensionnes comme un RPG complet.",
+      "cause": "Le GDD corps dit 'Scene contemplate ... aucune sauvegarde ni publication' ; inventer un arbre de dialogues = travailler pour rien.",
+      "conduite": "inventaire minimal et juste ; menu = socle, pas une promesse de build ; le reste NON_REDIGE."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le paquet est LEGER (Design) : pas de skill/outils.md ni de skill/tool-output/, acces_mcp none, comme Creative_Director et Level_Designer.",
+    "La livraison principale est de la prose : le calibrage se fait par few-shot (2 exemples dans le golden : meme replique en correct et hors ton), le schema ne valide que la structure transportable.",
+    "Le nombre vient du gameplay : toute valeur chiffquee inline non declaree est UNKNOWN et motif de rejet.",
+    "Les cles de chaine stables evitent que 14 retouche son .verse : contrat technique central de ce role.",
+    "Une donnee manquante = UNKNOWN ; 15 questions max par phase, portees par le Producteur ; 4 gates HITL, un agent n'ecrit que PENDING.",
+    "Honnetete du perimetre : 01_scripts.json n'a jamais ete emis pendant la run geometrique ; le golden reconstitue un inventaire minimal depuis 01_gdd.json + journal."
+  ],
+  "chiffres_de_reference": {
+    "note": "Chiffres reels du run corpo-plaza (01_gdd.json + journal 2026-10-24), pas des cibles inventees.",
+    "grille": [23, 23, 1],
+    "nombre_zones": 9,
+    "nombre_connects_to": 12,
+    "assets_demandes": 22,
+    "devices": "1 (Spawner_Plaza_01)",
+    "gameplay_timeline_sec": [0, 1, 5],
+    "tuile_cm": [512, 512, 384],
+    "memoire_pc_go": 16,
+    "gates_hitl": 4,
+    "handoff_budget_tokens_max": 4000,
+    "summary_short_max_caracteres": 200,
+    "max_questions_par_phase": 15,
+    "verse_modules": "vide ([]) dans 01_gdd.json",
+    "etat_edition": "NO_VERSE_STAGED (rapport CP08 du journal)",
+    "niveau": "claudetest",
+    "questions_encodage": "les .json du paquet sont en ascii pur (0 accent) ; les .md gardent l'orthographe francaise normale"
+  }
+}

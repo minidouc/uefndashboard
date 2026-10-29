@@ -1,0 +1,62 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-BUILD-016",
+  "from": "Physics_Programmer",
+  "to": ["Gameplay_Programmer", "UI_Programmer"],
+  "artifact": "04_devices.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-05",
+  "summary_short": "Scene construite, tout est propre, aucun probleme de collision, les 441 sols et les 128 props sont en place, pret pour le Verse.",
+  "payload": {
+    "devices": [
+      {
+        "actor_label": "Spawner Plaza 01",
+        "asset_key": "player_spawner",
+        "device_class": "player_spawner_device",
+        "asset_path": "/Game/Athena/Architectural/Environments/SM_Town_Center_01.SM_Town_Center_01",
+        "placement_mode": "TILE_ANCHOR",
+        "tile": [4, 11, 0],
+        "slot": "CENTER",
+        "face_towards": "NORTH",
+        "status": "placed"
+      },
+      {
+        "actor_label": "Sign_Neon_East",
+        "asset_key": "sign_vertical",
+        "device_class": "prop",
+        "placement_mode": "TILE_ANCHOR",
+        "tile": [2, 1, 0],
+        "slot": "NORTH_EDGE",
+        "status": "placed",
+        "notes": "repositionne a la main dans l'editeur pour supprimer le chevauchement"
+      }
+    ],
+    "audit": {
+      "source": "spec",
+      "status": "PASSED",
+      "error_count": 0,
+      "note": "aucun overlap calcule a partir des tailles theoriques de 02_palette.json"
+    }
+  },
+  "constraints": {
+    "z_floor": -16,
+    "z_ceiling": 384,
+    "must_preserve": []
+  },
+  "acceptance": ["audit_ok", "collisions_ok", "tout_est_pose"],
+  "next_step_hint": "Vous pouvez coder le gameplay.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - le livrable est REJETE par le validateur Python, ne jamais l'imiter",
+    "motifs_de_rejet": [
+      "audit.source = 'spec' : le schema exige 'live'. Hors editeur, un TILE_ANCHOR est par construction au sol, donc GRAVITY_ERROR est indetectable - 4 enseignes enfoncees (-3,2 puis -5,86 puis -3,07 cm) ont passe comme ca.",
+      "audit.status PASSED avec 91 OVERLAP_ERROR reels non relus : un compteur theorie ne prouve rien (les bounds rotatifs sont plus grands que la taille theorique).",
+      "device sans ref_path : les agents 12/13/14 ne peuvent pas cabler ; le contrat exige ref_path + xform relue pour tout status 'placed'.",
+      "asset_path /Game/Athena/... : interdit (FortValidator echoue au lancement de session) ; le chemin n'est pas dans 02_palette.json et n'a pas ete mesure.",
+      "actor_label 'Spawner Plaza 01' contient des espaces : pattern refuse, et l'identifiant devient introuvable dans l'Outliner.",
+      "notes 'repositionne a la main dans l'editeur' : la correction doit passer par la spec puis compile-transforms + place-scene, sinon le prochain batch ecrase le geste manuel et l'audit n'est plus reproductible.",
+      "acceptance avec des criteres subjectifs (audit_ok, collisions_ok, tout_est_pose) au lieu des criteres cochables (0_overlap, 0_floating, audit_source_live...).",
+      "summary_short en langue naturelle d'auto-evaluation ('tout est propre') : output-only exige des faits atomiques, et le champ annonce un succes non verifie - l'exact pattern que WP4 p.20 signale comme cause d'echec multi-agent.",
+      "next_step_hint prescriptif ('vous pouvez coder le gameplay') : le Producteur decide de la suite, pas l'agent."
+    ]
+  }
+}

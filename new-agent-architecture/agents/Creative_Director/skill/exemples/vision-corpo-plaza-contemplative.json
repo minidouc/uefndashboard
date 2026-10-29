@@ -1,0 +1,50 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-CADRAGE-001",
+  "from": "Creative_Director",
+  "to": ["Game_Designer", "Producer_Orchestrator"],
+  "artifact": "00_vision.json",
+  "mission_ref": "M-CORPOPLAZA-CADRAGE-01",
+  "summary_short": "Corpo Plaza en scene contemplative : bassin, trois anneaux, deux poissons neon opposes, 16 tours, dominante au nord.",
+  "payload": {
+    "pitch": "Corpo Plaza en promenade : place circulaire a bassin, deux poissons neon qui se repondent, seize tours. Ni combat, ni quete, ni economie.",
+    "theme": { "nom_projet": "Corpo Plaza - Memorial Park", "univers": "Cyberpunk 2077 corporatiste", "lieu": "place : bassin, esplanade, tours", "epoque": "2077", "ton": ["solennel", "urbain", "recueilli"] },
+    "references": [
+      { "titre": "place a anneaux, deux poissons opposes", "source": "capture mp02.png", "pourquoi": "grammaire : anneaux, axes", "equivalent_creatif": "PPID 7Village QuarterWall Curved, CR_Legacy Mall Fountain", "statut_conversion": "convertie" },
+      { "titre": "couronne de 16 tours, dominante au nord", "source": "corpus Night City", "pourquoi": "verticalite et cap", "equivalent_creatif": "PPID Sunburst Scifi, PID Sunburst Building g", "statut_conversion": "convertie" },
+      { "titre": "kois holographiques translucides", "source": "mp01 et mp02", "pourquoi": "signature du centre", "equivalent_creatif": "enseigne poisson neon emissive PPID SunStroke NeonSignFish", "statut_conversion": "introuvable" }
+    ],
+    "palette": { "couleurs": [
+      { "hex": "#0a0e27", "role": "fond", "intention": "nuit corporatiste" },
+      { "hex": "#22d3ee", "role": "froid", "intention": "poisson est" },
+      { "hex": "#f97316", "role": "chaud", "intention": "poisson ouest" },
+      { "hex": "#1e3a5f", "role": "eau", "intention": "bassin sombre" }
+    ] },
+    "identite_visuelle": { "style": "neon-noir corporatiste", "rendu_cible": "emissif et lampadaires", "signatures": ["deux poissons neon depuis le sud", "bassin sous trois anneaux", "16 tours, dominante nord"] },
+    "identite_sonore": { "ambiances": ["souffle de ville lointain", "neon qui bourdonne"], "signature": "place presque vide : positionnel et rare" },
+    "promesses": [
+      { "id": "P1", "promesse": "Bassin lisible depuis tous les points hauts.", "controle": "3 captures hautes : bassin cadre", "verifiable_en_jam": true },
+      { "id": "P2", "promesse": "Silence relatif : rien ne joue en boucle.", "controle": "inventaire : 0 musique globale", "verifiable_en_jam": false },
+      { "id": "P3", "promesse": "La tour nord domine la couronne.", "controle": "capture oblique : elle depasse", "verifiable_en_jam": true }
+    ],
+    "non_negotiables": ["contemplatif : ni combat ni quete", "trois anneaux, axes libres", "deux poissons neon vus du sud", "PID_ / PPID_ uniquement"],
+    "anti_references": ["arcade neon clignotante", "marche type Kabuki", "level design de tir"],
+    "ecarts_assumes": [
+      { "reference": "kois holographiques", "attendu": "volume translucide", "obtenu": "enseigne emissive", "motif": "aucun asset legal", "statut": "remplace" },
+      { "reference": "place circulaire", "attendu": "sol circulaire", "obtenu": "plateforme carree", "motif": "gabarit tuiles", "statut": "approxime" },
+      { "reference": "audio", "attendu": "ville lointaine", "obtenu": "UNKNOWN", "motif": "jam limitee au visuel", "statut": "abandonne" }
+    ],
+    "cibles_jam": { "jam": "Epic AI Megajam 2026 (README)", "perimetre": ["geometrie", "lecture des signatures"], "non_verifie": ["jeu client", "materiaux 16 Go", "audio", "reglement de jam : UNKNOWN"] },
+    "gate_hitl_1": { "numero": 1, "statut": "PENDING", "valide_par": "UNKNOWN" }
+  },
+  "constraints": { "acces_mcp": "none", "must_preserve": ["aucune mecanique : on traverse", "3 signatures, 4 hex"], "forbidden": ["aucun /Game/ comme cible", "aucune coordonnee ni device", "promesse hors jam"] },
+  "golden_example_ref": "skill/exemples/vision-corpo-plaza-contemplative.json",
+  "acceptance": ["pitch_present_max_300_chars", "theme_and_references_declared", "references_convertible_to_legal_assets", "non_negotiables_listed", "anti_references_listed", "palette_with_hex_codes", "visual_identity_and_audio_identity_present", "promises_count_1_to_5", "promises_each_has_check", "assumed_gaps_listed", "jam_scope_unverified_declared", "no_coordinate_or_asset_path", "brief_gate_hitl_1_pending"],
+  "next_step_hint": "Game_Designer : boucle de gameplay nulle, pilier de cadrage ; quete ou economie demandent une derogation remontee par le Producteur avant le HITL #2.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - forme attendue de 00_vision.json",
+    "source": "Reconstruit depuis le journal corpo-plaza (sections 1 demande verbatim, 2 cible arretee en brainstorming, 13.3 et 20 : kois introuvables, plateforme carree, session non prouvee). Le 00_vision.json n'a PAS ete emis pendant la run, limitee a la geometrie ; faits aval relus dans 01_gdd.json.",
+    "pourquoi_il_passe": ["introuvable declare, jamais un mesh renomme", "promesses cochables avec flag verifiable_en_jam", "ecarts et non_verifie inscrits, gate PENDING"]
+  }
+}

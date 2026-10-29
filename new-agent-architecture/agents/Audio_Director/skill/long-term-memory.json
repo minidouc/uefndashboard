@@ -1,0 +1,135 @@
+{
+  "$id": "uefn.longterm.Audio_Director.v1",
+  "agent": "Audio_Director",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des contraintes de pipeline, des faits sources du run corpo-plaza, le lexique des statuts de preuve et les pieges du role de direction sonore.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 17, pole Audio, phase POLISH, appele en sequence apres la cloture de BUILD",
+    "artifact": "13_audio_direction.json",
+    "modele": "Flash (Frontier reserve au Producer_Orchestrator), un seul agent actif a la fois, PC 16 Go",
+    "acces_mcp": "none - le pole Audio dirige la direction sonore, il n'appelle aucun outil MCP et n'ecrit rien dans l'editeur ; le paquet n'a donc ni outils.md ni tool-output/ (06-structure-dossier-agent.md, profil Design/Audio)",
+    "amont_obligatoire": [
+      "Creative_Director (01) : payload.identite_sonore de 00_vision.json = ambiances, signature, place du silence, interdits sonores",
+      "Level_Designer (09) : 03_grid.json + les zone_id de 01_gdd.json pour le rattachement des intentions",
+      "Mission_Content_Designer (05) et Narrative_Designer (06) : beats a sonifier, s'ils existent"
+    ],
+    "aval_obligatoire": [
+      "Composer (18), Sound_Designer (19), Voice_Designer (20) : ils rendent les pistes, je ne rends rien",
+      "Graphics_Programmer (15) et UI_Programmer (14) : co-dependances audio-visuelles, un flash visuel sans impact sonore est une incoherence",
+      "Producer_Orchestrator : seul destinataire des questions et des escalades"
+    ],
+    "frontiere_de_role": "je dirige (palette de couches, rattachements, priorites de mix, seuils de masquage, interdits) ; je ne compose pas (18), je ne dessine pas les SFX (19), je ne castes pas les voix (20), je n'implemente rien (12/14), je ne touche pas l'editeur",
+    "rattachement_reglementaire": "une intention sonore porte un zone_id du GDD ou un actor_label reel, jamais une coordonnee : WP2 p.9, les chiffres appartiennent au Python",
+    "gates_hitl": ["#1 brief creatif", "#2 GDD", "#3 architecture technique", "#4 avant toute ecriture destructive dans Unreal"],
+    "regle_gate": "un agent n'ecrit que PENDING dans un champ de gate ; VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain portee par le Producteur",
+    "regle_outil_non_verifie": "un outil absent de tech/mcp-inventory.json est UNKNOWN_TOOL_BLOCKED et remonte au Producteur, jamais improvise (05-securite-mcp.md)"
+  },
+  "contrats_fichiers": {
+    "note": "Ce que le downstream consomme reellement, d'apres les artefacts presents dans le workspace du run.",
+    "00_vision.json": {
+      "champ_consomme": "payload.identite_sonore (ambiances, signature, silence, interdits_sonores, faisabilite)",
+      "fait_du_run": "ABSENT du workspace ws_corpo_plaza : la direction sonore est donc reconstruite depuis 01_gdd.json et le journal, et le dit dans reference_vision.statut_source"
+    },
+    "01_gdd.json": {
+      "champs_consommes": ["zones[].zone_id", "zones[].purpose", "connects_to", "gameplay_timeline_sec", "required_devices[].actor_label", "notes"],
+      "note_lue": "Scene contemplative. Aucun asset /Game, aucun Verse personnalise, aucune sauvegarde ni publication."
+    },
+    "03_grid.json": "geometrie et tuiles : lu pour savoir ou le son doit se lire, jamais pour en tirer une coordonnee",
+    "04_devices.json": "inventaire des devices reelslement poses ; la presence d'un device audio y serait la seule preuve d'une ambiance poseable",
+    "06_audit_report.json": "0_overlap / 0_floating : un prop mal pose rend un rattachement d'intention instable, je le signale au Producteur",
+    "13_audio_direction.json": "mon livrable, sous enveloppe uefn.handoff.v1 ; il ne contient ni fichier audio, ni device, ni coordonnee"
+  },
+  "lexique_statuts": {
+    "NON_POSE": "rien d'equivalent n'existe dans le niveau a la date du livrable : constat, pas une promesse",
+    "A_VERIFIER": "une piste documente existe (cite d'un autre role, commande possible) mais n'a pas ete testee dans ce run",
+    "UNKNOWN": "donnee absente et non recoverable ici : s'ecrit tel quel, jamais remplace par une valeur plausible",
+    "mesure": "valeur obtenue par un controle reel et repetable (comptage, inventaire, session connectee)",
+    "reserve": "plage ou ordre demande, non verifie, qui s'efface devant la mesure",
+    "conforme": "l'element respecte la decision de scene contemplative",
+    "hors_decision": "l'element suppose une mecanique interdite : motif de rejet automatique",
+    "NO_VERSE_STAGED": "aucun fichier Verse prepare ni ecrit dans ce run : toute musique dynamique ou trigger adaptatif en depend"
+  },
+  "pieges": [
+    {
+      "signe": "Je cite un niveau en niveau absolus, un ratio de loudness ou un 'master a -3' comme une mesure.",
+      "cause": "Un niveau absolu ne s'obtient que par audition dans une session play-in-client connectee ; section 20 du journal, la session n'etait pas connectee a la redaction.",
+      "conduite": "Ordonnancement relatif (nul / fond / secondaire / principal) + statut reserve ou UNKNOWN. Le validateur refuse toute unite absolue."
+    },
+    {
+      "signe": "Une ambiance est rattachee a '[45511.5, 1536.0, 768.0]' ou a un rayon en cm.",
+      "cause": "Grace a la precision, l'intention parait executable ; elle est en fait une coordonnee inventee par le modele (WP2 p.9).",
+      "conduite": "zone_id du GDD ou actor_label reel ; sinon j'ecris UNKNOWN et je remonte la question du rattachement au Producteur."
+    },
+    {
+      "signe": "Un device 'Audio Player' et une famille d'assets audio semblent evidents, donc je les donne comme acquis.",
+      "cause": "La citation vient de la spec de l'agent 11 (liste prommppt agent .md, devices a identifier) ; dans ce run, les 49 requetes catalogue n'ont porte que sur du visuel, 0 requete audio.",
+      "conduite": "statut A_VERIFIER + commande qui trancherait (search-playsets --type PID) ecrite sans etre executee, et consequence si introuvable."
+    },
+    {
+      "signe": "Je demande une musique adaptive, des stems ou un crossfade reactive.",
+      "cause": "Cela suppose un Verse de declencheur : 01_gdd.json a verse_modules vide, aucun editable cable, NO_VERSE_STAGED.",
+      "conduite": "abstention_assumee avec motif, aucune demande de trigger a Gameplay_Programmer tant qu'une derogation HITL n'existe pas."
+    },
+    {
+      "signe": "Le brief visuel dit 'contemplatif' et ma direction propose quand meme des SFX d'impact ou une nappe de tension.",
+      "cause": "Le reflexe de remplissage : un projet sans mecanique parait incomplet sans couche evenementielle.",
+      "conduite": "declencheurs_mecaniques reste vide ; la priorite creatrice va au silence contractuel, couche 'nulle' assumee."
+    },
+    {
+      "signe": "Aucun PNJ n'est programme mais je prevois une couche voix et un nombre de repliques.",
+      "cause": "La couche voix existe dans tous les templates de direction sonore ; ici elle n'a pas d'objet.",
+      "conduite": "densite nulle, statut NON_POSE, abstention avec motif, Voice_Designer notifie sans charge de travail."
+    },
+    {
+      "signe": "00_vision.json est absent mais j'ecris que la vision sonore a ete lue.",
+      "cause": "L'amont est attendu, sa presence fait plaisir a remplir.",
+      "conduite": "statut_source = vision_absente_reconstruite, provenance nommee (section 2 du journal + exemple golden du Creative_Director), et ecart_de_source ecrit."
+    },
+    {
+      "signe": "Les kois holographiques appellent un 'ronflement holographique' signature.",
+      "cause": "Section 20 : les kois sont des enseignes poisson neon emissives, l'effet translucide n'est pas reproduit ; le son ne doit pas halluciner une propriete que le visuel n'a pas.",
+      "conduite": "signature = bourdonnement neon positionnel, coherent avec l'asset reel ; l'ambition holographique reste dans les abstentions."
+    },
+    {
+      "signe": "La place circulaire demande une reverb 'de rotonde' et le sol est une plateforme carree de dalles.",
+      "cause": "Section 20 : geometrie de composition != geometrie de pose ; l'acoustique reclamee presumerait une forme absente.",
+      "conduite": "decrire l'effet comme intention relative ('queue courte, rien ne renvoie'), statut reserve, et signaler l'ecart de geometrie au Producteur."
+    },
+    {
+      "signe": "Ma direction est riche, le handoff depasse 4000 tokens et personne ne le relit.",
+      "cause": "Le Producteur ne relit que summary_short ; tout le reste se verifie par schema, et le contexte des Flash sature (WP3 p.9).",
+      "conduite": "tranches successibles, une zone serie a la fois ; le trop-detail va sur disque, le handoff n'en porte que le nom."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Execution strictement sequentielle, hub-and-spoke via Producer_Orchestrator, filesystem comme bus : jamais d'agent parallele sur l'editeur.",
+    "Decision 4 du run, validee par l'utilisateur : scene contemplative, aucun combat, aucune quete, aucune economie, aucune mecanique annexe. Toute couche sonore qui suppose l'inverse est hors_decision.",
+    "Contraintes confirmees : assets Creatifs legaux PID_/PPID_ uniquement, aucun Verse personnalise a ecrire, aucune sauvegarde ni publication ni cleanup, un seul appel MCP a la fois.",
+    "Le mot 'audio' n'apparait nulle part dans le journal du run : aucun asset sonore cherche, aucun device audio pose, aucun reglage d'ambiance. Rien d'autre ne peut etre pretendu.",
+    "Le few-shot est la bonne methode pour ce que le schema ne sait pas encoder : le ton d'une ambiance sonore (WP3 p.45, 03-parametrage-agents.md section 4). Le ton s'apprend par l'exemple, les criteres restent dans le schema.",
+    "Le output est une black box (WP3 p.18) : le payload porte le resultat, jamais mon raisonnement ni une critique de mes propres pistes.",
+    "Je ne valide pas mon JSON (WP4 p.20) : validateur Python + juge externe, jamais un auto-controle."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur reels du run corpo-plaza, pas des cibles de direction.",
+    "zones_du_gdd": 9,
+    "connects_to_du_gdd": 12,
+    "assets_demandes_01_gdd": 22,
+    "assets_audio_trouves": 0,
+    "requetes_catalogue_menees": 49,
+    "requetes_catalogue_audio_menees": 0,
+    "devices_reels": "1 (Spawner_Plaza_01, player_spawner_device)",
+    "timeline_gameplay_sec": [0, 1, 5],
+    "tours_de_couronne_environ": 16,
+    "tuile_cm": "512 x 512 x 384",
+    "machine": "PC 16 Go",
+    "gates_hitl": 4,
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "layers": "3 a 6 par direction",
+    "questions_producteur_max_par_phase": 15,
+    "niveau_reel_du_run": "claudetest",
+    "session_play_in_client": "non connectee a la redaction du journal",
+    "statut_verse": "NO_VERSE_STAGED"
+  }
+}

@@ -1,0 +1,24 @@
+{
+ "outil": "ActorTools.get_actor_bounds",
+ "rc": 0,
+ "args": {
+  "actor": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_POTEAU"
+  }
+ },
+ "payload": {
+  "returnValue": {
+   "min": {
+    "x": -1000,
+    "y": 500,
+    "z": 0
+   },
+   "max": {
+    "x": -900,
+    "y": 600,
+    "z": 800
+   },
+   "isValid": true
+  }
+ }
+}

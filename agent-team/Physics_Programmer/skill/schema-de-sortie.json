@@ -155,8 +155,8 @@
         },
         "asset_path": {
           "type": "string",
-          "pattern": "^(?!/Game/).+",
-          "description": "Chemin creatif legal (PID_/PPID_) relu depuis 02_palette.json. Tout /Game/... est illegal en UEFN et bloque la validation de l'ile."
+          "pattern": "^/.+",
+          "description": "Chemin relu depuis 02_palette.json (jamais de memoire). Un /Game/... n'est PAS illegal en soi : le 2026-10-29 des /Game/Creative/... et /Game/Athena/... ont passe le validateur UEFN. Legalite = journal du validateur (agent-team/_commun/legalite-assets.md)."
         },
         "placement_mode": {
           "enum": ["TILE_ANCHOR", "WORLD", "RELATIVE_TO_ACTOR"]

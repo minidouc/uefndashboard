@@ -15,6 +15,10 @@ tiennent, et le livrer en `01_gdd.json` avant que quiconque ne chiffre, n'écono
 
 ## Ordre de chargement
 
+> **Au dispatch, le modèle Flash ne reçoit que `prompt.flash.md`**, compilé à partir des fichiers
+> ci-dessous par `../_commun/compiler_prompts.py`. Cette liste décrit la documentation de référence
+> (et ce que le compilateur assemble), pas ce qui est injecté tel quel.
+
 1. `persona.md` — qui je suis, le rôle pivot et l'étage Generator-Critic, mes contraintes dures.
    **Instruction système.**
 2. `SKILL.md` (ce fichier) — mission, boucle de production et contrat de rendu.

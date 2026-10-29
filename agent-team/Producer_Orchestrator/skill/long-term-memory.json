@@ -151,7 +151,7 @@
         "validation du brief (Creative_Director)",
         "validation du GDD (Game_Designer)",
         "validation de l'archi technique (Lead_Programmer)",
-        "TOUTE écriture destructrice dans l'éditeur UEFN (save, delete_actor, set_material, batch_place, apply_physics, run_python à effet de bord)"
+        "TOUTE écriture destructrice dans l'éditeur UEFN (Asset.save_assets, Scene.save_actor, Scene.remove_from_scene, Asset.delete, Scene.replace_actors_with_asset, Object.set_properties, Verse.WriteFile/Delete, Prog.execute_tool_script à effet de bord, Session.StartSession/PushChanges)"
       ],
       "alerte_douce": "questions_asked_total >= 30 → alerte utilisateur, sans blocage"
     }
@@ -174,7 +174,8 @@
     "0_floating": "chaque prop ancré à un support dans sa Z-slice",
     "spawn_reachable": "chemin spawn -> objectif sans trou",
     "mcp_ok": "preflight_ok.json frais + ping port 8000/8001",
-    "pid_legal": "tout PID_/PPID_ présent dans la palette autorisée",
+    "pid_legal": "tout chemin de la palette autorisée, ni ILLEGAL_ASSET_PATH ni UNVERIFIED_ASSET_PATH pour validate-scene (catalogue commun agent-team/_commun/catalogue-verifie.json)",
+    "validator_clean": "check-validator -> 06b_validator_report.json status PASSED, posterieur au dernier changement de scene ; UNKNOWN ne compte pas (agent-team/_commun/legalite-assets.md)",
     "clamp_deterministe": "X/Y/Z bornés aux Z-slices du handoff par le Python AVANT écriture (05 §3)"
   },
 

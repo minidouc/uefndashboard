@@ -1,0 +1,24 @@
+{
+ "outil": "ActorTools.get_actor_bounds",
+ "rc": 0,
+ "args": {
+  "actor": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S0_INVENTE"
+  }
+ },
+ "payload": {
+  "returnValue": {
+   "min": {
+    "x": -500,
+    "y": -500,
+    "z": 0
+   },
+   "max": {
+    "x": -400,
+    "y": -400,
+    "z": 100
+   },
+   "isValid": true
+  }
+ }
+}

@@ -55,7 +55,7 @@
       "checked": true,
       "illegal_paths_found": 0,
       "classes_used": ["FortPlaysetPropItemDefinition", "FortPlaysetItemDefinition", "DeviceToolset.ListDeviceAssets", "Engine/BasicShapes"],
-      "forbidden_prefixes": ["/Game/Athena", "/Game/Environments"],
+      "forbidden_prefixes": ["/BlastBerryWeapons", "/Figment_Athena_", "/JethroWeaponGameplay"],
       "editor_playsets_couverte_par_decision": "/CRP_* (CRP_Sunburst, CRP_Covert, CRP_7Village) : couverts par la decision memorisee du pipeline, acceptes quand l'item est un PPID_/PID_ expose avec sa source de recherche citee.",
       "evidence_files": ["search_spawner.json", "search_fountain.json", "search_building_ppid.json", "06_legality_report.json"]
     },
@@ -103,7 +103,7 @@
     "must_preserve": ["les 22 entrees mesurees de 02_palette.json", "les search_*.json de preuve", "niveau claudetest rendu propre"],
     "forbidden": [
       "aucun acteur de mesure laisse dans le niveau",
-      "aucun chemin /Game/Athena ou /Game/Environments",
+      "aucun chemin de _commun/catalogue-verifie.json -> refuses ; legalite de chaque chemin prouvee par une sauvegarde + journal du validateur sans erreur",
       "aucune decision de layout (Level_Designer)",
       "aucune logique interne de fonction Verse (12/13/14)",
       "aucune entree sans measured"

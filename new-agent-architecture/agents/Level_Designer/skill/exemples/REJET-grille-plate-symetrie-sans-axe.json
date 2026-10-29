@@ -1,0 +1,62 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-9",
+  "from": "Level_Designer",
+  "to": ["Physics_Programmer"],
+  "artifact": "03_grid.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-99",
+  "summary_short": "Carte 4x4 d'un seul etage, symetrie annoncee sans axe, coordonnees cm dans la matrice, entree unique bloquee, edge_policy oublie.",
+  "payload": {
+    "grid": {
+      "tile_size_cm": [512.0, 512.0, 384.0],
+      "symmetric": true,
+      "origin_tile": [0, 0, 0],
+      "floors": [
+        {
+          "z_index": 0,
+          "matrix": [
+            ["[-256, 0, 384]", "#", "#", "#"],
+            ["#", "[1280.0, 1280.0, 0.0]", "W", "#"],
+            ["#", "W", "[45511.5, 1536.0, 768.0]", "#"],
+            ["#", "#", "#", "#"]
+          ]
+        }
+      ],
+      "_comment": "perimetre 100 % ferme, un seul couloir interieur de 32 cm calcule de tete"
+    },
+    "props_intent": [
+      {
+        "actor_label": "Koi Aerial 01",
+        "tile": [99, 3, 0],
+        "slot": "CENTER",
+        "location_cm": [45511.0, 1536.0, 1024.0],
+        "notes": "coordonnee finale calculee par le modele, hors de la carte"
+      }
+    ]
+  },
+  "constraints": {
+    "z_ceiling": 2,
+    "must_preserve": ["entree unique"]
+  },
+  "acceptance": [
+    "grille magnifique",
+    "no_flat_map_3_levels"
+  ],
+  "next_step_hint": "Physics : poser la matrice telle quelle, les coords cm sont deja calcules.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "REJET EXAMPLE - viole volontairement les regles observees ; ne jamais copier cette forme",
+    "motifs_de_rejet": [
+      "handoff_id 'H-DESIGN-9' hors pattern ^H-[A-Z]+-[0-9]{3,}$",
+      "edge_policy absent : politique de bord non declaree, motif de rejet explicite (fall_zone ou wall, jamais le vide)",
+      "symmetric: true sans symmetry_axis : validate-grid renvoie SYMMETRY_AXIS_UNSUPPORTED ; un check-symmetry PASSED avec axis null ne prouverait rien",
+      "matrice avec des cellules '[-256, 0, 384]' : coordonnees (x, y, z) en cm inventees par le LLM, hors lexique tile_code et hors la regle speciale Design (WP2 p.9)",
+      "map plate : un seul z_index, aucune intention verticale (ni bassin, ni mezzanine, ni aerien) - interdit dur 'au moins 3 niveaux'",
+      "prop hors tuiles : tile [99, 3, 0] hors de la carte, plus une cle 'location_cm' hors properties du schema et un actor_label avec espaces",
+      "entree unique bloquee : perimetre # ferme sur lui-meme, aucun '.' joinctif - le flux des missions est infranchissable",
+      "couloir de 32 cm de tete < MIN_CORRIDOR_WIDTH 100 cm, et origine [0, 0, 0] sur Brush_0",
+      "constraints.z_floor manquant et acces_mcp absent : le pin 'acces_mcp: none' est obligatoire pour un agent Design, son absence laisse ouverte la question 'cet agent a-t-il touche l'editeur ?' ; acceptance 'grille magnifique' non cochable par un validateur Python et moins de 4 criteres",
+      "next_step_hint qui pre-mache des coords cm au Physics_Programmer : renversement total du pipeline"
+    ]
+  }
+}

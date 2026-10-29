@@ -1,0 +1,62 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-CADRAGE-001",
+  "from": "Creative_Director",
+  "to": ["Game_Designer", "Producer_Orchestrator"],
+  "artifact": "00_vision.json",
+  "mission_ref": "M-CORPOPLAZA-CADRAGE-01",
+  "summary_short": "Vision magnifique et entierement validee : scene immense, epique, next-gen qui va faire un carton, tout le monde va adorer, on a verifie que c'est beau.",
+  "payload": {
+    "pitch": "Une ville cyberpunk hyper realiste, epoustouflante, premium, next-gen, avec rendu AAA, foule permanente et musique epique en boucle qui impose le respect.",
+    "theme": { "nom_projet": "Night City XXL", "univers": "cyberpunk", "lieu": "une place", "epoque": "UNKNOWN", "ton": ["epique", "immense", "premium", "next-gen", "classe", "innovant"] },
+    "references": [
+      { "titre": "Corpo Plaza", "source": "Cyberpunk 2077", "pourquoi": "c'est beau", "equivalent_creatif": "/Game/Athena/Architectural/Environments/SM_Town_Center_01.SM_Town_Center_01", "statut_conversion": "convertie" },
+      { "titre": "le grand koil holographique", "source": "une capture", "pourquoi": "la signature", "equivalent_creatif": "idem, dans le contenu interne", "statut": "proche" },
+      { "titre": "vibe Blade Runner", "source": "film", "pourquoi": "la pluie et le neon", "equivalent_creatif": "PPID neon", "statut_conversion": "convertie" }
+    ],
+    "palette": { "couleurs": [
+      { "hex": "bleu neon", "role": "fond", "intention": "ca fait nuit" },
+      { "hex": "#22d3ee" }
+    ] },
+    "identite_visuelle": { "style": "photorealiste AAA", "rendu_cible": "ray tracing, volumetrique, particules, foule animee", "signatures": ["ok"] },
+    "identite_sonore": { "ambiances": [], "signature": "musique epique en boucle partout" },
+    "promesses": [
+      { "id": "promesse-1", "promesse": "Ca va couper le souffle.", "controle": "c'est beau" },
+      { "id": "promesse-2", "promesse": "Tout le monde va adorer.", "controle": "avis general" },
+      { "id": "promesse-3", "promesse": "Rendu premium garanti.", "controle": "comparaison AAA" },
+      { "id": "promesse-4", "promesse": "Foule permanente.", "controle": "ressenti" },
+      { "id": "promesse-5", "promesse": "Monde ouvert et quetes.", "controle": "on verra" },
+      { "id": "promesse-6", "promesse": "Economie complete.", "controle": "chiffrer en build" }
+    ],
+    "non_negotiables": ["c'est beau"],
+    "anti_references": [],
+    "ecarts_assumes": [],
+    "cibles_jam": { "jam": "une jam", "perimetre": ["tout"], "non_verifie": [] },
+    "gate_hitl_1": { "numero": 1, "statut": "VALIDE", "valide_par": "Creative_Director" },
+    "devices_imposes": [{ "actor_label": "Spawner Plaza 01", "world_location_cm": [3389.81, 6897.64, 128.0] }],
+    "coordonnees_centrale_cm": [3389.81, 6897.64, 128.0],
+    "fichiers_verse_prevus": ["game_manager_corpo.verse", "holo_koil_controller.verse"]
+  },
+  "constraints": { "acces_mcp": "write", "must_preserve": [], "forbidden": [] },
+  "acceptance": ["c_est_belle", "vision_inspiree", "tout_le_monde_adore", "rendu_premium"],
+  "next_step_hint": "Brief valide, vous pouvez coder le gameplay, la monnaie et les quetes. Le Producteur n'a rien a arbitrer.",
+  "context_budget_tokens": 9000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - livrable REJETE par le validateur Python et par le juge Generator-Critic",
+    "motifs_de_rejet": [
+      "gate_hitl_1.statut = 'VALIDE' signe par le CD : seuls PENDING / VALIDE_HUMAIN / REJETE_HUMAIN sont admis ; l'auto-validation est le motif de rejet WP4 p.20.",
+      "references[0].equivalent_creatif = /Game/Athena/... : refuse par le pattern ; une direction qui n'existe qu'en /Game/ est fausse et bloque la validation de l'ile.",
+      "references[1] : statut_conversion absent, cle 'statut' inventee, holographique pretendu proche sans une seule requete catalogue.",
+      "references[2] cite une franchise comme cible et non comme inspiration, sans equivalent verifiable.",
+      "aucun ecart assume, aucune anti-reference, un seul non_negotiable ('c'est beau', sous les 8 caracteres).",
+      "6 promesses (max 5), ids hors pattern ^P[0-9]{1,2}$, controles subjectifs : aucun juge ne peut dire tenu ou non tenu.",
+      "hex 'bleu neon' hors pattern, seconde couleur sans role ni intention, ton = 6 adjectifs (max 3).",
+      "rendu promis hors de portee : photorealisme AAA, ray tracing, volumetrique, foule sur un poste 16 Go.",
+      "cibles_jam.non_verifie vide : pretend tout verifier alors que rien n'est controlable en jam.",
+      "cles hors payload (devices_imposes, coordonnees_centrale_cm, fichiers_verse_prevus) : un agent Design n'ecrit ni device, ni coordonnee, ni .verse.",
+      "constraints.acces_mcp = 'write' alors que le const exige 'none' ; must_preserve et forbidden vides.",
+      "acceptance hors enum (c_est_belle, rendu_premium) et context_budget_tokens 9000 > 4000.",
+      "summary_short en auto-evaluation, next_step_hint prescriptif : la diffusion attend le HITL #1 tranche par le Producteur."
+    ]
+  }
+}

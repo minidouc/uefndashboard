@@ -6,8 +6,8 @@
   "contraintes_ecosysteme_creatif": {
     "assets_autorises": "uniquement des assets Creatifs exposes au catalogue : PID_ (ItemDefinition / playset) et PPID_ (playset prop). Ce sont les seules references qu'une direction visuelle peut viser.",
     "assets_interdits": [
-      "/Game/Athena/... : contenu interne Fortnite non expose, fait echouer la validation de l'ile au lancement de session",
-      "/Game/Environments/... : meme cause, jamais rattrapable par un renommage",
+      "tout chemin de agent-team/_commun/catalogue-verifie.json -> refuses (refuse par le validateur UEFN, jamais rattrapable par un renommage)",
+      "NB : le prefixe /Game/Athena ne decide rien (des /Game/Athena/Items/... sont legaux) ; la legalite se prouve par le validateur (agent-team/_commun/legalite-assets.md)",
       "tout asset d'un autre jeu ou d'une autre franchise : droit d'auteur, pas seulement technique"
     ],
     "consequence_pour_la_direction": "une reference dont aucun PPID_/PID_ ne reproduit l'ambiance n'est pas une direction : c'est un ecart a ecrire ou une reformulation a proposer",

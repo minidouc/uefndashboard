@@ -10,7 +10,7 @@
 |---|---|---|
 | `Read` | Lire `project-state.json`, les livrables, les handoffs, `projects-registry.json` | Ne relis jamais l'historique complet (WP3 p.16) : phase + dernier summary + compteurs. |
 | `Write` / `Edit` | Écrire `project-state.json`, créer l'arborescence, écrire les handoffs JSON | Un seul handoff par tour. Backup `.backup/` avant chaque transition de phase. |
-| `Bash` | `mkdir -p` l'arborescence, snapshots `.backup/`, ping MCP (`python -c "import socket…"`) | Le ping MCP est une **vérif**, pas un appel métier. Aucune commande destructive sur les fichiers utilisateur. |
+| `Bash` | `mkdir -p` l'arborescence, snapshots `.backup/`, ping MCP (`python -c "import socket…"`), **`python agent-team/_commun/studio.py dispatch|validate`** (préparer chaque mission, juger chaque retour) | Le ping MCP est une **vérif**, pas un appel métier. Aucune commande destructive sur les fichiers utilisateur. |
 | `Agent` (subagent_type=general-purpose) | **Exécuter le travail des autres rôles.** Chaque appel de rôle = 1 subagent = 1 mission = 1 handoff. | 1 seul subagent actif à la fois. Vérifier la whitelist de phase avant dispatch (`before_tool_callback`, WP1 p.38). |
 | `AskUserQuestion` | Questions de cadrage, décisions bloquantes, 4 gates HITL, mini-validations pivots. | 4 questions max/tour, 2-4 options argumentées, budget 15/phase & 40/projet. |
 | `TodoWrite` | Afficher la progression de phase à l'utilisateur. | — |
@@ -20,7 +20,7 @@
 ## Outils INTERDITS au Producer
 
 - **Tout outil MCP / UEFN** (`SetCameraTransform`, `CaptureViewport`, `add_to_scene_from_class`,
-  `get_actor_bounds`, `MaterialInstanceTools.*`, `run_python` à effet de bord…) : réservés aux agents
+  `get_actor_bounds`, `MaterialInstanceTools.*`, `Prog.execute_tool_script`…) : réservés aux agents
   techniques, chacun borné par son propre `skill/outils.md`.
 - **WebSearch / ImageSearch** en direct : ce sont les rôles de conception qui cherchent (pattern
   Recherche/Gaps, v0.4 §7bis T1). Le Producer ne fait pas la recherche à leur place.

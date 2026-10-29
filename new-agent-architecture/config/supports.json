@@ -1,0 +1,19 @@
+{
+  "$comment": "Traduction support du plan -> methode de pose. Seuls des chemins RELUS dans l'editeur figurent ici (corpo-plaza, lots 1-9, 2026-10-27). Un support absent = gap declare, jamais une improvisation.",
+  "devices": {
+    "PID_CP_Devices_PlayerSpawner": "/CRD_PlayerSpawn/ItemDefinitions/PID_CP_Devices_PlayerSpawner.PID_CP_Devices_PlayerSpawner",
+    "PID_Device_PointLight": "/CRD_PointLight/SetupAssets/PID_Device_PointLight.PID_Device_PointLight",
+    "PID_Device_Billboard": "/CreativeCoreDevices/SetupAssets/PID_Device_Billboard.PID_Device_Billboard",
+    "PID_Device_HoloScreen": "/CreativeCoreDevices/SetupAssets/PID_Device_HoloScreen.PID_Device_HoloScreen",
+    "PID_Device_Skydome": "/CRD_SkydomeDevice/SetupAssets/PID_Device_Skydome.PID_Device_Skydome",
+    "PID_CP_Devices_PostProcess": "/CRD_PostProcess/SetupAssets/PID_CP_Devices_PostProcess.PID_CP_Devices_PostProcess",
+    "PID_Environment_Light_Rig": "/CreativeCoreDevices/SetupAssets/PID_Environment_Light_Rig.PID_Environment_Light_Rig"
+  },
+  "primitives": ["PrimitiveTools.add_cube", "PrimitiveTools.add_cylinder"],
+  "repli_vers_cube": {
+    "$comment": "Supports prevus mais pas encore posables (import non prouve). Poses en cube, marques 'degrade' avec la raison : la dette DA reste VISIBLE dans le lot.",
+    "suffixes": [".png", ".obj"],
+    "raison": "texture/mesh studio : capacite d'import non prouvee (T6) -> cube de repli, a remplacer apres spike_capacite"
+  },
+  "class_acteur_vide": "/Script/Engine.Actor"
+}

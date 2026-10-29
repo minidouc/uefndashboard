@@ -1,0 +1,1900 @@
+{
+ "PrimitiveTools": {
+  "add_cone": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "radius": {
+     "type": "number",
+     "default": 50
+    },
+    "height": {
+     "type": "number",
+     "default": 100
+    },
+    "local_transform": {
+     "default": null,
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    }
+   },
+   "required": [
+    "actor",
+    "name"
+   ]
+  },
+  "add_cylinder": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "radius": {
+     "type": "number",
+     "default": 50
+    },
+    "height": {
+     "type": "number",
+     "default": 100
+    },
+    "local_transform": {
+     "default": null,
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    }
+   },
+   "required": [
+    "actor",
+    "name"
+   ]
+  },
+  "add_cube": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "dimensions": {
+     "title": "Vector",
+     "default": {
+      "x": 100,
+      "y": 100,
+      "z": 100
+     },
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    },
+    "local_transform": {
+     "default": null,
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    }
+   },
+   "required": [
+    "actor",
+    "name"
+   ]
+  }
+ },
+ "SceneTools": {
+  "save_actor": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "actor"
+   ]
+  },
+  "trace_world": {
+   "type": "object",
+   "properties": {
+    "start": {
+     "title": "Vector",
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    },
+    "end": {
+     "title": "Vector",
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    }
+   },
+   "required": [
+    "start",
+    "end"
+   ]
+  },
+  "set_actor_folder": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "folder_path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "actor",
+    "folder_path"
+   ]
+  },
+  "get_actors_in_folder": {
+   "type": "object",
+   "properties": {
+    "folder_path": {
+     "type": "string"
+    },
+    "recursive": {
+     "type": "boolean",
+     "default": false
+    }
+   },
+   "required": [
+    "folder_path"
+   ]
+  },
+  "remove_from_scene": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "actor"
+   ]
+  },
+  "set_actor_hidden": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "hidden": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "actor",
+    "hidden"
+   ]
+  },
+  "add_to_scene_from_asset": {
+   "type": "object",
+   "properties": {
+    "asset_path": {
+     "type": "string"
+    },
+    "name": {
+     "type": "string"
+    },
+    "xform": {
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    },
+    "parent": {
+     "default": null,
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "snap_to_ground": {
+     "type": "boolean",
+     "default": false
+    }
+   },
+   "required": [
+    "asset_path",
+    "name",
+    "xform"
+   ]
+  },
+  "add_to_scene_from_class": {
+   "type": "object",
+   "properties": {
+    "actor_type": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Class",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "xform": {
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    },
+    "parent": {
+     "default": null,
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "snap_to_ground": {
+     "type": "boolean",
+     "default": false
+    }
+   },
+   "required": [
+    "actor_type",
+    "name",
+    "xform"
+   ]
+  },
+  "find_actors": {
+   "type": "object",
+   "properties": {
+    "root": {
+     "default": null,
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string",
+     "default": ""
+    },
+    "actor_type": {
+     "default": null,
+     "type": "object",
+     "title": "/Script/CoreUObject.Class",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "tag": {
+     "type": "string",
+     "default": ""
+    },
+    "bounds": {
+     "default": null,
+     "title": "Box",
+     "type": "object",
+     "properties": {
+      "min": {
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "max": {
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "isValid": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "min",
+      "max",
+      "isValid"
+     ]
+    },
+    "collision_channels": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "title": "EObjectTypeQuery",
+      "enum": [
+       "ObjectTypeQuery1",
+       "ObjectTypeQuery2",
+       "ObjectTypeQuery3",
+       "ObjectTypeQuery4",
+       "ObjectTypeQuery5",
+       "ObjectTypeQuery6",
+       "ObjectTypeQuery7",
+       "ObjectTypeQuery8",
+       "ObjectTypeQuery9",
+       "ObjectTypeQuery10",
+       "ObjectTypeQuery11",
+       "ObjectTypeQuery12",
+       "ObjectTypeQuery13",
+       "ObjectTypeQuery14",
+       "ObjectTypeQuery15",
+       "ObjectTypeQuery16",
+       "ObjectTypeQuery17",
+       "ObjectTypeQuery18",
+       "ObjectTypeQuery19",
+       "ObjectTypeQuery20",
+       "ObjectTypeQuery21",
+       "ObjectTypeQuery22",
+       "ObjectTypeQuery23",
+       "ObjectTypeQuery24",
+       "ObjectTypeQuery25",
+       "ObjectTypeQuery26",
+       "ObjectTypeQuery27",
+       "ObjectTypeQuery28",
+       "ObjectTypeQuery29",
+       "ObjectTypeQuery30",
+       "ObjectTypeQuery31",
+       "ObjectTypeQuery32",
+       "ObjectTypeQuery33",
+       "ObjectTypeQuery34",
+       "ObjectTypeQuery35",
+       "ObjectTypeQuery36",
+       "ObjectTypeQuery37",
+       "ObjectTypeQuery38",
+       "ObjectTypeQuery39",
+       "ObjectTypeQuery40",
+       "ObjectTypeQuery41",
+       "ObjectTypeQuery42",
+       "ObjectTypeQuery43",
+       "ObjectTypeQuery44",
+       "ObjectTypeQuery45",
+       "ObjectTypeQuery46",
+       "ObjectTypeQuery47",
+       "ObjectTypeQuery48",
+       "ObjectTypeQuery49",
+       "ObjectTypeQuery50",
+       "ObjectTypeQuery51",
+       "ObjectTypeQuery52",
+       "ObjectTypeQuery53",
+       "ObjectTypeQuery54",
+       "ObjectTypeQuery55",
+       "ObjectTypeQuery56",
+       "ObjectTypeQuery57",
+       "ObjectTypeQuery58",
+       "ObjectTypeQuery59",
+       "ObjectTypeQuery60",
+       "ObjectTypeQuery61",
+       "ObjectTypeQuery62",
+       "ObjectTypeQuery63",
+       "ObjectTypeQuery64"
+      ]
+     }
+    },
+    "data_layer": {
+     "type": "string",
+     "default": ""
+    }
+   },
+   "required": [
+    "collision_channels"
+   ]
+  },
+  "get_current_level": {
+   "type": "object"
+  }
+ },
+ "ActorTools": {
+  "get_actor_bounds": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "actor"
+   ]
+  },
+  "set_actor_transform": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "xform": {
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "Représenter une transformation 3D avec position, rotation et échelle facultatives.\nLes champs non définis signifient \"identité\" lors de la création d’objets et \"ne pas changer\" lors de la modification d’objets existants.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    },
+    "worldspace": {
+     "type": "boolean",
+     "default": true
+    }
+   },
+   "required": [
+    "actor",
+    "xform"
+   ]
+  },
+  "add_tag": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "tag": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "actor",
+    "tag"
+   ]
+  },
+  "set_label": {
+   "type": "object",
+   "properties": {
+    "actor": {
+     "type": "object",
+     "title": "/Script/Engine.Actor",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "label": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "actor",
+    "label"
+   ]
+  }
+ },
+ "EditorAppToolset": {
+  "WorldPosToScreenCoords": {
+   "type": "object",
+   "properties": {
+    "position": {
+     "title": "Vector",
+     "description": "La position dans l’espace du monde à convertir.",
+     "type": "object",
+     "properties": {
+      "x": {
+       "type": "number"
+      },
+      "y": {
+       "type": "number"
+      },
+      "z": {
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y",
+      "z"
+     ]
+    }
+   },
+   "required": [
+    "position"
+   ]
+  },
+  "SetCVarValue": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Le nom de la variable de console."
+    },
+    "value": {
+     "type": "string",
+     "description": "La nouvelle valeur sous forme de chaîne."
+    }
+   },
+   "required": [
+    "name",
+    "value"
+   ]
+  },
+  "SetCameraTransform": {
+   "type": "object",
+   "properties": {
+    "transform": {
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "La transformation à appliquer à la caméra du hublot.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    }
+   },
+   "required": [
+    "transform"
+   ]
+  },
+  "GetCVarValue": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string",
+     "description": "Le nom de la variable de console."
+    }
+   },
+   "required": [
+    "name"
+   ]
+  },
+  "GetCameraTransform": {
+   "type": "object"
+  },
+  "CaptureViewport": {
+   "type": "object",
+   "properties": {
+    "captureTransform": {
+     "description": "Pose facultative à partir de laquelle capturer. Si cette option n'est pas définie, utilise la caméra actuelle du hublot.",
+     "default": null,
+     "type": "object",
+     "title": "ToolsetTransform",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    },
+    "annotations": {
+     "description": "Configuration facultative de la superposition d'annotations. Utilisez ceci uniquement lorsque vous avez besoin des informations pour effectuer des actions spatiales.",
+     "default": null,
+     "title": "ViewportAnnotationConfig",
+     "type": "object",
+     "properties": {
+      "gridSpacing": {
+       "type": "number",
+       "description": "Distance dans l'espace du monde entre les lignes de la grille (cm). Passer 0 pour désactiver la superposition des grilles tout en continuant à dessiner les étiquettes d'acteurs."
+      },
+      "gridExtent": {
+       "type": "number",
+       "description": "L'étendue de la grille à partir de l'origine sur chaque axe (cm)."
+      },
+      "gridHeight": {
+       "type": "number",
+       "description": "Hauteur de la grille du plan du sol dans l'espace du monde."
+      },
+      "maxLabelDistance": {
+       "type": "number",
+       "description": "Distance maximale (cm) pour l'étiquetage des acteurs et les coordonnées de la grille. Passer 0 pour désactiver les étiquettes d'acteurs tout en dessinant la grille."
+      },
+      "classFilter": {
+       "type": "object",
+       "title": "Class@/Script/Engine.Actor",
+       "description": "Si non nul, seuls les acteurs de cette classe (ou d'une sous-classe) sont étiquetés.",
+       "properties": {
+        "refPath": {
+         "type": "string",
+         "description": "La référence stockée sous forme de chaîne de chemin relatif."
+        }
+       },
+       "required": [
+        "refPath"
+       ]
+      },
+      "maxLabels": {
+       "type": "integer",
+       "description": "Nombre maximal d'étiquettes d'acteurs à dessiner. Le plus proche de la caméra l'emporte. Ne dessinez pas trop, sinon l'image devient incohérente."
+      }
+     },
+     "required": [
+      "gridSpacing",
+      "gridExtent",
+      "gridHeight",
+      "maxLabelDistance",
+      "classFilter",
+      "maxLabels"
+     ]
+    },
+    "bShowUI": {
+     "type": "boolean",
+     "description": "Si False (par défaut), les superpositions d'interface utilisateur de l'éditeur, telles que les gadgets de transformation et les contours de sélection, sont masquées dans l'image capturée. Définir sur true pour capturer exactement ce qui est à l'écran, gadgets et tout le reste.",
+     "default": false
+    }
+   }
+  }
+ },
+ "StaticMeshTools": {
+  "get_bounds": {
+   "type": "object",
+   "properties": {
+    "mesh": {
+     "type": "object",
+     "title": "/Script/Engine.StaticMesh",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "mesh"
+   ]
+  },
+  "import_file": {
+   "type": "object",
+   "properties": {
+    "folder_path": {
+     "type": "string"
+    },
+    "asset_name": {
+     "type": "string"
+    },
+    "source_file": {
+     "type": "string"
+    },
+    "import_materials": {
+     "type": "boolean",
+     "default": false
+    },
+    "import_textures": {
+     "type": "boolean",
+     "default": false
+    },
+    "combine_meshes": {
+     "type": "boolean",
+     "default": true
+    }
+   },
+   "required": [
+    "folder_path",
+    "asset_name",
+    "source_file"
+   ]
+  }
+ },
+ "TextureTools": {
+  "get_size": {
+   "type": "object",
+   "properties": {
+    "texture": {
+     "type": "object",
+     "title": "/Script/Engine.Texture2D",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "texture"
+   ]
+  },
+  "import_file": {
+   "type": "object",
+   "properties": {
+    "folder_path": {
+     "type": "string"
+    },
+    "asset_name": {
+     "type": "string"
+    },
+    "source_file": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "folder_path",
+    "asset_name",
+    "source_file"
+   ]
+  }
+ },
+ "ObjectTools": {
+  "set_properties": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "values": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "instance",
+    "values"
+   ]
+  },
+  "get_properties": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "properties": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "instance",
+    "properties"
+   ]
+  },
+  "list_properties": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "instance"
+   ]
+  }
+ },
+ "DeviceToolset": {
+  "PlaceDevice": {
+   "type": "object",
+   "properties": {
+    "assetPath": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "A device asset reference (from the catalog).",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "transform": {
+     "type": "object",
+     "title": "ToolsetTransform",
+     "description": "World-space transform to place the device with; scale is applied after spawn.",
+     "properties": {
+      "location": {
+       "description": "Emplacement dans l'espace monde",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      },
+      "rotation": {
+       "description": "La rotation de l’espace du monde.",
+       "title": "Rotator",
+       "type": "object",
+       "properties": {
+        "pitch": {
+         "type": "number",
+         "description": "Tangage (en degrés) autour de l'axe Y"
+        },
+        "yaw": {
+         "type": "number",
+         "description": "Lacet (en degrés) autour de l'axe Z"
+        },
+        "roll": {
+         "type": "number",
+         "description": "Roulis (en degrés) autour de l'axe X"
+        }
+       },
+       "required": [
+        "pitch",
+        "yaw",
+        "roll"
+       ]
+      },
+      "scale": {
+       "description": "L’échelle.",
+       "title": "Vector",
+       "type": "object",
+       "properties": {
+        "x": {
+         "type": "number"
+        },
+        "y": {
+         "type": "number"
+        },
+        "z": {
+         "type": "number"
+        }
+       },
+       "required": [
+        "x",
+        "y",
+        "z"
+       ]
+      }
+     }
+    }
+   },
+   "required": [
+    "assetPath",
+    "transform"
+   ]
+  },
+  "ListDeviceAssets": {
+   "type": "object",
+   "properties": {
+    "nameFilter": {
+     "type": "string",
+     "description": "Case-insensitive substring matched against each device's asset name. Empty lists all.",
+     "default": ""
+    }
+   }
+  },
+  "AddEventBinding": {
+   "type": "object",
+   "properties": {
+    "sourceDevicePath": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "Object path of an already-placed source device actor (not a catalog asset path).",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "sourceEvent": {
+     "type": "string",
+     "description": "Event name on the source device."
+    },
+    "targetDevicePath": {
+     "type": "object",
+     "title": "/Script/CoreUObject.Object",
+     "description": "Object path of an already-placed target device actor.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "targetFunction": {
+     "type": "string",
+     "description": "Function name on the target device."
+    }
+   },
+   "required": [
+    "sourceDevicePath",
+    "sourceEvent",
+    "targetDevicePath",
+    "targetFunction"
+   ]
+  }
+ },
+ "AssetTools": {
+  "is_dirty": {
+   "type": "object",
+   "properties": {
+    "asset_path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "asset_path"
+   ]
+  },
+  "save_assets": {
+   "type": "object",
+   "properties": {
+    "asset_paths": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    }
+   },
+   "required": [
+    "asset_paths"
+   ]
+  },
+  "exists": {
+   "type": "object",
+   "properties": {
+    "path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "path"
+   ]
+  }
+ },
+ "MaterialInstanceTools": {
+  "set_vector_parameter": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/Engine.MaterialInstanceConstant",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "value": {
+     "type": "object",
+     "title": "LinearColor",
+     "required": [
+      "r",
+      "g",
+      "b",
+      "a"
+     ],
+     "properties": {
+      "r": {
+       "type": "number",
+       "minimum": 0
+      },
+      "g": {
+       "type": "number",
+       "minimum": 0
+      },
+      "b": {
+       "type": "number",
+       "minimum": 0
+      },
+      "a": {
+       "type": "number",
+       "minimum": 0
+      }
+     }
+    }
+   },
+   "required": [
+    "instance",
+    "name",
+    "value"
+   ]
+  },
+  "get_vector_parameter": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/Engine.MaterialInstanceConstant",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "instance",
+    "name"
+   ]
+  },
+  "set_scalar_parameter": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/Engine.MaterialInstanceConstant",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    },
+    "value": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "instance",
+    "name",
+    "value"
+   ]
+  },
+  "get_scalar_parameter": {
+   "type": "object",
+   "properties": {
+    "instance": {
+     "type": "object",
+     "title": "/Script/Engine.MaterialInstanceConstant",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    },
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "instance",
+    "name"
+   ]
+  },
+  "list_parameters": {
+   "type": "object",
+   "properties": {
+    "material": {
+     "type": "object",
+     "title": "/Script/Engine.MaterialInterface",
+     "description": "Représenter une référence à un UObject ou une UClass.",
+     "properties": {
+      "refPath": {
+       "type": "string",
+       "description": "La référence stockée sous forme de chaîne de chemin relatif."
+      }
+     },
+     "required": [
+      "refPath"
+     ]
+    }
+   },
+   "required": [
+    "material"
+   ]
+  }
+ }
+}

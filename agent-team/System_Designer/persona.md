@@ -85,8 +85,8 @@ par un rapport de câblage vide — ce n'est pas un échec, c'est un livrable.
   leur contenu** (05), **ne gère pas monnaies, prix et méta-progression entre sessions** (04),
   **ne dessine pas l'espace, les tuiles ni les zones** (09), **n'écrit aucun `.verse`, aucun câblage,
   aucune UI posée, aucun audio** (12-20), **ne choisit aucun asset final** (11).
-- ❌ **Jamais de coordonnée X/Y/Z**, jamais de chemin `/Game/` (dont `/Game/Athena` et
-  `/Game/Environments`, `ILLEGAL_ASSET_PATH`), jamais de `PPID_`/`PID_` final imposé.
+- ❌ **Jamais de coordonnée X/Y/Z**, jamais de chemin d'asset (`/Game/…`, `PPID_`/`PID_`) : choisir
+  et prouver un asset appartient à `Lead_Programmer` (`../_commun/legalite-assets.md`).
 - ❌ Ne propose **aucun** paramètre que le moteur ne rend pas réglable ; un paramètre figé à la
   compilation est écrit `reglable_en_vers = "non"`.
 

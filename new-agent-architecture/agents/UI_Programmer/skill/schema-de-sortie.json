@@ -1,0 +1,308 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.UI_Programmer.v1",
+  "title": "UI_Programmer - contrat du livrable d'interface Verse (HUD, menus, editables, cablage)",
+  "description": "Schema de sortie de l'agent UI_Programmer (agent 14, pole Technique, phase BUILD). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte les ecrans codes, les fonctions publiques consommees par abonnement, la preuve de compilation et la table @editable relue. Validable par un validateur Python, jamais par le modele.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "UI_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": [
+        "ui_hud.verse",
+        "ui_menus.verse",
+        "09_verse_report.json",
+        "10_editables.json",
+        "08_wiring_report.json"
+      ],
+      "description": "Un seul artefact annonce par handoff (regle : une seule mission a la fois). Les autres rapports du meme cycle sont miroirs dans payload."
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screens", "consumed_functions", "verse_build"],
+      "properties": {
+        "screens": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/definitions/screen" },
+          "description": "Ecrans implentes par cet agent. Un tableau VIDE est legitimate seulement si 01_gdd.json ne demande aucun module Verse (verse_modules: []) et que le handoff le dit dans not_sourced et dans next_step_hint : c'est le cas documente NO_VERSE_STAGED, pas un succes annonce."
+        },
+        "hud_elements": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/hud_element" },
+          "description": "Elements d affichage (score, or, timers, barres vie/shield/cooldown/progression). Chacun declare la fonction publique qu il affiche."
+        },
+        "consumed_functions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/consumed_function" },
+          "description": "Noms EXACTS des fonctions et evenements exposes par les agents 12 et 13, tels que lus dans leurs 09_verse_report.json / 10_editables.json. Aucune valeur n'est recalculee ici."
+        },
+        "files_written": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/written_file" }
+        },
+        "verse_build": { "$ref": "#/definitions/verse_build" },
+        "editables": { "$ref": "#/definitions/editables" },
+        "wiring": { "$ref": "#/definitions/wiring" },
+        "not_sourced": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Champs volontairement en UNKNOWN avec la raison (ex. section verse_architecture absente de 02_palette.json)."
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["authorized_files", "must_preserve", "forbidden"],
+      "properties": {
+        "authorized_files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Liste des fichiers .verse que cet agent a le droit d ecrire : celle de 02_palette.json, section verse_architecture. Liste vide + 01_gdd.json qui demande un module = BLOCKED. Liste vide + verse_modules: [] = aucune ecriture attendue, cas documente (NO_VERSE_STAGED)."
+        },
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "items": { "type": "string" } },
+        "session_state_required": { "const": "Disconnected" }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "verse_build_passed",
+          "session_disconnected",
+          "success_line_recente",
+          "fichiers_dans_whitelist",
+          "aucun_fichier_autre_agent_touche",
+          "aucune_valeur_recalculee",
+          "read_back_matches",
+          "editables_listes",
+          "wiring_relu_sur_cible",
+          "aucun_acteur_deplace"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "file", "kind", "data_source", "valeur_recalculee"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "file": {
+          "type": "string",
+          "pattern": "^ui_[a-z0-9_]+\\.verse$",
+          "description": "Fichier d interface de CET agent uniquement (ui_hud.verse, ui_menus.verse). Un nom hors 02_palette.json verse_architecture est un motif de rejet."
+        },
+        "kind": {
+          "enum": ["hud", "menu_principal", "reglages", "fin_de_partie", "onboarding", "autre"]
+        },
+        "elements": { "type": "array", "items": { "type": "string" } },
+        "data_source": {
+          "enum": ["fonction_exposee_12", "fonction_exposee_13", "evenement_input", "UNKNOWN"],
+          "description": "Un ecran ne peut pas se declarer alimente par une valeur calculee dans ui_hud.verse."
+        },
+        "valeur_recalculee": {
+          "const": false,
+          "description": "Verrou de role : l UI affiche, elle ne recalcule rien. Le validateur Python refuse false -> absent ou true."
+        },
+        "navigation": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Evenements d input du gameplay qui ouvrent/ferment l ecran (input_trigger_device, boutons)."
+        },
+        "notes": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "hud_element": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["element", "widget", "source_function"],
+      "properties": {
+        "element": {
+          "enum": ["score", "or", "timer", "vie", "shield", "cooldown", "progression", "autre"]
+        },
+        "widget": {
+          "enum": ["player_ui", "canvas", "text_block", "barre_custom", "autre"]
+        },
+        "source_function": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Nom exact de la fonction publique appelee. 'UNKNOWN' est accepte comme valeur mais rend le handoff BLOCKED (voir regles)."
+        },
+        "source_agent": { "enum": ["Gameplay_Programmer", "AI_Programmer", "UNKNOWN"] },
+        "verified_by": { "enum": ["verse-grep", "09_verse_report", "10_editables", "UNKNOWN"] },
+        "notes": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "consumed_function": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "source_agent", "verified_by"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Signature lue dans le digest ou dans le rapport amont ; jamais reconstituee de memoire."
+        },
+        "kind": { "enum": ["function", "event", "editable"] },
+        "source_agent": { "enum": ["Gameplay_Programmer", "AI_Programmer", "UNKNOWN"] },
+        "verified_by": { "enum": ["verse-grep", "09_verse_report", "10_editables", "Verse.ReadFile", "UNKNOWN"] },
+        "notes": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "written_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verse_path", "bytes", "read_back_matches", "status"],
+      "properties": {
+        "verse_path": { "type": "string", "minLength": 1 },
+        "local_file": { "type": "string" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "read_back_matches": { "const": true },
+        "status": { "const": "PASSED" }
+      },
+      "description": "Preuve verse-write : ecriture puis relecture par Verse.ReadFile, historique _verse_written.json. read_back_matches false interdit toute compilation."
+    },
+    "verse_build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report", "status", "session", "diagnostics_count", "error_diagnostics", "success_line"],
+      "description": "La preuve de compilation. Un handoff UI_Programmer n'est jamais livrable avec un build non PASSED, une session autre que Disconnected ou sans ligne de succes recente : dans ce cas le handoff est BLOCKED.",
+      "properties": {
+        "report": { "const": "09_verse_report.json" },
+        "status": { "const": "PASSED" },
+        "session": { "const": "Disconnected" },
+        "diagnostics_count": { "type": "integer", "minimum": 0 },
+        "error_diagnostics": { "type": "array", "maxItems": 0 },
+        "success_line": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Ligne VerseBuild recente reprise verbatim du log (voir skill/tool-output/verse-scan-et-verse-write.md, section 4 : lignes localisees, gardee des builds precedents). Comparer l horodatage a celui de l appel."
+        },
+        "timestamp": { "type": "string" },
+        "scope": { "type": "string" }
+      }
+    },
+    "editables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report", "status", "editable_count", "actor_references", "parameters", "without_target", "mapping"],
+      "properties": {
+        "report": { "const": "10_editables.json" },
+        "status": { "enum": ["PASSED", "FAILED"] },
+        "editable_count": { "type": "integer", "minimum": 0 },
+        "actor_references": { "type": "integer", "minimum": 0 },
+        "parameters": { "type": "integer", "minimum": 0 },
+        "without_target": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "wiring_errors": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "mapping": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "live": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Bloc live du rapport : custom_verse_modules, game_manager_created, tool_result (NO_VERSE_STAGED est un etat legitime documente, pas une invention de succes)."
+        },
+        "scope": { "type": "string", "minLength": 1 }
+      }
+    },
+    "wiring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["report", "status", "wired", "errors", "not_placed", "scope"],
+      "properties": {
+        "report": { "const": "08_wiring_report.json" },
+        "status": { "enum": ["PASSED", "FAILED"] },
+        "error_count": { "type": "integer", "minimum": 0 },
+        "wired": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "errors": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "not_placed": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Doit dire ce qui n'est PAS couvert : cablage par canal (GameplayTagContainer) et references @editable hors --apply."
+        }
+      }
+    }
+  }
+}

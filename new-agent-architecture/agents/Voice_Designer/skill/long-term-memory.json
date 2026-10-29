@@ -1,0 +1,140 @@
+{
+  "$id": "uefn.longterm.Voice_Designer.v1",
+  "agent": "Voice_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des constantes de pipeline, des contrats de fichiers, un lexique de statuts, des pieges de direction de voix et des chiffres reels observes sur une run.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "studio": "21 agents : 1 Producteur Frontier (hub) + 20 specialistes Flash, execution strictement sequentielle, un seul agent actif a la fois, filesystem comme bus, PC 16 Go, Epic AI Megajam 2026.",
+    "position": "agent 20, pole Audio, phase POLISH, artefact 13_voice.json, acces_mcp none, paquet leger (ni outils.md ni tool-output).",
+    "amont": ["Audio_Director (17, 13_audio_direction.json)", "Writer_Scenariste (07, 01_scripts.json)", "Narrative_Designer (06, 01_lore.json)", "01_gdd.json / 04_devices.json (locuteurs reels)"],
+    "aval": ["Audio_Director (17, mix)", "UI_Programmer (14, sous-titres)", "AI_Programmer (13, PNJ parlant)", "Producer_Orchestrator"],
+    "frontiere_de_role": "casting, intentions de lecture, diction, plan de sous-titrage. Pas de texte (07), pas de musique (18), pas de SFX (19), pas de mix (17), pas d'implementation (12/13/14).",
+    "regles_de_pipeline": [
+      "Seul le Producteur parle a l'humain ; mes gaps passent par lui (15 max par phase).",
+      "Un agent ne valide pas son propre JSON : validateur Python + juge externe (WP4 p.20).",
+      "Black box : le payload porte le resultat, jamais le raisonnement (WP3 p.18).",
+      "Aucune coordonnee, aucun /Game/, aucun PPID_/PID_ final : l'intention s'ecrit, la resolution est cote Technique (WP2 p.9).",
+      "Un champ de gate ne recoit que PENDING.",
+      "Donnee manquante = UNKNOWN, jamais une valeur plausible.",
+      "Le ton de voix s'apprend par few-shot (conforme / hors ton), pas par un schema (03-parametrage-agents.md section 4).",
+      "Stable dans le dossier agent, transitoire dehors (WP3 p.61)."
+    ],
+    "gates_hitl": ["#1 brief creatif", "#2 GDD", "#3 architecture technique", "#4 avant toute ecriture destructive dans Unreal"],
+    "budget": "handoff <= 4000 tokens ; summary_short <= 200 caracteres ; 1 a 3 exemples injectes maximum."
+  },
+  "contrats_fichiers": {
+    "13_voice.json": "mon livrable, sous enveloppe uefn.handoff.v1 ; distribution, locuteurs, intentions_de_lecture, repere_diction, signalitique_in_world, regles_de_sous_titrage, support_lecture, abstentions.",
+    "01_scripts.json": "lines de texte avec cle stable (ui_hud.*, ui_menus.*, ui_panneaux.*, voix.*, sous_titres.*), destination, locuteur, flag doublable. Je reference la cle, je ne recopie jamais le texte.",
+    "01_gdd.json": "seule autorite sur l'existence d'un locuteur : required_devices, verse_modules, zones, notes. Un casting doit citer artefact + champ.",
+    "04_devices.json": "inventaire des devices poses : si un npc_editor ou un device audio apparait, le casting peut s'ouvrir pour ce locuteur.",
+    "13_audio_direction.json": "couche Voice du brief : style, langues, budget, presence ou absence de voix. Son absence me met en BLOCKED.",
+    "10_editables.json / 08_wiring_report.json": "preuve d'existence d'une UI cablee : sans editable ni binding, les regles de sous-titrage restent CONDITIONNELLES.",
+    "tech/mcp-inventory.json": "jamais appele par moi : un agent Audio de conception n'a pas d'acces MCP ; je prescrit la commande a Lead_Programmer."
+  },
+  "lexique_statuts": {
+    "AUCUNE": "distribution sans voix : valeur legale, a condition d'etre motivee par des preuves tracables (device unique, 0 PNJ, aucune mecanique annexe).",
+    "PARTIELLE": "certaines lignes doublables seulement distributees ; les autres restent NON_EMISE ou UNKNOWN avec motif.",
+    "COMPLETE": "toutes les lignes doublables de l'amont sont distributees ; impossible sans 01_scripts.json emis.",
+    "NON_EMISE": "cle prevue par un artefact amont qui n'a jamais ete emis pendant la run : on la cite, on ne la fait pas exister.",
+    "EXISTANTE": "cle portee par un artefact reellement emis, avec preuve artefact + champ.",
+    "LECTURE_SILENCIEUSE": "le texte se lit a l'ecran, il n'est pas dit : decision de design, pas une carence.",
+    "LUE_PAS_ENTENDUE": "mode de reception de la signalitique in-world quand aucun haut-parleur ni Verse n'existe.",
+    "NON_VERIFYE": "support de lecture non verifie : aucun device audio recherche ni pose ; la commande de verification est prescrite.",
+    "VERIFIE_PRESENT / VERIFIE_ABSENT": " seuls statuts autorisant une affirmation sur le support ; exigent une preuve de recherche.",
+    "RESERVE": "creneau budgete pour l'aval, jamais une mesure de duree.",
+    "NON_MESUREE": "duree inexistante : rien n'a ete enregistre.",
+    "NO_VERSE_STAGED": "aucun module Verse ni editable stage : donc aucun declencheur de dialogue possible.",
+    "CONDITIONNELLE": "regles redigees pour l'aval mais non applicables tant que l'UI n'existe pas.",
+    "UNKNOWN": "trou de donnee : remonte en gap au Producteur.",
+    "PENDING": "seule valeur que j'ecris dans un champ de gate."
+  },
+  "pieges": [
+    {
+      "signe": "La scene est contemplative mais le livrable aligne 4 personnages castes avec tessiture et accent.",
+      "cause": "Confondre 'une place s'appelle Memorial Park, donc quelqu'un doit parler' avec un locuteur declare dans le pipeline.",
+      "conduite": "distribution AUCUNE + preuves (1 device = player_spawner_device, verse_modules vide, decision 4). locuteurs = []. Caster un absent est la premiere interdiction du role."
+    },
+    {
+      "signe": "Une intention de lecture recopie le texte de la ligne et le reformule 'pour la voix'.",
+      "cause": "Grignotage du role de Writer_Scenariste (07) ; la cle de chaine devient une propriete de l'agent 20.",
+      "conduite": "reference par cle uniquement ; si la ligne ne tient pas a l'oral, retour a 07 via le Producteur. Le pattern du schema rejette toute cle qui n'est pas une cle de chaine."
+    },
+    {
+      "signe": "Une duree de replique est ecrite '3.4 s' et presentee comme mesuree.",
+      "cause": "Aucune prise n'existe et la session play-in-client n'etait pas connectee : le chiffre vient d'une hypothese.",
+      "conduite": "valeur RESERVE ou UNKNOWN, statut NON_MESUREE ou A_RECALER_APRES_ENREGISTREMENT. Le type du schema interdit un nombre."
+    },
+    {
+      "signe": "'Voix posee et entendue en session' ou 'ca sonne bien au play-in-client'.",
+      "cause": "Revendication d'ecoute sans session connectee ni device audio verifie.",
+      "conduite": "support_lecture.statut = NON_VERIFYE + commande search-playsets --type PID (famille audio) prescrite + nb reel de requetes audio. Jamais une affirmation de pose."
+    },
+    {
+      "signe": "Les regles de sous-titrage sont ACTIVE alors que la scene n'a aucun editable.",
+      "cause": "Promesse d'accessibilite non implementable ; l'amont UI (08/14) n'a rien dimensionne.",
+      "conduite": "statut CONDITIONNELLE + preuve_existence_ui citant 10_editables.json (editable_count 0) et 08_wiring_report.json (wired = [])."
+    },
+    {
+      "signe": "Le ton de voix est decrit par des adjectifs ('chaleureuse, premium, impactante').",
+      "cause": "Aucun adjectif n'est cochable : ni validateur, ni juge, ni acteur ne sait quoi faire.",
+      "conduite": "paire few-shot lecture_conforme / lecture_hors_ton + motif_hors_ton rattache a 00_vision.json et 01_lore.json ; registre herite de l'amont (source_amont obligatoire)."
+    },
+    {
+      "signe": "Le plan de voix prescrit des fichiers .ogg, des triggers Verse ou un niveau LUFS.",
+      "cause": "Le role deborde sur 17 (mix), 12/13/14 (implementation) et sur la production audio.",
+      "conduite": "abstentions motivees avec renvoi ; le handoff porte des decisions de lecture, pas des consignes d'ecriture ou de mix."
+    },
+    {
+      "signe": "Un device audio est impose par son PID_ ou un chemin /Game/ dans le casting.",
+      "cause": "Un agent du pole Audio sans acces MCP ne peut pas connaitre le catalogue ; l'asset illegal fait echouer la validation de l'ile.",
+      "conduite": "device_associe = label cite par l'amont, jamais un chemin ; le pattern du schema refuse /Game/, PPID_ et PID_."
+    },
+    {
+      "signe": "Le JSON declare 12 repliques alors que 01_scripts.json n'a jamais ete emis.",
+      "cause": "L'amont est suppose plutot que lu ; le nb_repliques_a_distribuer devient une fiction.",
+      "conduite": "compter dans les artefacts existants ; sinon 0 et gap au Producteur ('les lignes voix restent NON_REDIGE')."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le paquet du pole Audio est LEGER : pas d'outils.md, pas de tool-output, acces_mcp none (06-structure-dossier-agent.md).",
+    "Un plan de voix vide et justifie est un livrable qui passe l'acceptance : l'absence de locuteur est un fait du pipeline, pas un manque d'effort.",
+    "Le silence d'une scene contemplative est une decision de design : il s'ecrit dans signalitique_in_world, pas dans un commentaire.",
+    "Le sous-titrage est conditionne a la preuve d'existence d'une UI ; l'accessibilite ne se promet pas sans objet implmentable.",
+    "Le ton ne tient pas dans un schema : deux variantes d'intention de lecture valent mieux qu'un champ 'emotion'.",
+    "Toute duree est RESERVE ou UNKNOWN tant qu'aucune prise n'existe et que la session n'est pas connectee.",
+    "Le support de lecture se declare avec la commande qui le verifierait : prescrire, ne pas appeler.",
+    "Casser le silence, creer un PNJ parlant ou activer une file de sous-titres = decisions d'amont, arbitrees aux gates par le Producteur."
+  ],
+  "chiffres_de_reference": {
+    "note": "Chiffres reels observes sur le run Corpo Plaza / Memorial Park (ws_corpo_plaza + journal 2026-10-24-corpo-plaza). Ce sont des faits de pipeline, pas des cibles.",
+    "devices_declares_dans_01_gdd": 1,
+    "unique_device": "Spawner_Plaza_01, device_class player_spawner_device",
+    "pnj_concus_ou_poses": 0,
+    "zones": 9,
+    "connects_to": 12,
+    "assets_demandes": 22,
+    "assets_de_famille_audio": 0,
+    "requetes_catalogue": 49,
+    "requetes_catalogue_famille_audio": 0,
+    "verse_modules": 0,
+    "etat_editables": "NO_VERSE_STAGED",
+    "editable_count": 0,
+    "wiring_wired": 0,
+    "taille_10_editables_json_octets": 605,
+    "taille_08_wiring_report_json_octets": 268,
+    "timeline_sec": [0, 1, 5],
+    "grille_declaree_tiles": [23, 23, 1],
+    "grille_reelle_interieure_tiles": "21 x 21",
+    "gabarit_tile_cm": "512 x 512 x 384 (dalle de sol 512 x 512 x 32)",
+    "niveau": "claudetest",
+    "session_play_in_client": "NON_CONNECTEE a la redaction du journal",
+    "artefacts_jamais_emis": ["13_voice.json", "01_scripts.json", "13_audio_direction.json", "le mot 'audio' n'apparait nulle part dans le journal"],
+    "memoire_vive_pc_go": 16,
+    "gates_hitl": 4,
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "abstentions_minimum": 3,
+    "preuves_distribution_minimum": 1,
+    "exemples_injectes_max": 3
+  }
+}

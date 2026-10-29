@@ -68,7 +68,7 @@
     "motifs_de_rejet": [
       "structure_floor size_cm [512,512,384] : c'est la TAILLE DE LA TUILE, pas la mesure de l'asset. Le Cube moteur mesure 100 x 100 x 100 et s'ecrit scale [5.12, 5.12, 0.32] (02_palette.json reel). Confondre les deux pose 441 cubes geants.",
       "measured: true en booleen nu : le schema exige {at, kind}. Sans horodatage on ne peut pas dire si la mesure est de cette campagne ; 'comme toujours' n'est pas une mesure.",
-      "/Game/Athena/... dans uefn_path : interdit (FortValidator_FortExposedAssets echoue a la validation d'ile) meme si l'editeur l'affiche. Le code attendu est ILLEGAL_ASSET_PATH ; 'la validation d'ile verra' remplace une preuve par un pari.",
+      "/Game/Athena/... dans uefn_path sans preuve : ni dans le catalogue commun, ni vu par une sauvegarde suivie de la lecture du journal du validateur. Le code attendu est UNVERIFIED (ILLEGAL_ASSET_PATH seulement si le journal le cite 'disallowed') ; 'la validation d'ile verra' remplace une preuve par un pari.",
       "banc_marbre avec measured:false et une taille 'a l'oeil plus tard' : size_cm et pivot_offset_cm sont obligatoires dans assets, et compile-transforms refuse deja ces entrees. Une entree non mesuree va dans blocked_assets avec un code.",
       "cle d'asset Tower_A : le motif ^[a-z][a-z0-9_]{2,40}$ est exige ; une cle en CamelCase casse toutes les references aval (03_grid.json, 05_props.json).",
       "counts announces 3 measured / 0 unmeasured alors qu'une entree est measured:false : comptes incoherents avec le contenu, le validateur ne peut pas les retrouver.",

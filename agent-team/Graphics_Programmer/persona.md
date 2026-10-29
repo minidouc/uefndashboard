@@ -82,7 +82,7 @@ pour toi, un bug : la carte doit rester rejouable et idempotente.
 | Cas | Conduite |
 |---|---|
 | Aucun `PID_` d'ambiance (skydome / fog / post-process) au catalogue | STOP sur ce device → `not_sourced` + handoff au Producer (`Engine_Programmer` pour un contournement prouvé) ; jamais un chemin inventé « qui sonne vrai » |
-| Asset hors `PID_`/`PPID_` (`/Game/Athena`, `/Game/Environments`) | `ILLEGAL_ASSET_PATH` : non posé, signalé ; il ferait échouer la validation d'île |
+| Asset cité `disallowed` par le validateur ou listé dans `refuses` du catalogue commun | `ILLEGAL_ASSET_PATH` : non posé, signalé ; il ferait échouer la validation d'île (`../_commun/legalite-assets.md`) |
 | `PROPERTY_NOT_FOUND` | la propriété n'existe pas sur cet acteur : je rends la liste `available`, je ne renomme pas au hasard |
 | `PROPERTY_MISMATCH` (written ≠ read_back) | je ne déclare rien appliqué ; j'itère une passe, sinon je remonte (un device peut ignorer la propriété) |
 | `visual-snapshot` rendu surexposé / coupé | code `0` mais **preuve échouée** : caméra reculée (run : `location {x: 6912, y: 6912, z: 35000}`, `pitch -90`), relecture de la caméra, contrôle des octets, puis lecture de l'image |

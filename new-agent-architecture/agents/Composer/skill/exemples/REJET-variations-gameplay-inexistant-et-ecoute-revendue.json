@@ -1,0 +1,80 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-018",
+  "from": "Composer",
+  "to": ["Producer_Orchestrator"],
+  "artifact": "13_music.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-18",
+  "summary_short": "OST complet de Corpo Plaza : musique epique en boucle partout, theme de combat au premier contact ennemi, le tout verifie et entendu en session play-in-client.",
+  "payload": {
+    "direction_recue": {
+      "source_artefact": "13_audio_direction.json",
+      "statut_source": "RECU",
+      "contrainte_contemplative": "aucune : on peut mettre du combat et de la quete puisqu'il y a de la musique dynamique.",
+      "ambiances": [],
+      "signature": "musique epique partout",
+      "faisabilite": "VERIFIE"
+    },
+    "pieces": [
+      {
+        "id": "MUS_ACTION",
+        "destination": { "kind": "coordonnee", "valeur": "3389.81, 6897.64, 128.0" },
+        "forme": "poursuite tendue",
+        "tempo_bpm": { "bpm": "epique et planant" },
+        "tonalite": "dramatique",
+        "instrumentation": ["orchestre"],
+        "duree_sec": null,
+        "boucle": true,
+        "points_entree_sortie": { "entree_sec": 0 },
+        "statut": "PARTITION_LIVREE"
+      },
+      {
+        "id": "MUS_BOUCLE_GLOBALE",
+        "destination": { "kind": "zone_id", "valeur": "Zone_Center" },
+        "forme": "boucle permanente sur toute l'ile, energetique et heroique",
+        "tempo_bpm": { "bpm": 130 },
+        "tonalite": "mode majeur brillant",
+        "instrumentation": ["synthe", "percussion de combat"],
+        "duree_sec": 99999,
+        "boucle": true,
+        "points_entree_sortie": { "entree_sec": 0, "sortie_sec": 99999 },
+        "statut": "PARTITION_LIVREE"
+      }
+    ],
+    "variations": [
+      {
+        "id": "VAR_COMBAT",
+        "piece_ref": "MUS_ACTION",
+        "declencheur": { "kind": "EVENEMENT_GAMEPLAY", "reference": "au premier contact avec un ennemi" },
+        "nature": "entree de la couche de combat."
+      }
+    ],
+    "silences_voulus": [],
+    "support_lecture": {
+      "statut": "VERIFIE",
+      "device_audio_candidat": "PID_AudioPlayer_Music_01",
+      "note": "musique posee dans le niveau et entendue pendant la session play-in-client : verifie a l'oree."
+    },
+    "hors_perimetre": []
+  },
+  "constraints": {
+    "acces_mcp": "read_write",
+    "must_preserve": [],
+    "forbidden": []
+  },
+  "acceptance": ["c_est_epique", "musique_entendue_en_session", "support_verifie_a_loreille"],
+  "next_step_hint": "Tout est valide : publier l'ile avec la musique et les tracks de combat.",
+  "context_budget_tokens": 6200,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - 13_music.json REJETE par le validateur Python et par l'Audio_Director (17)",
+    "motifs_de_rejet": [
+      "MUS_ACTION : declencheur 'premier contact ennemi' = evenement de gameplay inexistant (decision utilisateur 4 : aucun combat, aucune quete, aucune economie). Une variation dependant d'un trigger absent est refusee ; kind EVENEMENT_GAMEPLAY n'est pas dans l'enum.",
+      "MUS_ACTION : tempo_bpm.bpm = 'epique et planant' = adjectifs, pas un nombre avec unite ; duree_sec = null = piste inmixable sans duree bornee ; points_entree_sortie sans sortie_sec ; destination.kind 'coordonnee' avec un triplet XYZ interdit (seuls zone_id et actor_label sont admis).",
+      "MUS_BOUCLE_GLOBALE : boucle permanente sur toute l'ile = contredit le silence voulu et l'interdit 'boucle globale permanente' ; duree 99999 s hors borne max 600.",
+      "support_lecture.statut = 'VERIFIE' avec PID_AudioPlayer_Music_01 invente : aucune recherche search-playsets --type PID sur la famille audio n'a ete faite (49 requetes, 0 audio) ; vers_modules vide et NO_VERSE_STAGED ; un PID final ne s'impose pas.",
+      "'entendue pendant la session play-in-client' est FAUX : la section 20 du journal dit que la session n'etait pas connectee a la redaction ; rien de ce qui s'entend n'a jamais ete entendu.",
+      "direction_recue statut RECU alors que 13_audio_direction.json n'existe pas dans le run ; contrainte_contemplative niee ; hors_perimetre et silences_voulus vides : empietement sur le combat et sur le mix de l'Audio_Director.",
+      "constraints.acces_mcp = 'read_write' alors que le const exige 'none' ; context_budget_tokens 6200 > 4000 ; acceptance hors enum ; summary_short revendique une ecoute et une verification."
+    ]
+  }
+}

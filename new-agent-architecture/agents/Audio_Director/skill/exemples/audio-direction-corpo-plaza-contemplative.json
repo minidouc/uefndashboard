@@ -1,0 +1,47 @@
+{
+ "$schema": "uefn.handoff.v1",
+ "handoff_id": "H-POLISH-017",
+ "from": "Audio_Director",
+ "to": ["Composer", "Sound_Designer", "Voice_Designer", "Graphics_Programmer", "Producer_Orchestrator"],
+ "artifact": "13_audio_direction.json",
+ "mission_ref": "M-CORPOPLAZA-POLISH-17",
+ "summary_short": "Direction sonore contemplative : 3 couches, signature neon positionnelle, silence contractuel, 0 combat, 0 voix, faisabilite audio A_VERIFIER.",
+ "payload": {
+  "reference_vision": {"source": "00_vision.json > payload.identite_sonore (agent 01), absent du workspace", "statut_source": "vision_absente_reconstruite", "ambiances_imposees": ["souffle de ville lointain", "neon qui bourdonne"], "signature_imposee": "place presque vide, positionnel et rare", "place_du_silence": "le silence est la matiere de la promenade", "interdits_sonores_repris": ["aucune musique globale"]},
+  "palette_sonore": {"layers": [
+   {"id": "LAY-VOI", "role": "voix", "intention": "aucune voix, aucun PNJ", "densite": "nulle", "priorite_mix": 1, "statut": "NON_POSE", "conformite_decision": "conforme", "rendu_par": "Voice_Designer"},
+   {"id": "LAY-SIG", "role": "signature", "intention": "neon aux deux enseignes", "densite": "ponctuelle", "priorite_mix": 2, "statut": "NON_POSE", "conformite_decision": "conforme", "rendu_par": "Sound_Designer"},
+   {"id": "LAY-AMB", "role": "ambience", "intention": "ville lointaine, source nulle", "densite": "continue", "priorite_mix": 3, "statut": "NON_POSE", "conformite_decision": "conforme", "rendu_par": "Sound_Designer"}
+  ]},
+  "cartographie_par_zone": [
+   {"rattachement_type": "zone_id", "rattachement": "Zone_West", "intention_sonore": "le neon passe avant le souffle", "layers_actifs": ["LAY-AMB", "LAY-SIG"], "volume_relatif": "secondaire", "statut": "NON_POSE"},
+   {"rattachement_type": "actor_label", "rattachement": "Spawner_Plaza_01", "intention_sonore": "aucun impact a l'apparition", "layers_actifs": ["LAY-AMB"], "volume_relatif": "nul", "statut": "UNKNOWN"}
+  ],
+  "regles_de_mix": {"ordre_de_priorite": ["LAY-VOI", "LAY-SIG", "LAY-AMB"], "masquage": [{"dominant": "LAY-AMB", "masque": "LAY-SIG", "regle": "le souffle ne couvre pas le neon", "statut": "UNKNOWN"}], "silence_contractuel": "rien en boucle hors la ville lointaine", "declencheurs_mecaniques": []},
+  "interdits": ["aucune musique d'action", "aucun SFX d'arme", "aucune voix de narrateur", "aucune boucle globale"],
+  "mesures": [
+   {"id": "M1", "objet": "couches actives", "valeur": 3, "unite": "layer", "statut_preuve": "mesure", "moyen_preuve": "comptage des ids"},
+   {"id": "M2", "objet": "zones couvertes", "valeur": "2 sur 9", "unite": "part", "statut_preuve": "reserve"},
+   {"id": "M3", "objet": "niveau global", "valeur": "UNKNOWN", "unite": "relatif", "statut_preuve": "UNKNOWN"}
+  ],
+  "faisabilite_creatif": {"statut_global": "A_VERIFIER", "requetes_audio_menees": 0, "famille_assets_audio": "UNKNOWN (49 requetes, 0 audio)", "piste_device": {"nom": "Audio Player", "provenance": "spec agent 11", "statut": "A_VERIFIER"}, "commande_verification": "search-playsets --query \"audio\" --type PID --max 20", "consequence_si_introuvable": "polish declare hors perimetre"},
+  "abstentions_assumees": [
+   {"objet": "mix final", "motif": "audition sans session connectee impossible", "statut": "UNKNOWN"},
+   {"objet": "adaptive audio", "motif": "suppose un Verse reactif, NO_VERSE_STAGED", "statut": "NON_POSE"}
+  ],
+  "gate_hitl": {"numero": 4, "statut": "PENDING", "valide_par": "UNKNOWN"}
+ },
+ "constraints": {"acces_mcp": "none", "must_preserve": ["scene contemplative : 0 combat, 0 quete, 0 mecanique annexe", "rattachement zone_id ou actor_label reel"], "forbidden": ["aucune coordonnee", "aucun PPID_ final", "aucun niveau absolu"], "must_ask_producer": ["Audio Player recherche avant tout polish ?"], "hors_perimetre_run": ["le mot audio n'apparait pas dans le journal"]},
+ "acceptance": ["layers_count_3_to_6", "each_layer_has_mix_priority_1_to_5", "each_layer_has_proof_status", "priority_order_lists_every_layer_id", "every_intention_attached_to_gdd_zone_id_or_existing_actor_label", "zero_intention_attached_to_coordinates", "every_mesure_has_proof_status", "no_absolute_db_or_loudness_claim", "zero_action_music_layer", "zero_combat_or_quest_sfx", "no_mechanical_trigger_declared", "audio_asset_faisabilite_marked_a_verifier", "verification_command_written_for_unverified_device", "no_final_ppid_or_pid_imposed", "assumed_abstentions_listed_with_motif", "vision_sonore_source_declared_or_reconstructed", "no_mcp_call_acces_none", "hitl_gate_statut_pending_only", "summary_short_max_200_chars"],
+ "golden_example_ref": "skill/exemples/audio-direction-corpo-plaza-contemplative.json",
+ "next_step_hint": "Composer (18) et Sound_Designer (19) prennent LAY-SIG et LAY-AMB.",
+ "context_budget_tokens": 4000,
+ "exemple_annotations": {
+  "role": "GOLDEN - forme attendue de 13_audio_direction.json",
+  "source": "RECONSTRUCTION : l'artefact n'a jamais ete emis, la run s'est arretee avant le polish. Rebati depuis le journal (s2 decision 4, s17 non-fait, s20 honnetete) et 01_gdd.json (9 zones, 12 connects_to, Spawner_Plaza_01).",
+  "tronque": "pour tenir sous 5 Ko : 2 zones sur 9, 3 couches au lieu de 4 (LAY-MUS omis), ni emotions_cibles ni co_dependances, 2 abstentions. Couvert par M2 en statut reserve.",
+  "criteres_revendiques": "19 criteres sur 20, aucun retire pour la troncature : les 3 couches portent priorite_mix (1,2,3) et statut de preuve, ordre_de_priorite cite les 3 ids, M1/M2/M3 portent statut_preuve, interdits couvrent musique d'action et SFX de combat, declencheurs_mecaniques [], faisabilite A_VERIFIER avec sa commande, aucun PPID_ ni PID_ dans le payload (verifie : 0 occurrence), 2 abstentions motivees, reference_vision.statut_source = vision_absente_reconstruite, acces_mcp none, gate 4 PENDING, summary_short 142 caracteres.",
+  "critere_omis_et_why": "zero_voice_layer_without_npc_programmed reste hors liste, et la raison merite l'arbitrage du Producteur : le golden declare la couche LAY-VOI avec role 'voix', densite 'nulle', statut 'NON_POSE' et intention 'aucune voix, aucun PNJ'. Lecture budget (un role cite avec son etat vide) -> le critere tient. Lecture litterale (aucune entree role==voix tant qu'aucun PNJ n'est programme) -> le critere echoue. Le validateur code doit trancher : tester role=='voix' AND densite!='nulle' AND statut!='NON_POSE', sinon le golden doit supprimer la couche. Je n'ai pas revendique le critere plutot que de choisir a la place du code.",
+  "pourquoi_il_passe": ["zone_id ou actor_label, zero coordonnee", "0 requete audio : A_VERIFIER et commande citee sans execution", "declencheurs vide, 0 combat, 0 voix ; M1 seule valeur en statut mesure"]
+ }
+}

@@ -1,0 +1,59 @@
+{
+"$schema":"uefn.handoff.v1",
+"handoff_id":"H-POLISH-019",
+"from":"Sound_Designer",
+"to":["Audio_Director","Producer_Orchestrator","Gameplay_Programmer"],
+"artifact":"13_sfx.json",
+"mission_ref":"M-CORPOPLAZA-POLISH-01",
+"summary_short":"4 evenements diegetiques NON_POSE sur objets reels, 4 abstentions, aucun SFX d'etat.",
+"payload":{
+ "direction_recue":{"artefat_amont":"13_audio_direction.json","statut_amont":"absent","identite_sonore_de":"00_vision.identite_sonore","perimetre_cadrage":"scene contemplative : ni combat, ni quete, ni mecanique."},
+ "evenements":[
+  {"id":"SFX-01","nom":"souffle_place","declencheur":"ambiance_continue","source":{"objet":"air du bassin central","artefat_prouve":"01_gdd.json","statut_ref":"present"},"rattachement":{"type":"zone_id","valeur":"Zone_Center"},"forme":{"bande":"large","enveloppe":"tres_lente","contenu":"bruit_filtre"},"portee":{"type":"globale","echelle":"toute la scene"},"variantes":{"nombre":2,"rotation":"anti-boucle","support":"non_verifie"},"statut":"NON_POSE","motif_rattachement":"seul emetteur continu : l'air du plateau."},
+  {"id":"SFX-02","nom":"bourdon_neon_koi","declencheur":"presence_objet","source":{"objet":"enseigne poisson neon","artefat_prouve":"05_props.json","statut_ref":"present","precision":"holo non reproduit (S20)"},"rattachement":{"type":"actor_label","valeur":"Koi_Holo_Orange"},"forme":{"bande":"haute","enveloppe":"soutenu","contenu":"tonal_pur"},"portee":{"type":"directionnelle","echelle":"anneau est"},"variantes":{"nombre":2,"rotation":"deux timbres","support":"non_verifie"},"statut":"NON_POSE","motif_rattachement":"enseigne emissive posee : son electrique, pas un chant."},
+  {"id":"SFX-03","nom":"pas_sur_dalles","declencheur":"circulation_libre","source":{"objet":"plateforme de dalles","artefat_prouve":"03_grid.json","statut_ref":"present"},"rattachement":{"type":"zone_id","valeur":"Zone_South"},"forme":{"bande":"mediane","enveloppe":"franche","contenu":"transitoire"},"portee":{"type":"ponctuelle","echelle":"axes radiaux sud"},"variantes":{"nombre":4,"rotation":"quatre impacts","support":"non_verifie"},"statut":"NON_POSE","motif_rattachement":"sol reel = plateau de dalles, pas un anneau."},
+  {"id":"SFX-04","nom":"masse_tour_nord","declencheur":"apparition_joueur","source":{"objet":"tour dominante nord","artefat_prouve":"05_props.json","statut_ref":"present","precision":"Tower_01 a Tower_16"},"rattachement":{"type":"zone_id","valeur":"Zone_North"},"forme":{"bande":"basse","enveloppe":"lente","contenu":"couches"},"portee":{"type":"directionnelle","echelle":"du spawner au nord"},"variantes":{"nombre":1,"rotation":"couche unique","support":"non_verifie"},"statut":"NON_POSE","motif_rattachement":"a 0 s le joueur apparait au sud, face a la tour."}
+ ],
+ "valeurs_quantitatives":[
+  {"grandeur":"cote_dalle","valeur":512,"unite":"cm","statut":"mesure","preuve":"tile_size_cm","artefat_mesure":"03_grid.json"},
+  {"grandeur":"niveau_ambiance","valeur":35,"unite":"dB","statut":"reserve","preuve":"session jamais connectee (S20)"},
+  {"grandeur":"duree_boucle","valeur":"UNKNOWN","unite":"s","statut":"UNKNOWN","preuve":"0 requete audio sur 49"}
+ ],
+ "abstentions":[
+  {"categorie":"combat","motif":"aucune mecanique de combat.","verifie_dans":"journal S17"},
+  {"categorie":"recompense","motif":"un jingle mentirait au joueur.","verifie_dans":"journal S2, decision 4"},
+  {"categorie":"ui","motif":"0 editable : aucun bouton a signaler.","verifie_dans":"10_editables.json"},
+  {"categorie":"autre","motif":"aucun SFX d'etat : 01_systems.json ne definit aucun etat et 09_verse_report.json n'expose aucun evenement. NON_IMPOSEE par construction.","verifie_dans":"09_verse_report.json"}
+ ],
+ "support_lecture":{"statut":"jamais_ecoute","raison":"session jamais connectee, rien entendu.","commande_verification":"grep -rin 'audio\\|sfx\\|sound' docs/*journal-complet.md","consequence":"forme prescrite, jamais a l'oreille."}
+},
+"constraints":{
+ "acces_mcp":"none",
+ "must_preserve":["aucun SFX de feedback","chaque nombre porte son statut"],
+ "forbidden":["aucun PID_ impose","aucune coordonnee","aucune ecoute en session"],
+ "preuves_manquantes":["13_audio_direction.json absent","0 requete audio sur 49"],
+ "gate_hitl_attendu":{"numero":4,"statut":"PENDING","motif":"la pose audio releve d'un role technique."}
+},
+"golden_example_ref":"skill/exemples/sfx-ambiance-corpo-plaza-contemplative.json",
+"acceptance":["event_source_prouvee_ou_unknown","quantite_avec_statut_de_preuve","no_sfx_etat_sans_evenement_expose","no_sfx_contre_scene_sans_mecanique","no_coordinate_rattachement","support_lecture_declared","no_session_listen_claim","abstentions_motivees","amont_audio_direction_declare","no_final_pid_or_ppid_imposed","no_mcp_write_claim_in_constraints"],
+"next_step_hint":"Audio_Director (17) : doser les 4 couches ; 12/14 : rien a cabler.",
+"context_budget_tokens":3400,
+"exemple_annotations":{
+ "role":"GOLDEN - 13_sfx.json sur une scene sans mecanique",
+ "source":"Journal S2/S17/S20 et artefacts cites ; 13_sfx.json jamais emis.",
+ "pourquoi_il_passe":["4 entrees NON_POSE sur des objets poses, plus des abstentions motivees","une mesure lue dans un artefact, le reste reserve ou UNKNOWN"],
+ "legende":"NON_POSE = congu, rien de pose. NON_IMPOSEE = etat inexistant.",
+ "regle_de_troncature":"11 criteres sur 11 revendiques : aucun n'a ete retire pour faire rentrer la troncature. Ce qui est tronque, c'est la matiere (4 evenements sur les 4 prevus, 3 valeurs quantitatives, 4 abstentions), pas la liste des criteres.",
+ "criteres_revendiques":["event_source_prouvee_ou_unknown : les 4 evenements portent source.artefat_prouve et statut_ref 'present' (01_gdd.json, 05_props.json x2, 03_grid.json) ; SFX-02 ajoute la precision 'holo non reproduit'",
+ "quantite_avec_statut_de_preuve : 512 cm = 'mesure' avec preuve tile_size_cm lue dans 03_grid.json ; 35 dB = 'reserve' ; duree = 'UNKNOWN' avec motif",
+ "no_sfx_etat_sans_evenement_expose : 01_systems.json ne definit aucun etat, 09_verse_report.json n'expose aucun evenement ; les 4 evenements ont un declencheur diegetique, aucun n'est un etat de jeu",
+ "no_sfx_contre_scene_sans_mecanique : les 4 sources sont des objets poses (air du bassin, enseigne neon, dalle du plateau, tour nord) ; must_preserve porte 'aucun SFX de feedback' ; les abstentions couvrent combat, recompense et ui",
+ "no_coordinate_rattachement : rattachement est un zone_id (Zone_Center, Zone_South, Zone_North, relus dans 01_gdd.json) ou un actor_label (Koi_Holo_Orange, relu dans 05_props.json) ; 0 triplet de coordonnees dans le payload",
+ "support_lecture_declared : support_lecture porte statut, raison, commande_verification et consequence",
+ "no_session_listen_claim : statut 'jamais_ecoute' + raison 'session jamais connectee, rien entendu' ; forbidden porte 'aucune ecoute en session' ; le payload n'affirme aucune ecoute",
+ "abstentions_motivees : 4 abstentions, chacune avec motif et verifie_dans (journal S17, journal S2 decision 4, 10_editables.json, 09_verse_report.json)",
+ "amont_audio_direction_declare : payload.direction_recue nomme 13_audio_direction.json et declare statut_amont 'absent' ; constraints.preuves_manquantes le repete ; next_step_hint renvoie a Audio_Director (17)",
+ "no_final_pid_or_ppid_imposed : 0 occurrence de 'PID_' ni 'PPID_' dans le payload (verifiee par comptage) ; la chaine n'apparait que dans constraints.forbidden, comme interdiction",
+ "no_mcp_write_claim_in_constraints : constraints.acces_mcp = 'none' ; aucun champ de constraints n'affirme une pose dans l'editeur ; gate 4, statut PENDING, motive que la pose releve d'un role technique"]
+}
+}

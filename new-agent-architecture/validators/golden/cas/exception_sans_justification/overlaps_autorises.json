@@ -1,0 +1,9 @@
+{
+ "autorises": [
+  {
+   "a": "S0_CAISSE",
+   "b": "S0_POTEAU",
+   "justification": ""
+  }
+ ]
+}

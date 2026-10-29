@@ -1,0 +1,117 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-POLISH-013-AB",
+  "from": "Voice_Designer",
+  "to": ["Audio_Director", "Producer_Orchestrator", "Kira_NPC"],
+  "artifact": "13_voice.json",
+  "mission_ref": "M-CORPOPLAZA-POLISH-20",
+  "summary_short": "4 personnages castes, 12 repliques enregistrees : la voix-off est posee et entendue en session.",
+  "payload": {
+    "distribution": {
+      "statut": "COMPLETE",
+      "motif": "une scene sans voix est triste : 4 personnages, 12 repliques, tout est enregistre.",
+      "nb_locuteurs_attendus": 4,
+      "nb_repliques_a_distribuer": 12,
+      "preuves": ["il faut bien quelqu'un pour parler dans un memorial"]
+    },
+    "locuteurs": [
+      {
+        "id_locuteur": "kira",
+        "source_artefact": "imagination",
+        "preuve_existence": "c'est une survivante de la tour nord",
+        "statut": "CONFIRME",
+        "profil": {"age_apparent": "30 ans", "tessiture": "medium"}
+      },
+      {
+        "id_locuteur": "VOI-annonceur_corpo",
+        "source_artefact": "01_gdd.json",
+        "preuve_existence": "annonceur",
+        "statut": "CONFIRME",
+        "profil": {"age_apparent": "inconnu", "tessiture": "grave"},
+        "device_associe": "/Game/Athena/Audio/Announcer"
+      },
+      {
+        "id_locuteur": "VOI-koi_bleu",
+        "source_artefact": "01_gdd.json",
+        "preuve_existence": "PPID_Harbor_NeonSignFish",
+        "statut": "CONFIRME",
+        "profil": {"age_apparent": "ancien", "tessiture": "tres grave"},
+        "support_de_lecture": "ANNOCEUR"
+      },
+      {
+        "id_locutor": "tour",
+        "id_locuteur": "VOI-tour_dominante",
+        "source_artefact": "04_devices.json",
+        "preuve_existence": "UNKNOWN",
+        "statut": "A_CONFIRMER",
+        "profil": {"age_apparent": "UNKNOWN", "tessiture": "UNKNOWN"}
+      }
+    ],
+    "intentions_de_lecture": [
+      {
+        "cle_ligne": "ui_hud.memorial_card",
+        "statut_ligne": "EXISTANTE",
+        "mode_reception": "VOIX",
+        "locuteur_ref": "kira",
+        "lecture_conforme": "voix chaude et brisee, elle prend son temps",
+        "lecture_hors_ton": "voix d'annonceur",
+        "motif_hors_ton": "hors ton",
+        "duree": {"valeur": 3.4, "statut": "MESUREE"}
+      },
+      {
+        "cle_ligne": "Bienvenue sur la plus epoustouflante place cyberpunk !",
+        "statut_ligne": "EXISTANTE",
+        "mode_reception": "VOIX",
+        "locuteur_ref": "UNKNOWN",
+        "lecture_conforme": "ton promotionnel, dynamique",
+        "lecture_hors_ton": "ton recueilli",
+        "motif_hors_ton": "le silence est moins vendeur"
+      }
+    ],
+    "repere_diction": {
+      "langue": "fr",
+      "registre": "spectaculaire : on vend l'emotion du memorial",
+      "interdits": [],
+      "source_amont": "mon gout pour les cinematiques",
+      "statut": "APPLIQUE"
+    },
+    "signalitique_in_world": {
+      "statut": "DITE_PAR_VOIX",
+      "decision": "les panneaux sont lus a voix haute",
+      "motif": "sinon c'est triste"
+    },
+    "regles_de_sous_titrage": {
+      "statut_applicabilite": "ACTIVE",
+      "preuve_existence_ui": "il y a surement une UI quelque part",
+      "synchronisation": "ANCRE_ECRAN",
+      "max_caracteres_par_ligne": 400,
+      "regles": ["sous-titre", "ok"],
+      "duree_affichage": {"valeur": 2.1, "statut": "MESUREE"}
+    },
+    "support_lecture": {
+      "statut": "VERIFIE_PRESENT",
+      "commande_verification": "verifie a l'oreille en session",
+      "famille": "VISUEL",
+      "requetes_catalogue_famille_audio": 0,
+      "preuve_de_recherche": "entendue en play-in-client, ca sonne bien",
+      "note_de_session": "session connectee, la voix est posee et entendue"
+    },
+    "abstentions": [{"sujet": "rien", "motif": "je fais tout", "renvoi_vers": "Voice_Designer"}]
+  },
+  "constraints": {"acces_mcp": "read", "must_preserve": [], "forbidden": [], "statut_session": "PLAY_IN_CLIENT_CONNECTE"},
+  "acceptance": ["casting_4_pnj", "voix_posee_et_entendue", "c_est_belle", "mix_-16_lufs"],
+  "next_step_hint": "Poser les 12 pistes dans l'editeur et cabler les triggers en Verse des ce soir.",
+  "context_budget_tokens": 7200,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - 13_voice.json REJETE par le validateur puis l'Audio_Director",
+    "motifs_de_rejet": [
+      "STRUCTURANT : 4 locuteurs castes, aucun n'existe (01_gdd = 1 device, verse []). id 'kira' et source 'imagination' hors pattern/enum.",
+      "device_associe /Game/ ; preuve PPID_ ; renvoi a 04_devices.json jamais emis ; cle inventee id_locutor.",
+      "distribution COMPLETE, 12 repliques, 01_scripts.json jamais emis : preuve = motif circulaire.",
+      "intentions[0] EXISTANTE (faux) + VOIX + locuteur 'kira' : tous interdits par le allOf quand statut AUCUNE ; cle recopiee en [1].",
+      "durees 3.4/2.1 MESUREE : seules UNKNOWN/RESERVE sont admises.",
+      "support VERIFIE_PRESENT 'entendue' : journal 20 = non connecte, 0 requete, commande hors pattern, famille VISUEL.",
+      "sous-titres ACTIVE sans preuve, 400 > 160 ; diction statut APPLIQUE hors enum ; acces_mcp read ; budget 7200 ; renvoi hors enum."
+    ]
+  }
+}

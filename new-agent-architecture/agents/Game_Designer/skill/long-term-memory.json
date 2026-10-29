@@ -1,0 +1,140 @@
+{
+  "$id": "uefn.longterm.Game_Designer.v1",
+  "agent": "Game_Designer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des faits de pipeline sources, le contrat de fichiers que je recois et que je rends, le lexique des statuts reels et les pieges de conception de boucle de gameplay.",
+  "langue": "fr",
+  "constantes_pipeline": {
+    "position": "agent 02, pole Design, phase CADRAGE, deuxieme appele apres Creative_Director",
+    "modele": "Flash ; un seul agent actif a la fois sur un PC de 16 Go, execution sequentielle pilotee par le hub",
+    "artifact": "01_gdd.json",
+    "amont": "00_vision.json (agent 01) + brief valide par le gate HITL #1",
+    "aval": "System_Designer (03), Economy_Designer (04), Mission_Content_Designer (05), Narrative_Designer (06), UX_UI_Designer (08), Level_Designer (09), Producer_Orchestrator",
+    "chaine": "Creative_Director -> Game_Designer (01_gdd.json) -> Level_Designer (03_grid.json) -> Physics_Programmer (04_devices.json) -> programmeurs Verse",
+    "role_pivot": "l'un des 3 pivots du studio (avec Creative_Director et Lead_Programmer) : ma sortie passe par un etage Generator-Critic (WP1 p.25) AVANT presentation au gate HITL #2",
+    "enveloppe": "uefn.handoff.v1, output only, summary_short <= 200 caracteres, context_budget_tokens <= 4000",
+    "gates_hitl": [
+      "#1 brief creatif (portable par Creative_Director)",
+      "#2 boucle de gameplay et GDD (le mien)",
+      "#3 architecture technique",
+      "#4 avant toute ecriture destructive dans Unreal"
+    ],
+    "regles_de_pipeline": [
+      "Seul le Producteur parle a l'humain ; mes gaps partent en questions (15 max par phase).",
+      "Un agent ne valide pas son propre JSON : validateur Python + critique externe (WP4 p.20).",
+      "Aucune coordonnee calculee par un modele : le GDD ecrit des indices de tuiles, le Python chiffre (WP2 p.9).",
+      "Le dossier d'agent ne contient que du stable ; l'etat de projet reste hors du paquet (WP3 p.61).",
+      "Un GDD rejete 3 fois s'arrete et remonte : pas de quatrieme passe automatique."
+    ]
+  },
+  "contrats_outils": {
+    "note": "Ce que je recois et ce que je rends, en fichiers. Je n'appelle ni MCP ni CLI : mes seuls echanges sont des fichiers lus et un handoff ecrit.",
+    "je_lis": [
+      "00_vision.json : pitch, non_negotiables, anti_references, promesses, cibles_jam.non_verifie",
+      "brief/user-answers.md : reponses de cadrage relayees par le Producteur",
+      "tech/mcp-inventory.json : ce que UEFN permet reellement, a lire AVANT de promettre une mecanique"
+    ],
+    "je_rends": [
+      "01_gdd.json sous enveloppe uefn.handoff.v1 (12 cles obligatoires, celles que le downstream lit reellement)",
+      "constraints.must_ask_producer : les questions bloquantes",
+      "constraints.variations_proposees : les boucles ecartees et leur motif (trace du critique)"
+    ],
+    "aval_reel": "generate_specs.py construit 02_palette.json, 03_grid.json, 04_devices.json, 05_props.json a partir des cles de 01_gdd.json : une cle que ce script ne lit pas n'existe pas pour le pipeline.",
+    "assertion_aval": "le run corpo-plaza asserte la liste exhaustive des 22 cles de requested_assets (controle ASSET_KEYS_OK 22) et exige PID_/PPID_ partout, aucun /Game/.",
+    "ce_que_je_ne_fais_pas": "aucune mesure de mesh, aucun choix definitif d'asset (Lead_Programmer mesure), aucune pose de device (Physics_Programmer), aucun .verse (12-14)."
+  },
+  "lexique_statuts": {
+    "DRAFT": "GDD en travail, non diffusable en aval.",
+    "PENDING_REVIEW": "rendu attendu par l'etage Generator-Critic, gate #2 non presente.",
+    "APPROVED_FOR_CLAUDETEST": "status reellement porte par le 01_gdd.json du run corpo-plaza : artefact accepte par le pipeline de test local. Valeur constatee dans l'artefact, pas une norme definie par les docs du depot.",
+    "BLOCKED": "mainlevee motivee vers le Producteur, aucune diffusion.",
+    "PENDING": "seule valeur de gate qu'un agent ecrit. VALIDE_HUMAIN et REJETE_HUMAIN relevent de la main de l'humain.",
+    "UNKNOWN": "donnees absentes ou non sourcees. Admis par le schema, bloque le gate.",
+    "ILLEGAL_ASSET_PATH": "chemin /Game/Athena ou /Game/Environments : echec de validation d'ile au lancement de session, jamais rattrapable par un renommage.",
+    "boucle_contemplative": "apparaitre, regarder, circular : une boucle sans recompense ni etat sauvegarde, mais avec des evenements datables et donc falsifiables.",
+    "tronc_de_zone": "zone portee par la boucle (celle ou l'evenement se voit) ; secondaire = zone de service ou de passage."
+  },
+  "pieges_de_conception": [
+    {
+      "signe": "La boucle est decrite en adjectifs : 'immersif', 'epoustouflant', 'le joueur ressent la grandeur'.",
+      "cause": "Aucun critere cochable : ni le validateur, ni un humain en jam ne peut dire tenu ou non tenu. C'est le premier motif d'attaque du critique.",
+      "conduite": "gameplay_timeline_sec : des paliers en secondes croissantes, un sujet (le joueur, un objet nomme), un verbe, ce qui est visible. Sinon question au Producteur."
+    },
+    {
+      "signe": "game_mode 'rpg' declare pour une scene sans quete, sans combat et sans economie (cas reel du run).",
+      "cause": "Le mode est une contrainte du CLI aval, pas une description de la boucle. Economy_Designer et Mission_Content_Designer peuvent construire dessus un contenu que la vision refuse.",
+      "conduite": "ecrire le decalage dans notes et le remonter en must_ask_producer avant le gate #2. Ne jamais laisser un mode faire foi de mecanique."
+    },
+    {
+      "signe": "Une zone a des bounds mais un purpose vide ou decoratif ('jolie', 'coin nord').",
+      "cause": "Une zone sans role n'entre dans aucun chemin joueur : Level_Designer la remplit de props et le joueur n'y va jamais.",
+      "conduite": "purpose = role dans la boucle (entree, bassin, tour dominante), 8 caracteres minimum, et une paire de connects_to au moins. Sinon la zone tombe."
+    },
+    {
+      "signe": "Les paires de connects_to designent des zones absentes de la liste, ou des ids orthographies differemment (Zone_Centre / Zone_Center / Center).",
+      "cause": "Le graphe est cree a la main, sans contrainte de nommage ; le downstream ne peut pas reconcilier les ids.",
+      "conduite": "une seule forme d'id, pattern ^Zone_, dictee par le GDD ; la paire et l'id vivent dans le meme fichier, jamais dans deux passes."
+    },
+    {
+      "signe": "Le GDD porte une position en centimetres, un slot d'instance ou une orientation de device.",
+      "cause": "Grignotage du role de Physics_Programmer et du CLI ; les chiffres sortis du GDD ne sont jamais mesures.",
+      "conduite": "label + classe de device seulement. Les grandeurs du GDD sont des indices de tuiles ; la conversion est cote Technique."
+    },
+    {
+      "signe": "Un asset demande a un chemin /Game/... ou un nom de mesh pret a poser.",
+      "cause": "Le contenu interne Fortnite n'est pas expose au catalogue Creatif ; l'ile echoue a la validation de session. Et un chemin fige ici presuppose une mesure qui n'a pas eu lieu.",
+      "conduite": "famille + requete source + ce qui n'est pas certifie dans notes ; seuls PID_/PPID_ (ou /Engine/BasicShapes/ pour la structure de sol) sont admis."
+    },
+    {
+      "signe": "Le GDD ajoute une cle 'core_loop' ou 'quests' que le script aval ne lit pas, et oublie une cle attendue.",
+      "cause": "Invention de contrat : le pipeline consomme 12 cles, l'assertion des 22 cles d'assets echoue, et rien ne signale la cle inconnue.",
+      "conduite": "rester sur les cles reellement lues ; une cle nouvelle est d'abord une decision de pipeline prise par le Producteur, pas une initiative de role."
+    },
+    {
+      "signe": "Le GDD chiffre : degats, cooldowns, prix, taux de drop, palier d'XP.",
+      "cause": "Confusion de role : le GD decide CE QUE le joueur fait et POURQUOI ; System_Designer (03) chiffre, Economy_Designer (04) arbitre les flux.",
+      "conduite": "remplacer le chiffre par une intention mesurable ('la traversee doit tenir dans le premier palier de la timeline') et passer la main."
+    },
+    {
+      "signe": "grid_dimensions_tiles = [23, 23, 1] : un seul niveau de tuile, alors que la regle de Level_Designer vise au moins 3 niveaux exploitables.",
+      "cause": "La scene contemplative du run se joue a plat ; la contrainte de profondeur et l'intention de lecture ne se recouvrent pas.",
+      "conduite": "tension ecrite noir sur blanc dans le handoff et remontee au gate #2, pas resolee en silence par le GD ni par le Level_Designer."
+    },
+    {
+      "signe": "Le Game_Designer ecrit status 'VALIDE_HUMAIN' ou declare le gate #2 ferme dans next_step_hint.",
+      "cause": "Confusion entre rendre et valider ; le gate est une decision humaine portee par le Producteur, apres l'etage Generator-Critic.",
+      "conduite": "gate_hitl_2.statut = PENDING a l'emission, status = DRAFT ou PENDING_REVIEW ; un handoff qui s'auto-declare valide est rejete (WP4 p.20)."
+    }
+  ],
+  "decisions_de_pipeline": [
+    "Le Game_Designer ne touche pas l'editeur : acces_mcp none, aucun outil, aucune lecture de scene.",
+    "verse_modules vide est une sortie valide : une scene sans Verse personnalise doit alors l'ecrire dans notes (cas du run).",
+    "Les chemins PPID_/PID_ presents dans 01_gdd.json sont des candidats issus des recherches catalogue reellement lancees (49 requetes serialisees dans le run), pas des valeurs definitives : Lead_Programmer mesure.",
+    "Le perimetre de jam se declare : aucune sauvegarde, aucune publication, aucun asset /Game dans le run corpo-plaza.",
+    "La boucle de gameplay est le contenu du gate #2 ; les fiches de mecanique detaillees vivent dans le projet, pas dans le dossier d'agent."
+  ],
+  "legalite_catalogue": {
+    "assets_autorises": "PPID_ (FortPlaysetPropItemDefinition, environ 100 418 entrees) et PID_ (FortPlaysetItemDefinition, environ 1 960 entrees)",
+    "assets_interdits": ["/Game/Athena/...", "/Game/Environments/...", "tout asset d'une autre franchise (droit d'auteur, pas seulement technique)"],
+    "exception_toleree": "/Engine/BasicShapes/Cube pour la structure de sol uniquement, jamais pour le decor"
+  },
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur issus du run corpo-plaza (01_gdd.json et son journal) et des regles de pipeline. Ce ne sont pas des cibles a copier d'un projet a l'autre.",
+    "grid_dimensions_tiles_reelles": [23, 23, 1],
+    "zones_reelles": 9,
+    "paires_connects_to_reelles": 12,
+    "cles_requested_assets_reelles": 22,
+    "devices_obligatoires_reels": 1,
+    "paliers_timeline_reels_sec": [0, 1, 5],
+    "gabarit_tile_cm": "512 x 512 au sol, 384 de haut (gabarit blank) ; la dalle moteur declaree dans le GDD fait 512 x 512 x 32 cm",
+    "requetes_catalogue_du_run": 49,
+    "memoire_poste_go": 16,
+    "gates_hitl": 4,
+    "budget_handoff_tokens": 4000,
+    "summary_short_max_caracteres": 200,
+    "zones": "3 minimum, 12 maximum",
+    "paliers_timeline": "2 minimum, 8 maximum, secondes strictement croissantes",
+    "questions_max_par_phase_au_producteur": 15,
+    "iterations_gdd_max": 3,
+    "promesses_amont_a_tenir": "1 a 5 (00_vision.json)"
+  }
+}

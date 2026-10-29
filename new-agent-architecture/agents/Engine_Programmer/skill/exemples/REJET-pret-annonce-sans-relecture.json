@@ -1,0 +1,55 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-PREFLIGHT-002",
+  "from": "Engine_Programmer",
+  "to": ["Producer_Orchestrator", "Level_Designer"],
+  "artifact": "preflight_ok.json",
+  "mission_ref": "M-CORPOPLAZA-BUILD-00",
+  "summary_short": "Tout est bon, l'editeur est pret, on peut lancer la production. J'ai fait le menage dans la scene pour liberer la memoire, pas de souci.",
+  "payload": {
+    "status": "READY",
+    "checked_at": "2026-10-24T09:00:00+00:00",
+    "mcp_port_active": 8000,
+    "ram_usage_mb": "environ 12000",
+    "active_level_name": "Corpofield copie",
+    "verse_path_valid": true,
+    "checks": [
+      { "check": "pont_mcp", "status": "OK", "detail": "le port 8000 est celui de la documentation, donc le pont est la" },
+      { "check": "processus_et_ram", "status": "OK", "detail": "16 Go de RAM sur la machine, ca suffira" },
+      { "check": "niveau_actif", "status": "OK", "detail": "l'onglet de l'editeur affiche le bon titre" },
+      { "check": "pagination_cvar", "status": "OK", "detail": "SetCVarValue a renvoye null donc la valeur est ecrite" },
+      { "check": "fenetres_bloquantes", "status": "OK", "detail": "aucune fenetre genante remarquee" }
+    ],
+    "cleanup": {
+      "performed": true,
+      "save_before": false,
+      "removed_count": 412,
+      "note": "acteurs supprimes pour gagner de la place, sans inventaire"
+    },
+    "error_log": [
+      { "code": "OFFLINE", "message": "editeur injoignable sur http://127.0.0.1:8000/mcp", "source": "ping", "return_code": 2 }
+    ]
+  },
+  "constraints": {
+    "forbidden": ["ne pas generer d'erreur pendant la session"]
+  },
+  "acceptance": ["tout_est_pret", "editeur_rapide", "menage_fait"],
+  "next_step_hint": "Tout le monde peut poser ses assets, la machine suit.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "CONTRE-EXEMPLE - rejecte par le validateur et par les regles d'engagement, ne jamais l'imiter",
+    "motifs_de_rejet": [
+      "status READY avec un error_log non vide (OFFLINE code 2 sur 8000) : le schema impose error_log maxItems 0 pour READY. Un ping qui echoue se rend en ERROR, pas en READY.",
+      "mcp_port_active 8000 declare sans ping relu sur ce port : le port vient de la documentation, pas d'une mesure. Dans la run relu 8000 etait OFFLINE (code 2) et 8001 repondait.",
+      "ram_usage_mb 'environ 12000' : chaine au lieu d'un entier, et valeur heritee d'une mission precedente. La RAM est une mesure instantanee ; sans mesure relue le champ vaut UNKNOWN et le status ne peut pas etre READY.",
+      "active_level_name 'Corpofield copie' : vide au pattern ^[A-Za-z0-9_-]+$ (espaces), et titre d'onglet suppose. Le nom doit sortir de Scene.get_current_level (claudtest dans la run), et etre confirme via Producer_Orchestrator (level_confirmed_by absent).",
+      "aucune case de check n'a de champ evidence : le schema exige evidence pour tout READY. Un 'detail' qui explique pourquoi ca devrait marcher n'est pas une preuve relue.",
+      "pagination : 'SetCVarValue a renvoye null donc c'est ecrit' = contresens. null est la sortie normale de l'outil ; seule la relecture par GetCVarValue (200) fait preuve, et la pagination valait 0 au depart (troncation silencieuse).",
+      "fenetres_bloquantes 'OK' sans outil : aucun outil MCP ne liste les fenetres modales de l'editeur. La bonne valeur est modal_windows_blocking = UNKNOWN, jamais un OK invente.",
+      "cleanup.performed true avec 412 acteurs retires, save_before false, sans demande explicite du Producteur et sans inventaire de refPath : le schema impose performed false dans un READY, et la regle d'engagement interdit toute destruction unilaterale (le champ 'note' n'existe d'ailleurs pas dans la definition cleanup).",
+      "payload READY sans les champs obligatoires pagination_cvar, workspace, session_status, mcp_ports_tested, et verse_path_valid true sans test d'arborescence ni test en ecriture : le handoff ne peut pas etre valide.",
+      "acceptance subjective (tout_est_pret, editeur_rapide, menage_fait) : hors enum, et non cochable par du code. Les criteres attendus sont bridge_ping_relu, ram_measured, level_name_from_tool, pagination_cvar_200, no_actor_written...",
+      "summary_short en auto-eloge ('Tout est bon... pas de souci') et next_step_hint prescriptif ('tout le monde peut poser ses assets') : output-only, et la decision de pipeline appartient au Producteur."
+    ]
+  }
+}

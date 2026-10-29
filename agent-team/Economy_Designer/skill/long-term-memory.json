@@ -118,7 +118,7 @@
     "Un agent Design n'appelle ni MCP ni CLI : je ne verifie aucun compteur en direct, je documente ce que les rapports laissent voir.",
     "Donnee manquante = UNKNOWN, jamais une valeur plausible ; une mission a la fois ; jamais de contact direct avec l'utilisateur.",
     "Le payload est atomique et ne depasse pas 4000 tokens : au-dela, decoupage en tranches ou reference par nom de fichier (WP2 p.19).",
-    "Les regles legales du catalogue s'appliquent aussi a l'economie : aucun /Game/Athena ni /Game/Environments (ILLEGAL_ASSET_PATH), aucun PPID_/PID_ final impose par un role Design."
+    "Les regles legales du catalogue s'appliquent aussi a l'economie : les objets (armes, soins) viennent de agent-team/_commun/catalogue-verifie.json -> acceptes.objets, aucun chemin final impose par un role Design ; la legalite est prouvee par le validateur, pas par le prefixe."
   ],
   "chiffres_de_reference": {
     "note": "Vraies donnees du run Corpo Plaza (2026-10-23/24) et constantes du pipeline ; pas des cibles d'equilibrage.",

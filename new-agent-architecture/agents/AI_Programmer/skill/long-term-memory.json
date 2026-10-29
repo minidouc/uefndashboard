@@ -1,0 +1,166 @@
+{
+  "$id": "uefn.longterm.AI_Programmer.v1",
+  "agent": "AI_Programmer",
+  "description": "Connaissances persistantes, stables d'un projet a l'autre (composant 'Long-Term Memory', WP3 p.8). Aucun etat de projet ici : que des faits d'API et d'editeur, des contrats d'outils, un lexique de statuts et des decisions de pipeline actees.",
+  "langue": "fr",
+  "perimetre_de_fichiers": {
+    "roles_techniques_verse": {
+      "12_Gameplay_Programmer": "boucle globale, economie, boutique, quetes, timers, game_manager_device.verse, fonctions communes",
+      "13_AI_Programmer": "mecaniques temps reel : fort_character, props manipules, armes et capacites, cameras, entites autonomes - special_mechanics.verse / custom_combat_camera.verse / ai_entities.verse",
+      "14_UI_Programmer": "canvas, text_block, HUD, menus - ui_hud.verse / ui_menus.verse"
+    },
+    "source_des_noms": "02_palette.json -> verse_architecture (a defaut 01_gdd.json -> verse_modules) : la repartition est decidee par le Lead_Programmer (11), jamais par moi",
+    "appellation": "Dans ce studio 'AI' = mecanismes originaux temps reel, pas uniquement des arbres de comportement ; un arbre de comportement PNJ n'est qu'un cas particulier"
+  },
+  "api_verse": {
+    "imports_habituels": [
+      "using { /Fortnite.com/Devices }",
+      "using { /Fortnite.com/Characters }",
+      "using { /Verse.org/Simulation }",
+      "using { /Verse.org/Random }",
+      "using { /UnrealEngine.com/Temporary/Diagnostics }",
+      "using { /UnrealEngine.com/Temporary/SpatialMath }"
+    ],
+    "syntaxe": [
+      "variable mutable : var Nom : type = valeur puis set Nom = nouvelle_valeur",
+      "acces Tableau[Index] ou appel <decides> dans un contexte d'echec : if (X := Tableau[0]):",
+      "Sleep() uniquement dans une fonction <suspends> ou un bloc spawn{}",
+      "un @editable d'acteur porte exactement l'actor_label de 04_devices.json ; un @editable primitif est un reglage (PARAMETRE), pas une cible"
+    ],
+    "symboles_prouves_par_compilation": [
+      {
+        "symbole": "player_spawner_device.SpawnedEvent.Subscribe",
+        "statut": "VERIFIE",
+        "preuve": "game_manager_device.verse compile a 0 diagnostic avec ligne de succes, 09_verse_report.json du 2026-10-20T23:32:16 (run 1v1-buildfight)"
+      },
+      {
+        "symbole": "item_granter_device.GrantItem(agent)",
+        "statut": "VERIFIE",
+        "preuve": "meme compilation PASSED ; attention au Clear Inventory : attendre ItemGrantedEvent du granter 1 avant le granter 2"
+      },
+      {
+        "symbole": "barrier_device.Enable() / Disable()",
+        "statut": "VERIFIE",
+        "preuve": "meme compilation PASSED ; cycle relu dans 08_wiring_report.json (OnSuccess -> Disable)"
+      },
+      {
+        "symbole": "timer_device.Start() / Reset() / SuccessEvent.Subscribe",
+        "statut": "VERIFIE",
+        "preuve": "meme compilation PASSED"
+      },
+      {
+        "symbole": "Print (Diagnostics)",
+        "statut": "VERIFIE",
+        "preuve": "utilise dans le patron de verse-qa-standard.md section 4 ; une ligne [STEP] ne certifie QUE le passage a ce point, pas l'effet obtenu"
+      }
+    ],
+    "symboles_cites_par_le_brief_non_prouves": [
+      "fort_character.MoveTo", "fort_character.TeleportTo", "fort_character.Damage",
+      "fort_character.Hide", "fort_character.Show", "fort_character.PutInStasis",
+      "fort_character.SetMovementSpeedModifier", "character.NavigateTo",
+      "camera_fixed_point_device.Enable/Disable", "orbit_camera_device.Enable/Disable",
+      "vfx_spawner_device.SpawnVfxAtLocation", "input_trigger_device.TriggeredEvent",
+      "conditional_button_device.OnInteracted"
+    ],
+    "regle_symbole": "un symbole de cette liste est UNKNOWN tant que verse-grep n'a pas rendu une signature relue OU qu'une compilation PASSED ne l'a pas deja appele : la ligne s'ecrit en 'reserve', elle n'est pas appelee. Un Grep vide n'est pas une absence."
+  },
+  "lexique_statuts": {
+    "SESSION_CONNECTED": "GetSessionStatus different de Disconnected : verse-build refuse, aucun rapport ecrit, aucun appel d'editeur",
+    "NO_VERSE_STAGED": "aucun .verse dans workspace/verse/ : list-editables rend ce type, non applicable et non une erreur de ma part",
+    "PROPERTY_NOT_FOUND": "le nom demande n'existe pas dans list_properties ; le CLI rend des suggestions 'nearest' reprises de la liste relue - ne jamais inventer un autre nom",
+    "TIMEOUT_OUTCOME_UNKNOWN": "code 3 : l'appel a peut-etre ete applique sans reponse ; relecture avant tout rejou",
+    "OFFLINE": "code 2 : rien n'a ete execute ; verifier le pont (8000 par defaut, 8001 observe) via UEFN_MCP_URL",
+    "AUTO_VERIFIED": "reference @editable ecrite puis relue sur le creative_device (list-editables --apply)",
+    "MANUEL": "reference resolue par la table mais non ecrite : cablage a faire ou decision --apply du Producteur",
+    "AUCUNE_CIBLE": "editable sans acteur correspondant : pour un PARAMETRE c'est normal, pour un ACTEUR c'est without_target",
+    "NO_BINDING_DECLARED": "aucun binding dans 04_devices.json : rien n'est appele, la logique passe par Verse",
+    "reserve": "ligne de code ecrite et documentee mais non appelee, faute de preuve d'API",
+    "UNKNOWN": "valeur attendue absente de l'entrant ou du tool result : jamais remplacee par une valeur plausible"
+  },
+  "pieges": [
+    {
+      "signe": "diagnostics_count: 0 annonce comme 'compile' alors que le Verse n'a jamais tourne.",
+      "cause": "BuildAll renvoie une liste vide sur un projet sans objet compilable ; le log VerseBuild garde en plus les builds precedents.",
+      "conduite": "Exiger error_diagnostics: [] ET une success_lines horodatee APRES le timestamp de l'appel ; citer le scope du rapport."
+    },
+    {
+      "signe": "Le build 'passe' alors qu'un fichier d'un autre agent est casse.",
+      "cause": "BuildAll compile TOUT le Verse du projet, pas seulement mon perimetre.",
+      "conduite": "Je ne reponds que de payload.files ; un diagnostic hors perimetre est signale au Producer, je ne le corrige pas en ecrivant chez le voisin."
+    },
+    {
+      "signe": "Capacite annoncee 'testee en jeu' dans un rapport.",
+      "cause": "Aucune session lancee : GetClientLogEntries hors session renvoie 'No client log was found; start a play-in-client session first.'",
+      "conduite": "playtest = AUCUNE_SESSION ou UNKNOWN, jamais un libelle de succes ; un self-test qui imprime [STEP] n'affirme rien."
+    },
+    {
+      "signe": "AddEventBinding renvoie null et le lien est annonce pose.",
+      "cause": "L'outil ne rend pas le binding ; ListEventBindings doit etre appele sur la CIBLE, pas sur l'emetteur.",
+      "conduite": "wired[].read_back = sortie de ListEventBindings sur la cible ; sans relecture, wiring = MANUEL."
+    },
+    {
+      "signe": "Object.set_properties ecrit mais la valeur relue differe, ou une erreur accompagne l'ecriture.",
+      "cause": "'values' est une CHAINE JSON et non un objet ; une erreur peut cacher une ecriture partielle ; les noms reels contiennent parfois des espaces ('interaction Text').",
+      "conduite": "list_properties d'abord, ecriture, puis get_properties SYSTEMATIQUE, meme apres erreur."
+    },
+    {
+      "signe": "Un teamType 'Specific' fait echouer l'ecriture mais la relecture affiche une valeur differente.",
+      "cause": "Valeur hors enum acceptee partiellement par l'editeur (observe sur activatingTeam du Button V2 : ecrit Specific/5, relu Any/5).",
+      "conduite": "N'ecrire teamType ET teamIndex ensemble qu'avec une valeur deja relue sur un device du meme type ; sinon passer par un reglage demande a 16."
+    },
+    {
+      "signe": "Le joueur traverse le sol ou reste coince apres une teleportation vers un spawner.",
+      "cause": "Position du spawner au ras du sol.",
+      "conduite": "Regle de note reprise des references : ajouter environ 100 cm en Z ; le symbole TeleportTo doit d'abord etre prouve."
+    },
+    {
+      "signe": "Deux agents ecrivent le meme .verse, ou un @editable cree un doublon de label.",
+      "cause": "Repartition de verse_architecture non lue, ou label recree de tete au lieu de celui de 04_devices.json.",
+      "conduite": "verse-scan avant toute ecriture ; un acteur absent de 04_devices.json n'est pas reference ; arbitrage Producer en cas de conflit."
+    },
+    {
+      "signe": "Logs.GetLogEntries sur 'Valkyrie' renvoie McpError: Log category 'Valkyrie' not found.",
+      "cause": "La categorie litterale n'existe pas.",
+      "conduite": "Logs.GetLogCategories {\"filter\":\"Valkyrie\"} puis lire LogValkyrie / LogValkyrieValidation ; categorie 'VerseBuild' pour la compilation."
+    },
+    {
+      "signe": "Une sortie d'outil explose le contexte (list_toolsets, schemas complets).",
+      "cause": "Les 30 toolsets et 388 outils remontent en une seule reponse (790,8 Ko observes).",
+      "conduite": "Sortie redirigee sur fichier, lecture ciblee ; GetDynamicInputSchema hors session ne JAMAIS appeler (crash editeur connu) ; search_subclasses sur 'fort_character' ne pas utiliser hors session."
+    }
+  ],
+  "contrats_outils": {
+    "point_entree_unique": "python script/uefn_spatial_cli.py <commande> --workspace <chemin_absolu> [--dry-run]",
+    "codes_retour": {
+      "0": "PASSED - continuer",
+      "1": "FAILED ou partiel - l'appel A ETE TRAITE : relire l'etat avant de rejouer",
+      "2": "OFFLINE - rien n'a ete execute",
+      "3": "TIMEOUT / etat inconnu - relire, jamais relancer a l'aveugle"
+    },
+    "journalisation": "chaque appel CLI est trace dans <workspace>/_mcp_calls.jsonl ; un appel direct via mcp_client.py ne l'est qu'avec --log ou UEFN_MCP_LOG",
+    "workspace": "toujours HORS du skill (WORKSPACE_INSIDE_SKILL refuse)",
+    "regles_non_negociables": [
+      "Un seul appel MCP a la fois, jamais en parallele, jamais deux agents sur l'editeur.",
+      "Ne tenir pour vrai que ce qui a ete relu par un second appel ; une reponse vide ([] / null / false) vaut 'inconnu'.",
+      "Aucun asset /Game/... et aucun WID_ pose dans la scene : un WID_ s'assigne a un granter, jamais dans le niveau.",
+      "Save, --apply, lancement de session, publication sont des gates HITL : accord explicite du Producteur.",
+      "Ne jamais modifier un fichier du skill pendant une run."
+    ]
+  },
+  "decisions_de_pipeline": [
+    "Verifier l'API avant d'ecrire (verse-scan + verse-grep), ecrire, relire, puis seulement compiler : l'editeur n'est jamais un bac a sable.",
+    "Une compilation sans ligne de succes recente n'est pas un succes : le handoff part en BLOCKED.",
+    "Ce qui n'est pas prouve n'est pas appele : la ligne reste 'reserve' et le handoff le nomme, au lieu d'inventer une signature.",
+    "L'economie, les recompenses et l'affichage sont delegues : j'emets un evenement a 12, j'expose une valeur a 14, je ne calcule ni n'affiche rien.",
+    "Un device manquant arrete une mecanique : elle est 'blocked' avec le device attendu, pas simulee par un contourne.",
+    "Aucun comportement annonce observe en jeu sans 12_session_report.json relu."
+  ],
+  "chiffres_de_reference": {
+    "note": "Ordres de grandeur observes sur des runs documentes (1v1-buildfight 2026-10-21, corpo_plaza 2026-10-24). Ce sont des echelles, pas des cibles.",
+    "duree_buildall": "environ 6 s sur un projet vide",
+    "log_versebuild_par_build": 3,
+    "taille_fichier_verse_reference": "2442 octets pour game_manager_device.verse relu",
+    "editables_par_device": "3 a 12",
+    "max_entries_log_lectures": 15
+  }
+}

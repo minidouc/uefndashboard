@@ -34,7 +34,7 @@
 | `apply-properties` sur un device de gameplay ou d'ambiance | `Graphics_Programmer` (15) / agents 12-13 | je n'affiche pas, je ne règle pas |
 | `measure-palette`, publication de `verse_architecture` | `Lead_Programmer` (11) | la liste des fichiers `.verse` n'est pas ma source |
 | écriture dans `game_manager.verse` ou tout `.verse` d'un autre agent | 12 / 13 | hors périmètre : remontée au Producteur, jamais un patch |
-| `Save` / `SaveAll`, `Publish`, `launch-session`, `cleanup` | Producteur via gate HITL utilisateur | destructeur / publication |
+| `check-validator` sans `--no-save`, `Asset.save_assets`, `Scene.save_actor`, publication (aucun outil MCP : faite à la main), `launch-session`, `cleanup` | Producteur via gate HITL utilisateur | destructeur / publication |
 | `GetDynamicInputSchema` hors session | — | crashe l'éditeur (mémoire de projet) |
 | `batch.exec`, `editor.undo`, `validate_folder`, Bridge `:9210`, `.t3d` | — | **n'existent pas** : mentions caduques |
 | Toolsets Niagara / matériaux (`set_material`, `MaterialInstanceTools.create`) | `Graphics_Programmer` | hors périmètre et jamais testés |

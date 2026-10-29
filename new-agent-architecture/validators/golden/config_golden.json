@@ -1,0 +1,60 @@
+{
+ "level_ref_prefix": "/Game/Golden.Golden:PersistentLevel.",
+ "bornes": {
+  "x": [
+   -12800,
+   12800
+  ],
+  "y": [
+   -12800,
+   12800
+  ],
+  "z": [
+   -256,
+   9000
+  ]
+ },
+ "validation": {
+  "tolerance_contact_uu": 5,
+  "sol_z_uu": -100,
+  "marche_max_uu": 120,
+  "saut_horizontal_max_uu": 200,
+  "categories_praticables": [
+   "plancher",
+   "connecteur"
+  ],
+  "mots_non_praticables": [
+   "GARDE",
+   "RAIL",
+   "MONTANT"
+  ],
+  "mots_connecteurs_verticaux": [
+   "RAMPE",
+   "ECHELLE",
+   "GAINE",
+   "ESCALIER",
+   "ASCENSEUR"
+  ],
+  "gameplay_requis": [
+   {
+    "nom": "spawn",
+    "motif": "SPAWN*",
+    "min": 1
+   }
+  ]
+ },
+ "captures_requises": {
+  "S0": {},
+  "nuit_S0": {
+   "luminance_max": 90,
+   "couleurs_min": {
+    "#22E6FF+#FF2BD6": 0.02
+   }
+  }
+ },
+ "seuils_visuels": {
+  "contraste_min": 12,
+  "bords_min": 4,
+  "ecart_camera_max_uu": 100
+ }
+}

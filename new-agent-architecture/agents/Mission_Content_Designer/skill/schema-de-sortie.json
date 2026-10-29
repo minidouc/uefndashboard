@@ -1,0 +1,500 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Mission_Content_Designer.v1",
+  "title": "Mission_Content_Designer - contrat du livrable 01_missions.json",
+  "description": "Schema de sortie de l'agent Mission_Content_Designer (agent 05, pole Design, phase DESIGN). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte le contenu jouable dessine sur les zones deja nommees du GDD. Ce contrat ne verifie pas qu'une mission est passionnante : il verifie qu'elle est TENABLE et CONTROLABLE. Chaque objectif doit avoir un lieu reference par zone_id du GDD, un evenement observable a un instant de la gameplay_timeline_sec, et un juge externe ; chaque dispositif exige doit exister dans required_devices ; chaque recompense doit avoir une source ou declarer qu'elle n'en a pas. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin d'asset, aucun PPID_/PID_ final, aucun contact avec l'utilisateur.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Mission_Content_Designer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "01_missions.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "pattern": "^M-[A-Z0-9]+-[A-Z]+-[0-9]{2,}$",
+      "description": "Rattachement a la mission du Producer, ex. M-CORPOPLAZA-DESIGN-05."
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Seul champ relu mot a mot par le Producteur. Doit dire combien de missions actives et si le contenu est implantable avec les seuls devices demandes."
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_amont",
+        "format_mission",
+        "missions",
+        "declencheurs",
+        "couverture_timeline",
+        "zones_gdd",
+        "verrous_gdd",
+        "hors_perimetre",
+        "gate_hitl_2"
+      ],
+      "properties": {
+        "source_amont": { "$ref": "#/definitions/source_amont" },
+        "format_mission": { "$ref": "#/definitions/format_mission" },
+        "missions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "$ref": "#/definitions/mission" },
+          "description": "1 a 12 missions. Une scene contemplative a le droit de produire 0 mission active et 1 mission d'observation : ce n'est pas un vide, c'est un arrete. Au-dela de 12, plus rien n'est tenu dans le temps d'une jam."
+        },
+        "declencheurs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "$ref": "#/definitions/declencheur" },
+          "description": "Ce qui demarre le contenu. Tout declencheur d'apparition, d'entree en volume ou d'interaction exige un actor_label reellement demande dans le GDD."
+        },
+        "couverture_timeline": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/couverture_etape" },
+          "description": "Chaque etape de gameplay_timeline_sec du GDD entrant est reprise et classee. Une etape non couverte est declaree, jamais passee sous silence."
+        },
+        "zones_gdd": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": { "$ref": "#/definitions/usage_zone" },
+          "description": "Inventaire des zones du GDD et de leur usage par le contenu. Un zone_id utilise dans un objectif et absent de cette liste = objectif dans une zone inventee = rejet."
+        },
+        "verrous_gdd": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Ce que le GDD interdit deja et que le contenu doit subir sans negocier : verse_modules vide (aucun script), aucune sauvegarde ni publication, aucun asset /Game."
+        },
+        "hors_perimetre": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "minLength": 8 },
+          "description": "Ce que ce livrable ne definit pas : boucle de gameplay (02), regles d'etat (03), economie (04), lore (06), texte definitif (07), espace et coordonnees (09), code (10-15)."
+        },
+        "gate_hitl_2": { "$ref": "#/definitions/gate_hitl_2" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": {
+          "const": "none",
+          "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur."
+        },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous transmis en aval : zone_id a preserver, devices a ne pas multiplier, moments de la timeline a ne pas deplacer."
+        },
+        "forbidden": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        },
+        "artefacts_amont_absents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Artefacts amont declares comme non emis sur le run reel (01_systems.json, 01_economy.json, 01_lore.json) : ce qui est UNKNOWN ici n'est pas une paresse mais une absence de source."
+        }
+      }
+    },
+    "golden_example_ref": { "type": "string" },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue, ce qui est reconstruit et non observe). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "mission_format_justified_by_gdd",
+          "missions_count_1_to_12",
+          "every_mission_has_gdd_zone_objective",
+          "every_objective_has_observable_condition",
+          "every_objective_has_timeline_instant",
+          "every_objective_has_external_judge",
+          "no_objective_in_zone_absent_from_gdd",
+          "no_ghost_device_or_verse_requirement",
+          "triggers_use_existing_actor_labels",
+          "rewards_sourced_or_none_declared",
+          "every_mission_ends_or_abandons",
+          "timeline_steps_fully_accounted",
+          "zones_not_served_declared",
+          "gdd_locks_declared",
+          "out_of_scope_declared",
+          "no_coordinate_or_asset_path",
+          "upstream_gap_status_declared",
+          "mission_gate_hitl_2_pending"
+        ]
+      },
+      "description": "Criteres cochables par du code (WP4 p.20), pas par un jugement de LLM. Aucun critere ne porte sur l'interet ou l'emotion de la mission."
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400,
+      "description": "Instruction pour l'aval : quelles zones d'objectif Level_Designer doit servir, quels devices AI/UI/Graphics peuvent consommer, ce qui reste non implantable."
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "source_amont": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project_name", "game_mode", "zones_issues", "timeline_etapes", "amont_statut"],
+      "description": "Releve factuel du GDD entrant : le contenu ne dessine que sur ce qui est reellement declare.",
+      "properties": {
+        "project_name": { "type": "string", "minLength": 3 },
+        "game_mode": {
+          "type": "string",
+          "minLength": 2,
+          "description": "rpg pour Corpo Plaza : le mode ne prejuge en rien d'une quete. C'est la note de scene contemplative qui decide du format."
+        },
+        "zones_issues": { "type": "integer", "minimum": 0 },
+        "connects_to_nb": { "type": "integer", "minimum": 0 },
+        "devices_demandes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Nombre de required_devices du GDD (1 : Spawner_Plaza_01). C'est le plafond absolu des dispositifs qu'une mission peut exiger."
+        },
+        "timeline_etapes": { "type": "integer", "minimum": 1 },
+        "amont_statut": {
+          "enum": ["complet", "partiel", "geometrique_seul", "UNKNOWN"],
+          "description": "complet = 01_systems.json, 01_economy.json, 01_lore.json emis ; geometrique_seul = seul le GDD existe reellement, donc aucune regle d'etat et aucun puits de recompense disponibles."
+        },
+        "amont_statut_note": { "type": "string", "minLength": 8 }
+      }
+    },
+    "format_mission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "justification", "duree_cible_min", "nb_missions_mvp"],
+      "properties": {
+        "type": {
+          "enum": ["scriptee", "emergente", "evenementielle", "observation_seule", "boss"],
+          "description": "Le format se deduit du GDD, pas du gout du role. Scene contemplative = observation_seule."
+        },
+        "justification": { "type": "string", "minLength": 15, "maxLength": 300 },
+        "duree_cible_min": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "nb_missions_mvp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "0 est une valeur licite et doit alors etre justifiee par un verrou du GDD, pas par un manque d'idees."
+        },
+        "variants_ecartees": { "type": "array", "items": { "type": "string" } },
+        "motif_arrete": { "type": "string", "minLength": 8 }
+      }
+    },
+    "mission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "titre",
+        "type",
+        "pitch",
+        "duree_cible_min",
+        "preerequis",
+        "objectifs",
+        "fin",
+        "abandon",
+        "recompenses",
+        "statut_implantation"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^MS-[0-9]{2}$" },
+        "titre": { "type": "string", "minLength": 3, "maxLength": 60 },
+        "type": { "enum": ["principale", "secondaire", "evenement", "observation", "hors_service"] },
+        "pitch": { "type": "string", "minLength": 10, "maxLength": 200 },
+        "duree_cible_min": { "type": "integer", "minimum": 0, "maximum": 60 },
+        "preerequis": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Au moins 'aucun'. Une mission sans prerequis declare suppose un etat du monde que personne (03) n'a defini."
+        },
+        "objectifs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "$ref": "#/definitions/objectif" }
+        },
+        "fin": { "$ref": "#/definitions/fin" },
+        "abandon": { "$ref": "#/definitions/abandon" },
+        "recompenses": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": { "$ref": "#/definitions/recompense" }
+        },
+        "statut_implantation": {
+          "enum": ["implantable", "conditionnel", "non_implantable", "UNKNOWN"],
+          "description": "implantable = tous les dispositifs exiges existent dans le GDD. non_implantable s'ecrit et se motive ; ne jamais le convertir en mission 'simplifiee' sans le dire."
+        },
+        "motif_statut": { "type": "string", "minLength": 8 },
+        "beats": {
+          "type": "array",
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 5 },
+          "description": "Ouverture / montee / climax / resolution en intention seulement. Le texte definitif appartient a Writer_Scenariste (07)."
+        },
+        "lore_ref": {
+          "type": "string",
+          "description": "Renvoi a 01_lore.json (06). UNKNOWN si l'artefact n'a pas ete emis : la mission n'invente pas de faction ni de personnage."
+        },
+        "anti_pattern_evite": { "type": "string", "minLength": 8 }
+      }
+    },
+    "objectif": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "enonce",
+        "zone_id",
+        "condition_observation",
+        "instant_timeline_sec",
+        "evenement_observable",
+        "juge_externe",
+        "statut_dispositifs"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^OBJ-[0-9]{2}$" },
+        "enonce": { "type": "string", "minLength": 10, "maxLength": 160 },
+        "zone_id": {
+          "type": "string",
+          "pattern": "^Zone_[A-Za-z0-9_]+$",
+          "description": "Un zone_id reellement declare dans 01_gdd.json. Jamais une coordonnee, jamais un nom de lieu invente."
+        },
+        "type": { "enum": ["principal", "secondaire", "secret", "observation"] },
+        "condition_observation": {
+          "type": "string",
+          "minLength": 15,
+          "maxLength": 240,
+          "description": "Ce qu'un juge VOIT : 'joueur visible depuis Spawner_Plaza_01, bassin dans le champ'. 'le joueur trouve cela beau' est refuse par le validateur : non observable."
+        },
+        "instant_timeline_sec": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Instant (secondes) de la gameplay_timeline_sec du GDD ou l'evenement est controlable : 0, 1 ou 5 pour Corpo Plaza. Un objectif hors timeline n'est datable par personne."
+        },
+        "evenement_observable": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "juge_externe": { "$ref": "#/definitions/juge" },
+        "dispositifs_exiges": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "description": "actor_label de devices ou modules Verse reellement necessaires. Doit rester un sous-ensemble des required_devices du GDD."
+        },
+        "statut_dispositifs": {
+          "enum": ["tous_demandes_gdd", "au_moins_un_non_demande", "aucun"],
+          "description": "mecanique fantome = au_moins_un_non_demande. Verse etant absent du GDD (verse_modules vide), tout objectif exigeant un script est automatiquement dans ce cas."
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "juge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "controle"],
+      "properties": {
+        "type": { "enum": ["validateur_python", "audit", "capture_session", "humain_hitl", "UNKNOWN"] },
+        "controle": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200,
+          "description": "Ou le juge dit tenu / non tenu : 07_measure_report, 09_session_report, capture de session, grid 03_grid.json. Un auto-controle du designer ne compte pas (WP4 p.20)."
+        },
+        "artefact_ref": { "type": "string" }
+      }
+    },
+    "recompense": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "nature", "statut_preuve"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^RW-[0-9]{2}$" },
+        "nature": {
+          "enum": ["xp", "loot", "deblocage", "acces", "precedent_narratif", "non_remunere"]
+        },
+        "valeur": {
+          "type": "string",
+          "description": "Valeur annoncee en reference a 01_economy.json. UNKNOWN si aucune source : jamais un chiffre plausible."
+        },
+        "source_ref": {
+          "type": "string",
+          "description": "Entree reellement existante dans 01_economy.json / drop_tables. Absent si nature = non_remunere."
+        },
+        "statut_preuve": {
+          "enum": ["sourcee_amont", "approximee", "sans_source", "non_applicable", "UNKNOWN"],
+          "description": "sans_source est un motif de rejet : une recompense sans puits est une promesse que rien ne peut payer."
+        },
+        "puits": { "enum": ["economy_amont", "gdd", "aucun", "UNKNOWN"] }
+      }
+    },
+    "declencheur": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "couvre_mission", "statut_ref"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^TRG-[0-9]{2}$" },
+        "type": {
+          "enum": ["apparition_joueur", "instant_timeline", "zone_entree", "interaction", "cinematique", "minuteur"]
+        },
+        "ref_actor_label": {
+          "type": "string",
+          "minLength": 3,
+          "description": "actor_label existant (required_devices du GDD / 04_devices.json), ex. Spawner_Plaza_01. Obligatoire pour apparition_joueur, zone_entree, interaction, cinematique."
+        },
+        "ref_zone_id": { "type": "string", "pattern": "^Zone_[A-Za-z0-9_]+$" },
+        "instant_timeline_sec": { "type": "integer", "minimum": 0 },
+        "couvre_mission": { "type": "string", "pattern": "^MS-[0-9]{2}$" },
+        "dispositif_reel": {
+          "type": "string",
+          "description": "device_class attendu (player_spawner_device, trigger_volume...). UNKNOWN si le device n'a pas ete demande."
+        },
+        "statut_ref": {
+          "enum": ["demande_gdd", "absent_gdd", "non_applicable", "UNKNOWN"],
+          "description": "non_applicable = le declencheur ne coute aucun device (instant_timeline). absent_gdd = mecanique fantome, motif de rejet."
+        }
+      }
+    },
+    "couverture_etape": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time_sec", "evenement_gdd", "statut"],
+      "properties": {
+        "time_sec": { "type": "integer", "minimum": 0 },
+        "evenement_gdd": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "description": "Repris du champ event de gameplay_timeline_sec, sans reinterpretation."
+        },
+        "statut": { "enum": ["objectif_attache", "observation", "non_couvert", "hors_contenu"] },
+        "rattache": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 3 },
+          "description": "Objective ids rattaches. Liste vide avec statut objectif_attache = faux positif : le validateur refuse."
+        },
+        "motif": { "type": "string", "minLength": 8 }
+      }
+    },
+    "usage_zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zone_id", "sert_le_contenu"],
+      "properties": {
+        "zone_id": { "type": "string", "pattern": "^Zone_[A-Za-z0-9_]+$" },
+        "sert_le_contenu": { "type": "boolean" },
+        "objectifs_rattaches": { "type": "array", "items": { "type": "string", "minLength": 3 } },
+        "motif_non_servie": {
+          "type": "string",
+          "description": "Obligatoire quand sert_le_contenu = false : une zone du GDD sans contenu est declaree, pas oubliee."
+        }
+      }
+    },
+    "fin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statut", "condition"],
+      "properties": {
+        "statut": {
+          "enum": ["atteignable", "ouverte", "aucune"],
+          "description": "ouverte ou aucune sans abandon possible = mission sans sortie : motif de rejet."
+        },
+        "condition": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "seuil_declencheur": { "type": "string" }
+      }
+    },
+    "abandon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["possible", "motif"],
+      "properties": {
+        "possible": { "type": "boolean" },
+        "motif": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "consequence": { "type": "string" }
+      }
+    },
+    "gate_hitl_2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["numero", "statut", "valide_par"],
+      "description": "Gate HITL #2 (volet design valide par l'humain via le Producteur). L'agent ne peut ecrire que PENDING : VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain, jamais celle du modele.",
+      "properties": {
+        "numero": { "const": 2 },
+        "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+        "valide_par": { "type": "string", "minLength": 1 },
+        "date_validation": { "type": "string" },
+        "iterations": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    }
+  }
+}

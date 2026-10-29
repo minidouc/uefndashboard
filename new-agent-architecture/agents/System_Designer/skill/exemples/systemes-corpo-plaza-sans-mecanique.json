@@ -1,0 +1,46 @@
+{
+"$schema": "uefn.handoff.v1",
+"handoff_id": "H-DESIGN-003",
+"from": "System_Designer",
+"to": ["Mission_Content_Designer", "Economy_Designer", "Level_Designer", "Producer_Orchestrator"],
+"artifact": "01_systems.json",
+"mission_ref": "M-CORPOPLAZA-DESIGN-03",
+"summary_short": "0 mecanique, 0 table de tuning. Apparition au sud, 12 connects_to franchissables, 3 anneaux et 2 koi a lire.",
+"payload": {
+"bilan_systemes": "regles_de_presence_seules",
+"declare_aucune_mecanique": true,
+"mechanics": [
+{"id": "SYS01", "nom": "Apparition au sud", "type": "transition_etat", "intention": "Un seul point d'entree, regard au nord.", "etat": {"initial": "aucun_joueur", "transitions": [{"de": "aucun_joueur", "a": "joueur_vue_nord", "quand": "spawn sur Spawner_Plaza_01"}], "memoire": "aucune"}, "entrees": [{"depuis": "device", "evenement": "spawn assure par le moteur"}], "sorties": [{"vers": "joueur", "effet": "aucune logique annexe"}], "observation": {"preuve": "08_wiring_report allow-empty, 0 binding", "critere": "arrivee au sud, face au nord", "qui_verifie": "rapport_mcp", "verifiable_en_jam": true}, "besoin_vers": "aucun", "api_vers": "aucune", "dependances_devices": [{"actor_label": "Spawner_Plaza_01", "device_class": "player_spawner_device", "source": "01_gdd.required_devices"}]},
+{"id": "SYS02", "nom": "Circulation en neuf zones", "type": "regle_perpetuelle", "intention": "Traverser sans verrou.", "etat": {"initial": "joueur_cote_sud", "transitions": [{"de": "joueur_cote_sud", "a": "joueur_entre_anneaux", "quand": "Zone_South vers Zone_Center"}], "memoire": "aucune"}, "entrees": [{"depuis": "zone", "evenement": "arete du graphe de zones"}], "sorties": [{"vers": "joueur", "effet": "acces aux 9 zones"}], "observation": {"preuve": "06_navigation_report : navigation_errors vide", "critere": "12 paires franchissables", "qui_verifie": "validateur_python", "verifiable_en_jam": true}, "besoin_vers": "aucun", "api_vers": "aucune", "dependances_devices": []}
+],
+"jalons_observation": [
+{"time_sec": 0, "ce_qui_doit_tenir": "apparition au sud, regard nord", "preuve_attendue": "08_wiring_report allow-empty", "systemes_lies": ["SYS01"]},
+{"time_sec": 1, "ce_qui_doit_tenir": "bassin, 3 anneaux, 2 koi visibles", "preuve_attendue": "capture : UNKNOWN, 0 session rapportee", "systemes_lies": []},
+{"time_sec": 5, "ce_qui_doit_tenir": "circulation libre, couronne visible", "preuve_attendue": "06_navigation_report PASSED", "systemes_lies": ["SYS02"]}
+],
+"tuning": {"philosophie": "Aucune table : scene contemplative, verse_modules vide, donc 0 HP, DPS, TTK, cooldown.", "parametres": [], "coherence": ["HP / DPS : sans objet"]},
+"hors_portee": [
+{"effet": "koi volumetriques animees", "motif": "0 module Verse, 0 equivalent legal", "statut": "non_realisable_sans_vers", "alternative": "emissif statique pose par 15", "ecart_a_inscrire_chez": "Creative_Director"},
+{"effet": "decor du jeu hote", "motif": "hors catalogue Creatif", "statut": "hors_portee_legale", "alternative": "PPID_ choisis par 11", "ecart_a_inscrire_chez": "Lead_Programmer"}
+],
+"contradictions_amont": [
+{"champ": "01_gdd.game_mode", "valeur_amont": "rpg", "implication": "un rpg veut progression et persistance ; les notes imposent 0 mecanique.", "gravite": "bloquante", "question_producteur": "game_mode rpg : etiquette ou intention ?"},
+{"champ": "01_gdd.status", "valeur_amont": "APPROVED_FOR_CLAUDETEST", "implication": "ce statut n'est pas le gate HITL #2 accorde.", "gravite": "a_arbitrer", "question_producteur": "HITL #2 accorde ? Sinon livrable conditionnel."}
+]
+},
+"constraints": {
+"acces_mcp": "none",
+"must_preserve": ["0 mecanique : on traverse et on regarde", "api_vers = UNKNOWN tant que 11 n'a pas verifie"],
+"forbidden": ["aucune coordonnee x/y/z", "aucun PPID_ ni nom d'API Verse invente"]
+},
+"golden_example_ref": "skill/exemples/systemes-corpo-plaza-sans-mecanique.json",
+"acceptance": ["bilan_systemes_declared", "each_mechanic_has_state_transition", "each_mechanic_has_observation_condition", "each_mechanic_has_traced_device_dependency", "no_invented_verse_api", "no_illegal_asset_path", "no_coordinate_written_by_model", "timeline_steps_all_covered", "tuning_values_all_traced", "out_of_scope_effects_declared", "upstream_contradictions_declared", "no_mechanic_declared_or_empty_coherent", "no_self_validation_no_user_contact"],
+"next_step_hint": "04 et 05 : rien tant que rpg n'est pas arbitre. 12 : rien a coder. 09 : SYS02 tient si les connects_to passent.",
+"context_budget_tokens": 4000,
+"exemple_annotations": {
+"role": "GOLDEN - 01_systems.json sans mecanique",
+"source": "01_systems.json jamais emis (run geometrique seule, NO_VERSE_STAGED) ; payload reconstitue depuis 01_gdd.json et le journal 2026-10-24 (s. 1, 11, 12, 17).",
+"tronque": "SYS03 (contrainte_de_lecture : bassin, 3 anneaux, 2 koi ; preuve = capture humaine, verifiable_en_jam false) repliee dans le jalon de 1 s ; 22 assets resumes a bassin, anneaux, koi ; 6 zones sur 9 absentes ; garde, chiffres_cles, invariants omis.",
+"pourquoi_il_passe": ["regles_de_presence_seules assume : l'absence de mecanique est une sortie", "une transition et une observation par regle, sur un rapport reel du run", "api_vers = aucune : inventer une API Verse serait un rejet", "contradictions amont declarees, jamais arbitrees seule", "13 criteres sur 13 revendiques, aucun retire pour la troncature : no_coordinate_written_by_model et no_illegal_asset_path portent sur un payload sans coordonnee ni /Game/, tuning_values_all_traces sur parametres [] avec sa philosophie, out_of_scope_effects_declared sur les 2 hors_portee (motif + statut + alternative + destinataire de l'ecart), upstream_contradictions_declared sur les 2 contradictions_amont, no_self_validation_no_user_contact parce que chaque observation nomme un juge externe (rapport_mcp, validateur_python) et que l'arbitrage rpg part en question_producteur -- jamais vers l'humain ni vers le modele lui-meme."]
+}
+}

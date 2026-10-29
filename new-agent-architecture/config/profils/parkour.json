@@ -1,0 +1,80 @@
+{
+  "description": "Parcours de plateformes avec checkpoints jusqu'a une arrivee.",
+  "generateur": "parkour",
+  "pose": {
+    "max_acteurs_par_lot": 60,
+    "portee_max_primitive_uu": 3900,
+    "z_min_primitive_uu": 256,
+    "tag_studio": "CP_STUDIO",
+    "dossier_outliner": "CP_Studio",
+    "categories_en_dernier": [
+      "environnement"
+    ],
+    "prefixes_en_dernier": [],
+    "ordre_strates": [
+      "S0",
+      "S1",
+      "S2",
+      "S3",
+      "S4"
+    ]
+  },
+  "validation": {
+    "tolerance_contact_uu": 5,
+    "sol_z_uu": -256,
+    "marche_max_uu": 120,
+    "saut_horizontal_max_uu": 200,
+    "categories_praticables": [
+      "plancher",
+      "connecteur"
+    ],
+    "mots_non_praticables": [
+      "GARDE",
+      "RAIL",
+      "MONTANT"
+    ],
+    "mots_connecteurs_verticaux": [
+      "RAMPE",
+      "ECHELLE",
+      "GAINE",
+      "ESCALIER",
+      "ASCENSEUR"
+    ],
+    "gameplay_requis": [
+      {
+        "nom": "spawn",
+        "motif": "SPAWN*",
+        "min": 1
+      },
+      {
+        "nom": "checkpoints",
+        "motif": "*CHECKPOINT*",
+        "min": 3
+      },
+      {
+        "nom": "arrivee",
+        "motif": "*ARRIVEE*",
+        "min": 1
+      }
+    ],
+    "valeurs_a_mesurer": "marche_max_uu et saut_horizontal_max_uu valent ici la MARCHE (sur). Les vraies capacites de saut Fortnite ne sont pas inventees : les mesurer en playtest puis les reporter dans le projet."
+  },
+  "visuel": {
+    "captures": {
+      "ensemble": {}
+    },
+    "seuils": {
+      "contraste_min": 12,
+      "bords_min": 4,
+      "ecart_camera_max_uu": 100
+    }
+  },
+  "$schema": "studio.profil.v1",
+  "ram_gate": {
+    "free_mo_min": 1500,
+    "editeur_ws_mo_max": null,
+    "cache_s": 20,
+    "polling_s": 30,
+    "fenetre_max_s": 360
+  }
+}

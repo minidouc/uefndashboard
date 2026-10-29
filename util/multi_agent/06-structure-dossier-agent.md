@@ -119,14 +119,26 @@ Physics_Programmer/
 
 ## Chargement à l'exécution (rappel)
 
-1. Le Producer ouvre le dossier de l'agent ciblé.
-2. `persona.md` + `SKILL.md` → chargés comme **instruction système**.
-3. `skill/schema-de-sortie.json` → le contrat à respecter.
-4. `skill/regles-engagement.md` + `skill/long-term-memory.json` → injectés.
-5. `skill/exemples/*.json` → injectés en **few-shot** (1 à 3 seulement).
-6. Pour un agent technique : `skill/outils.md` borne les appels MCP autorisés.
-7. L'agent produit son livrable → validé contre `schema-de-sortie.json` → écrit en
-   `handoff/*.json` **hors du dossier agent**.
+> **Mis à jour le 2026-10-29.** Injecter tous les fichiers ci-dessous coûtait ≈ 19 000 tokens par
+> agent : trop pour un modèle Flash. Ils sont désormais **compilés** en un seul `prompt.flash.md`.
+
+1. **Compilation** (code, déterministe) : `python agent-team/_commun/compiler_prompts.py` produit
+   `<Agent>/prompt.flash.md` à partir de `persona.md`, `skill/regles-engagement.md`,
+   `skill/outils.md`, `skill/long-term-memory.json`, un **squelette** de `skill/schema-de-sortie.json`,
+   **un** bon exemple et les tableaux de pièges de `skill/tool-output/`. Retirés : citations WP,
+   méta-commentaires, règles communes recopiées (remplacées par `_commun/regles-communes-flash.md`),
+   `decisions_de_pipeline`, `chiffres_de_reference`, descriptions de schéma, exemples REJET.
+   Résultat : ≈ 8 500 tokens en moyenne (−54 %). `--check` échoue si un prompt est périmé ou dépasse
+   le plafond (11 000).
+2. Au DISPATCH, `agent-team/_commun/studio.py dispatch --mission <handoff>` écrit
+   `<projet>/dispatch/<id>__<Agent>.md` : `prompt.flash.md` + mission + fichiers d'entrée + consignes
+   de rendu (avec auto-contrôle `validate --essai`). Le Producer passe au sous-agent de son harness la
+   ligne `prompt_sous_agent` (« lis ce fichier et exécute-le »), jamais un prompt réécrit à la main.
+   Marche dans tout harness qui a un shell et un outil de sous-agent. Le Producer n'est pas compilé.
+3. Le livrable est jugé par `studio.py validate` contre le `skill/schema-de-sortie.json` **complet**
+   (le squelette du prompt n'en est qu'un résumé), plus légalité, émetteur, mission, budget et
+   compteur de tentatives ; la sortie donne `decision_conseillee` et le `message_correctif`.
+4. On ne modifie **jamais** `prompt.flash.md` à la main : on corrige la source, puis on recompile.
 
 ---
 

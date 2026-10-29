@@ -1,0 +1,122 @@
+{
+  "$schema": "uefn.catalogue-verifie.v1",
+  "description": "Assets dont la legalite a ete PROUVEE par le validateur UEFN (FortValidator_FortExposedActors) et, pour les props, dont les bornes ont ete MESUREES. Regle et procedure : legalite-assets.md. Un asset absent de ce fichier est UNVERIFIED, pas interdit.",
+  "mise_a_jour": "2026-10-29",
+  "projet_de_preuve": "MyProjectArtyu (1v1 build fight)",
+  "preuve": {
+    "validation_propre": "2026-10-29 13:49:20, aucune ligne 'AssetCheck: Error' apres sauvegarde",
+    "session": "2026-10-29 13:50:12 FlowStep_RunLocalValidation(): Complete ; 13:50:15 Module upload completed"
+  },
+  "conventions_bornes": {
+    "unite": "cm",
+    "repere": "bornes min/max relatives a l'origine de l'acteur, yaw 0, scale 1, mesurees par get bounds sur un acteur pose puis detruit",
+    "lecture": "taille = max - min ; l'origine n'est PAS toujours au centre : lire min/max avant de calculer une position (ex. Floor_Base a son origine sur le bord -Y, Pillar sur son bord +X)"
+  },
+
+  "acceptes": {
+    "props": {
+      "_note": "Blueprints poses directement (SceneTools.add_to_scene_from_asset avec ce chemin). place_en_map_validee=true : present dans la scene lors de la validation propre ; false : mesure seulement.",
+      "MilitaryBase_Floor_Base":        { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Floor_Base.MilitaryBase_Floor_Base_C", "min": [-256, 0, -12], "max": [256, 512, 12], "place_en_map_validee": true, "piege": "origine sur le bord -Y : pour centrer une dalle en (cx, cy), poser en (cx, cy - 256)" },
+      "MilitaryBase_Floor_Side":        { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Floor_Side.MilitaryBase_Floor_Side_C", "min": [-256, 0, -19], "max": [256, 512, 18], "place_en_map_validee": false },
+      "MilitaryBase_SolidWall_01a":     { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_SolidWall_01a.MilitaryBase_SolidWall_01a_C", "min": [-256, -12, 0], "max": [256, 12, 384], "place_en_map_validee": true, "piege": "le mur court le long de X a yaw 0 ; yaw 90 pour un mur le long de Y" },
+      "MilitaryBase_Window_Wide":       { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Window_Wide.MilitaryBase_Window_Wide_C", "min": [-256, -15, 0], "max": [256, 13, 384], "place_en_map_validee": true },
+      "MilitaryBase_HalfWall":          { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_HalfWall.MilitaryBase_HalfWall_C", "min": [-256, -16, 0], "max": [256, 16, 192], "place_en_map_validee": true },
+      "MilitaryBase_QuarterWall":       { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_QuarterWall.MilitaryBase_QuarterWall_C", "min": [-256, -21, 0], "max": [256, 21, 104], "place_en_map_validee": true },
+      "MilitaryBase_RoofWall_01":       { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_RoofWall_01.MilitaryBase_RoofWall_01_C", "min": [-256, -21, 0], "max": [256, 21, 384], "place_en_map_validee": false },
+      "MilitaryBase_Archway_Large_01":  { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Archway_Large_01.MilitaryBase_Archway_Large_01_C", "min": [-256, -32, 0], "max": [256, 32, 384], "place_en_map_validee": false },
+      "MilitaryBase_Trim_01":           { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Trim_01.MilitaryBase_Trim_01_C", "min": [-257, -8, -17], "max": [257, 45, 54], "place_en_map_validee": true },
+      "MilitaryBase_Pillar":            { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Pillar.MilitaryBase_Pillar_C", "min": [-61, -25, 0], "max": [0, 25, 384], "place_en_map_validee": true, "piege": "origine sur le bord +X" },
+      "MilitaryBase_Pillar_Cap":        { "chemin": "/Game/Creative/Sets/MilitaryBase/BuildingPieces/MilitaryBase_Pillar_Cap.MilitaryBase_Pillar_Cap_C", "min": [-51, 0, 0], "max": [52, 95, 153], "place_en_map_validee": false },
+      "MilitaryBase_Metal_Crate_01":    { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_Metal_Crate_01.MilitaryBase_Metal_Crate_01_C", "min": [-53, -46, 0], "max": [46, 45, 66], "place_en_map_validee": true },
+      "MilitaryBase_Metal_Crate_02":    { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_Metal_Crate_02.MilitaryBase_Metal_Crate_02_C", "min": [-51, -87, 0], "max": [45, 87, 66], "place_en_map_validee": true },
+      "MilitaryBase_Crate_03":          { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_Crate_03.MilitaryBase_Crate_03_C", "min": [-82, -34, 0], "max": [82, 40, 47], "place_en_map_validee": true },
+      "MilitaryBase_Crate_04":          { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_Crate_04.MilitaryBase_Crate_04_C", "min": [-82, -40, 0], "max": [81, 40, 77], "place_en_map_validee": true },
+      "MilitaryBase_LargePipe_01":      { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_LargePipe_01.MilitaryBase_LargePipe_01_C", "min": [0, -102, -2], "max": [512, 102, 179], "place_en_map_validee": true, "piege": "origine a une extremite (bord -X)" },
+      "MilitaryBase_Satellite_Dish_02": { "chemin": "/Game/Creative/Sets/MilitaryBase/MilitaryBase_Satellite_Dish_02.MilitaryBase_Satellite_Dish_02_C", "min": [-145, -199, -1], "max": [276, 199, 382], "place_en_map_validee": true },
+      "CP_Prop_ShippingContainer_01_Closed": { "chemin": "/Game/Creative/BuildingActors/Props/CP_Prop_ShippingContainer_01_Closed.CP_Prop_ShippingContainer_01_Closed_C", "min": [-298, -122, 0], "max": [298, 121, 293], "place_en_map_validee": true, "note": "empilable : poser le second a z = 293" },
+      "CP_Prop_ShippingContainer_01_Open_A": { "chemin": "/Game/Creative/BuildingActors/Props/CP_Prop_ShippingContainer_01_Open_A.CP_Prop_ShippingContainer_01_Open_A_C", "min": [-336, -156, -24], "max": [329, 152, 318], "place_en_map_validee": true },
+      "CP_PowerPlant_OverheadLight_01": { "chemin": "/Game/Creative/BuildingActors/Props/CP_PowerPlant_OverheadLight_01.CP_PowerPlant_OverheadLight_01_C", "min": [-128, -128, -360], "max": [128, 128, 0], "place_en_map_validee": false, "piege": "suspendu : l'objet pend SOUS son origine" },
+      "Athena_Prop_Storage_Crate05":    { "chemin": "/Game/Athena/BuildingActors/Props/Building/ActorBlueprints/Containers/Athena_Prop_Storage_Crate05.Athena_Prop_Storage_Crate05_C", "min": [-58, -66, -2], "max": [57, 58, 111], "place_en_map_validee": true },
+      "Athena_Prop_Storage_Crate06":    { "chemin": "/Game/Athena/BuildingActors/Props/Building/ActorBlueprints/Containers/Athena_Prop_Storage_Crate06.Athena_Prop_Storage_Crate06_C", "min": [-47, -59, -1], "max": [47, 59, 92], "place_en_map_validee": true },
+      "Athena_Prop_Recreation_Camp_Tent_01": { "chemin": "/Game/Athena/BuildingActors/Props/Building/ActorBlueprints/Containers/Athena_Prop_Recreation_Camp_Tent_01.Athena_Prop_Recreation_Camp_Tent_01_C", "min": [-94, -108, -1], "max": [141, 109, 99], "place_en_map_validee": true },
+      "Apollo_PowerPlant_Lightpost_01": { "chemin": "/Game/Athena/Apollo/Environments/BuildingActors/PowerPlant/Props/Apollo_PowerPlant_Lightpost_01.Apollo_PowerPlant_Lightpost_01_C", "min": [-274, -304, 0], "max": [274, 304, 911], "place_en_map_validee": true },
+      "Athena_Prop_AB_Siren_Light":     { "chemin": "/Game/Building/ActorBlueprints/ArcticBase/Props/Athena_Prop_AB_Siren_Light.Athena_Prop_AB_Siren_Light_C", "min": [-128, -128, -128], "max": [128, 128, 128], "place_en_map_validee": true },
+      "Palettes_Tall":                  { "chemin": "/Game/Building/ActorBlueprints/Prop/Palettes_Tall.Palettes_Tall_C", "min": [-128, -58, 0], "max": [125, 53, 109], "place_en_map_validee": true },
+      "Prop_TirePile_02":               { "chemin": "/Game/Building/ActorBlueprints/Prop/Prop_TirePile_02.Prop_TirePile_02_C", "min": [-185, -157, -3], "max": [189, 105, 234], "place_en_map_validee": true },
+      "Storage_OilDrum_Barrel_2":       { "chemin": "/Game/Building/ActorBlueprints/Prop/Storage_OilDrum_Barrel_2.Storage_OilDrum_Barrel_2_C", "min": [-37, -37, 0], "max": [37, 37, 107], "place_en_map_validee": true },
+      "WaterTower01":                   { "chemin": "/Game/Building/ActorBlueprints/Prop/WaterTower01.WaterTower01_C", "min": [-500, -500, 0], "max": [500, 500, 384], "place_en_map_validee": true, "note": "vu de haut : un disque plat, pas un chateau d'eau complet" },
+      "PowerTower02":                   { "chemin": "/Game/Building/ActorBlueprints/Prop/PowerTower02.PowerTower02_C", "min": [-466, -478, 0], "max": [466, 478, 1632], "place_en_map_validee": true },
+      "Tiered_Chest_Athena":            { "chemin": "/Game/Building/ActorBlueprints/Containers/Tiered_Chest_Athena.Tiered_Chest_Athena_C", "place_en_map_validee": true, "note": "coffre Fortnite fonctionnel (butin aleatoire)" }
+    },
+
+    "devices": {
+      "_note": "Poses avec DeviceToolset.PlaceDevice {assetPath:{refPath}, transform}. Le yaw demande peut etre ignore : relire et forcer avec set_actor_transform.",
+      "ItemSpawner": { "pid": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemSpawner.PID_Device_ItemSpawner", "classe_posee": "Device_ItemSpawner_V3_C", "recette": "Gameplay_Programmer/skill/tool-output/devices-objets-et-ile.md" },
+      "ItemGranter": { "pid": "/CreativeCoreDevices/SetupAssets/PID_Device_ItemGranter.PID_Device_ItemGranter", "classe_posee": "Device_ItemGranter_V2_C", "recette": "Gameplay_Programmer/skill/tool-output/devices-objets-et-ile.md" },
+      "PIEGE_ItemSpawner_CTF": { "pid": "/CR_Legacy/Playsets/PID_CP_Devices_ItemSpawner.PID_CP_Devices_ItemSpawner", "classe_posee": "BP_Creative_ItemSpawner_C", "statut": "NE PAS UTILISER pour des armes", "raison": "malgre son nom, c'est le generateur d'objet de capture (drapeau CTF) : proprietes bIsFlag, captureItemTakenTag..." }
+    },
+
+    "objets": {
+      "_note": "Definitions d'objets (FortWeaponRangedItemDefinition / consommables) acceptees dans la liste d'un ItemSpawner (toSpawnList) et d'un ItemGranter (itemListData). Rarete SR = epique.",
+      "armes": {
+        "pompe":              "/Game/Athena/Items/Weapons/WID_Shotgun_Standard_Athena_SR_Ore_T03.WID_Shotgun_Standard_Athena_SR_Ore_T03",
+        "pompe_de_combat":    "/Game/Athena/Items/Weapons/WID_Shotgun_Combat_Athena_SR_Ore_T03.WID_Shotgun_Combat_Athena_SR_Ore_T03",
+        "pompe_lourd":        "/Game/Athena/Items/Weapons/WID_Shotgun_Heavy_Athena_SR.WID_Shotgun_Heavy_Athena_SR",
+        "pompe_tactique":     "/Game/Athena/Items/Weapons/WID_Shotgun_SemiAuto_Athena_SR.WID_Shotgun_SemiAuto_Athena_SR",
+        "ar_scar":            "/Game/Athena/Items/Weapons/WID_Assault_AutoHigh_Athena_SR_Ore_T03.WID_Assault_AutoHigh_Athena_SR_Ore_T03",
+        "ar_lourd":           "/Game/Athena/Items/Weapons/WID_Assault_Heavy_Athena_SR_Ore_T03.WID_Assault_Heavy_Athena_SR_Ore_T03",
+        "smg_tir_rapide":     "/Game/Athena/Items/Weapons/WID_Pistol_RapidFireSMG_Athena_SR_Ore_T03.WID_Pistol_RapidFireSMG_Athena_SR_Ore_T03",
+        "smg_p90":            "/Game/Athena/Items/Weapons/WID_Pistol_AutoHeavyPDW_Athena_SR_Ore_T03.WID_Pistol_AutoHeavyPDW_Athena_SR_Ore_T03",
+        "smg_compact":        "/Game/Athena/Items/Weapons/WID_SMG_Compact_Athena_SR.WID_SMG_Compact_Athena_SR",
+        "hand_cannon":        "/Game/Athena/Items/Weapons/WID_Pistol_HandCannon_Athena_SR_Ore_T03.WID_Pistol_HandCannon_Athena_SR_Ore_T03",
+        "sniper_lourd":       "/Game/Athena/Items/Weapons/WID_Sniper_Heavy_Athena_SR_Ore_T03.WID_Sniper_Heavy_Athena_SR_Ore_T03",
+        "sniper_verrou":      "/Game/Athena/Items/Weapons/WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03.WID_Sniper_BoltAction_Scope_Athena_SR_Ore_T03",
+        "lance_roquettes":    "/Game/Athena/Items/Weapons/WID_Launcher_Rocket_Athena_SR_Ore_T03.WID_Launcher_Rocket_Athena_SR_Ore_T03"
+      },
+      "consommables": {
+        "gros_bouclier":      "/Game/Athena/Items/Consumables/Shields/Athena_Shields.Athena_Shields",
+        "mini_bouclier":      "/Game/Athena/Items/Consumables/ShieldSmall/Athena_ShieldSmall.Athena_ShieldSmall",
+        "trousse_de_soins":   "/Game/Athena/Items/Consumables/Medkit/Athena_Medkit.Athena_Medkit",
+        "slurp":              "/Game/Athena/Items/Consumables/PurpleStuff/Athena_PurpleStuff.Athena_PurpleStuff",
+        "grenade":            "/Game/Athena/Items/Consumables/Grenade/Athena_Grenade.Athena_Grenade"
+      },
+      "decouverte": "les autres armes classiques sont listees par AssetTools.find_assets {folder_path:'/Game/Athena/Items/Weapons', recursive:false} et les consommables sous '/Game/Athena/Items/Consumables/<Nom>/' ; elles sont UNVERIFIED tant qu'une validation propre ne les a pas vues"
+    }
+  },
+
+  "refuses": {
+    "_note": "Vus dans une ligne 'AssetCheck: Error ... references disallowed object' (2026-10-29 13:42:34), places dans la liste d'un ItemSpawner ou d'un ItemGranter. Ils existent dans le projet, l'editeur les accepte : SEUL le validateur les refuse.",
+    "familles": ["/BlastBerryWeapons/...", "/Figment_Athena_*/...", "/Figment_Athena_SmallShieldV2/...", "/JethroWeaponGameplay/..."],
+    "chemins": [
+      "/BlastBerryWeapons/Gameplay/PumpShotgun/WID_Shotgun_Pump_Athena_BB_SR.WID_Shotgun_Pump_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/FastAR/WID_Assault_AutoHigh_Athena_BB_SR.WID_Assault_AutoHigh_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/SMG/WID_SMG_AutoHeavyPDW_Athena_BB_SR.WID_SMG_AutoHeavyPDW_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/AutoShotgun/WID_Shotgun_SemiAuto_Athena_BB_VR.WID_Shotgun_SemiAuto_Athena_BB_VR",
+      "/BlastBerryWeapons/Gameplay/FlexSMG/WID_SMG_DragonCart_Athena_BB_SR.WID_SMG_DragonCart_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/HammerAR/WID_Assault_Heavy_Recoil_Athena_BB_SR.WID_Assault_Heavy_Recoil_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/HandCannon/WID_Pistol_HandCannon_Athena_BB_SR.WID_Pistol_HandCannon_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/HavocPump/WID_Shotgun_RadicalPump_Athena_BB_VR.WID_Shotgun_RadicalPump_Athena_BB_VR",
+      "/BlastBerryWeapons/Gameplay/SentinalPump/WID_Shotgun_Pump_FirePetal_Athena_BB_SR.WID_Shotgun_Pump_FirePetal_Athena_BB_SR",
+      "/BlastBerryWeapons/Gameplay/SlowAR/WID_Assault_Heavy_Athena_BB_SR.WID_Assault_Heavy_Athena_BB_SR",
+      "/Figment_Athena_Shields/Gameplay/Figment_Athena_Shields.Figment_Athena_Shields",
+      "/Figment_Athena_Medkit/Gameplay/Figment_Athena_Medkit.Figment_Athena_Medkit",
+      "/Figment_Athena_PurpleStuff/Gameplay/Figment_Athena_PurpleStuff.Figment_Athena_PurpleStuff",
+      "/Figment_Athena_SmallShieldV2/Gameplay/WID_Figment_Paprika_ShieldSmall.WID_Figment_Paprika_ShieldSmall",
+      "/JethroWeaponGameplay/Gameplay/Unvaults/CosmosSniper/WID_Sniper_Jethro_Cosmos_Athena_SR.WID_Sniper_Jethro_Cosmos_Athena_SR"
+    ],
+    "non_verifies_mais_suspects": {
+      "_note": "Places dans la meme liste refusee ; le journal tronque ne les montrait pas. Ne pas utiliser sans validation.",
+      "chemins": [
+        "/MoonFlaxWeaponGameplay/Items/Weapons/Sniper/WID_Sniper_MoonFlax_Athena_SR.WID_Sniper_MoonFlax_Athena_SR",
+        "/ResolveGameplay/Items/Guns/HomingRocket/WIDs/WID_Launcher_HomingRocket_Athena_SR.WID_Launcher_HomingRocket_Athena_SR",
+        "/Figment_Athena_Grenade/Gameplay/Figment_Athena_Grenade.Figment_Athena_Grenade"
+      ]
+    }
+  },
+
+  "mauvaise_classe": {
+    "_note": "Pas une question de legalite : l'asset n'est pas un objet. Code WRONG_ASSET_CLASS.",
+    "/Figment_Athena_Grenade/Figment_Athena_Grenade.Figment_Athena_Grenade": "FortGameFeatureData (le plugin), pas une FortWorldItemDefinition ; l'objet est sous .../Gameplay/",
+    "regle": "verifier AssetTools.get_asset_class avant de mettre un objet dans une liste : attendu FortWeaponRangedItemDefinition (ou une autre *ItemDefinition)"
+  }
+}

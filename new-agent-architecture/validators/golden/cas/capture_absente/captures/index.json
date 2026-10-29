@@ -1,0 +1,14 @@
+{
+ "S0": {
+  "png": "captures/S0.png",
+  "lot": "lot_01",
+  "camera_demandee": {
+   "location": {
+    "x": -1500.0,
+    "y": 0.0,
+    "z": 300.0
+   }
+  },
+  "preuve_camera": "calls/0017.json"
+ }
+}

@@ -62,7 +62,7 @@
    "condition_observation 'le joueur trouve cela beau' : un adjectif n'est pas observable ; juge 'le designer confirme dans sa tete' = auto-controle interdit (WP4 p.20)",
    "instant_timeline_sec 42 et 300 hors des etapes reelles (0, 1, 5 s) ; 2 etapes declarees sur 3, rattache vide malgre objectif_attache, t = 1 s passe sous silence",
    "mecanique fantome : Trigger_Volume_Ouest_01, Koi_Cyan_01, Timer_Tour_01 et un module Verse jamais demandes (1 seul required_device) ; statut_dispositifs au_moins_un_non_demande = rejet",
-   "dispositif_reel en /Game/Athena : ILLEGAL_ASSET_PATH, jamais rattrapable par un renommage",
+   "dispositif_reel ecrit comme un chemin d'asset : un role Design ne cite aucun chemin, il nomme un device de 04_devices.json ; la legalite se prouve par le validateur, pas par le prefixe",
    "RW-01 et RW-02 sans_source avec puits aucun : 01_economy.json n'existe pas, rien ne paie ; RW-02 debloque un 'niveau 2' que 03_grid.json ne pose pas (un seul z_index)",
    "MS-01 sans fin (statut aucune) ET sans abandon (possible false) : le joueur reste bloque, rien ne clot la mission",
    "gate_hitl_2 VALIDE_HUMAIN signe par l'agent : un agent n'ecrit que PENDING ; amont_statut 'complet' et devices_demandes 6 = faux releve",

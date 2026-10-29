@@ -75,8 +75,8 @@ L'étage Generator-Critic (WP1 p.25) porte sur mes artefacts : je lui livre un G
 
 - Assets : je nomme une **famille** et la **requête catalogue** qui l'a fait apparaître, j'écris ce
   qui n'est pas certifié (couleur, silhouette, animation). Les candidats `PPID_`/`PID_` sortent de
-  recherches réellement exécutées, jamais d'un souvenir ; `/Game/Athena` et `/Game/Environments`
-  sont `ILLEGAL_ASSET_PATH`. `Lead_Programmer` mesure et tranche.
+  recherches réellement exécutées ou du catalogue commun (`../../_commun/catalogue-verifie.json`),
+  jamais d'un souvenir ; le chemin ne prouve pas la légalité. `Lead_Programmer` mesure et tranche.
 - Devices : **classe fonctionnelle + label** uniquement, et le rôle du device dans la timeline.
 - Faisabilité : rien n'est promis sans `tech/mcp-inventory.json` lu ; une mécanique non native se
   déclare avec 2 à 3 contournements ou part en question.

@@ -341,24 +341,95 @@ def full_object_path(p: str) -> str:
   return f"{s}.{last}" if last and "." not in last else s
 
 
-def is_legal_uefn_path(path: str) -> bool:
-  """En UEFN, tout asset /Game/... brut (Athena, Environments, Meshes) est rejete par FortValidator_FortExposedAssets.
-  Seuls sont autorises les PPID_ (FortPlaysetPropItemDefinition), PID_ (FortPlaysetItemDefinition),
-  /Engine/BasicShapes/ et /Fortnite/ (ainsi que /Game/C.SM_Crate des tests hors-ligne).
-  """
+# Legalite : le PREFIXE d'un chemin ne prouve rien. Le 2026-10-29, le validateur UEFN
+# (FortValidator_FortExposedActors) a accepte des /Game/Athena/Items/... et /Game/Creative/...,
+# et refuse des /BlastBerryWeapons/... et /Figment_Athena_*/... . La verite est donc le catalogue
+# commun, alimente par la lecture du journal du validateur (commande check-validator).
+# Regle : agent-team/_commun/legalite-assets.md
+CATALOGUE_PATH = os.environ.get("UEFN_CATALOGUE") or os.path.join(
+    os.path.dirname(os.path.dirname(SKILL_ROOT)), "agent-team", "_commun", "catalogue-verifie.json")
+_CATALOGUE: dict | None = None
+
+
+def load_catalogue(force: bool = False) -> dict:
+  """Catalogue commun des assets prouves (acceptes / refuses). {} s'il est absent."""
+  global _CATALOGUE
+  if _CATALOGUE is None or force:
+    try:
+      with open(CATALOGUE_PATH, encoding="utf-8") as f:
+        _CATALOGUE = json.load(f)
+    except (OSError, ValueError):
+      _CATALOGUE = {}
+  return _CATALOGUE
+
+
+def _catalogue_index() -> tuple[set, set, list]:
+  cat = load_catalogue()
+  acc = cat.get("acceptes", {})
+  accepted = {v["chemin"] for k, v in acc.get("props", {}).items()
+              if isinstance(v, dict) and v.get("chemin")}
+  accepted |= {v["pid"] for v in acc.get("devices", {}).values()
+               if isinstance(v, dict) and v.get("pid") and not v.get("statut")}
+  for groupe in ("armes", "consommables"):
+    accepted |= {v for v in acc.get("objets", {}).get(groupe, {}).values() if isinstance(v, str)}
+  ref = cat.get("refuses", {})
+  refused = set(ref.get("chemins", [])) | set(
+      ref.get("non_verifies_mais_suspects", {}).get("chemins", []))
+  familles = [re.compile("^" + re.escape(f.split("/...")[0]).replace(r"\*", "[^/]*") + "(/|$)")
+              for f in ref.get("familles", [])]
+  return accepted, refused, familles
+
+
+def legal_status(path: str) -> str:
+  """VERIFIED (catalogue acceptes), REFUSED (catalogue refuses), PATTERN (forme Creatif usuelle,
+  non prouvee mais historiquement acceptee), UNVERIFIED (/Game/... absent du catalogue)."""
   p = str(path or "").strip()
   if not p:
-    return True
+    return "PATTERN"
+  accepted, refused, familles = _catalogue_index()
+  pkg = p.split(".")[0]
+  if p in refused or pkg in {r.split(".")[0] for r in refused} or any(f.match(p) for f in familles):
+    return "REFUSED"
+  if p in accepted or pkg in {a.split(".")[0] for a in accepted}:
+    return "VERIFIED"
   if p in ("/Game/C.SM_Crate", "/Fortnite/Game/Props/Ramp"):
-    return True
+    return "PATTERN"
   if p.startswith(("/Engine/BasicShapes/", "/Fortnite/")):
-    return True
+    return "PATTERN"
   obj_name = p.rsplit("/", 1)[-1].split(".")[0]
   if obj_name.startswith(("PPID_", "PID_")) or "/PPIDs/" in p:
-    return True
+    return "PATTERN"
   if p.startswith("/Game/"):
+    return "UNVERIFIED"
+  return "PATTERN"
+
+
+def is_legal_uefn_path(path: str) -> bool:
+  """False pour un chemin REFUSED ; pour un /Game/ UNVERIFIED, False par defaut (prudence) sauf
+  UEFN_ALLOW_UNVERIFIED=1, qui permet d'essayer un nouvel asset avant de le faire juger par
+  `check-validator`."""
+  s = legal_status(path)
+  if s == "REFUSED":
     return False
+  if s == "UNVERIFIED":
+    return os.environ.get("UEFN_ALLOW_UNVERIFIED") == "1"
   return True
+
+
+def legality_error(asset_key: str, path: str, where: str | None = None) -> dict:
+  """Erreur de legalite explicite : refuse par le validateur, ou simplement non prouve."""
+  refused = legal_status(path) == "REFUSED"
+  err = {"type": "ILLEGAL_ASSET_PATH" if refused else "UNVERIFIED_ASSET_PATH",
+         "asset": asset_key, "uefn_path": path}
+  if where:
+    err["where"] = where
+  err["detail"] = (
+      "Refuse par le validateur UEFN (catalogue commun -> refuses) : remplacer par un asset de "
+      "catalogue-verifie.json -> acceptes." if refused else
+      "Chemin /Game/ absent du catalogue commun : legalite non prouvee. Utiliser un asset 'acceptes', "
+      "ou relancer avec UEFN_ALLOW_UNVERIFIED=1 puis faire juger par `check-validator` "
+      "(le prefixe /Game/ ne prouve PAS l'illegalite).")
+  return err
 
 
 def find_by_label(cli: McpClient, label: str) -> str | None:
@@ -590,8 +661,7 @@ def cmd_measure_palette(workspace: str, dry_run: bool, force: bool) -> int:
             for k, v in assets.items() if not v.get("uefn_path")]
   for k, v in assets.items():
     if v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
-      errors.append({"type": "ILLEGAL_ASSET_PATH", "asset": k, "uefn_path": v.get("uefn_path"),
-                     "error": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : chercher un PPID_ / PID_ legal avec `search-playsets --query <mot>`."})
+      errors.append(legality_error(k, v.get("uefn_path")))
   todo = [k for k, v in assets.items()
           if v.get("uefn_path") and is_legal_uefn_path(v.get("uefn_path")) and (force or not v.get("measured"))]
   if dry_run:
@@ -868,15 +938,11 @@ def spec_report(workspace: str) -> tuple[list[dict], list[dict]]:
   if isinstance(req_assets, dict):
     for k, v in req_assets.items():
       if isinstance(v, dict) and v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
-        errors.append({"type": "ILLEGAL_ASSET_PATH", "where": f"01_gdd.json requested_assets.{k}",
-                       "asset": k, "uefn_path": v.get("uefn_path"),
-                       "detail": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : utiliser exclusivement un PPID_ / PID_ de Playset Creatif (`search-playsets --query <mot>`)."})
+        errors.append(legality_error(k, v.get("uefn_path"), f"01_gdd.json requested_assets.{k}"))
   if isinstance(assets, dict):
     for k, v in assets.items():
       if isinstance(v, dict) and v.get("uefn_path") and not is_legal_uefn_path(v.get("uefn_path")):
-        errors.append({"type": "ILLEGAL_ASSET_PATH", "where": f"02_palette.json assets.{k}",
-                       "asset": k, "uefn_path": v.get("uefn_path"),
-                       "detail": "Chemin /Game/ interne interdit par FortValidator_FortExposedAssets : utiliser exclusivement un PPID_ / PID_ de Playset Creatif (`search-playsets --query <mot>`)."})
+        errors.append(legality_error(k, v.get("uefn_path"), f"02_palette.json assets.{k}"))
   # Lire le fichier ENTIER : se limiter a `floors` rendait `grid.get("symmetric")` toujours
   # faux, donc l'avertissement SYMMETRY_SCOPE n'a jamais ete emis.
   grid_path = os.path.join(workspace, "03_grid.json")
@@ -1758,6 +1824,40 @@ def cmd_verse_scan(workspace: str, root: str, recursive: bool) -> int:
   return 0
 
 
+def cmd_verse_read(workspace: str, verse_path: str) -> int:
+  """Relit un .verse du projet (Verse.ReadFile). Lecture seule."""
+  try:
+    text = verse_payload(client_for(workspace).value("Verse", "ReadFile", {"path": verse_path}))
+  except McpError as exc:
+    if "does not exist" not in str(exc):
+      return mcp_failure("verse-read", exc, {"verse_path": verse_path})
+    text = None
+  if text is None:
+    emit({"status": "FAILED", "command": "verse-read", "verse_path": verse_path,
+          "error_kind": "VERSE_FILE_NOT_FOUND",
+          "detail": "fichier absent (attendu avant une premiere ecriture)."})
+    return 1
+  emit({"status": "PASSED", "command": "verse-read", "verse_path": verse_path,
+        "text": text if isinstance(text, str) else json.dumps(text, ensure_ascii=False)})
+  return 0
+
+
+def cmd_list_devices(workspace: str, name_filter: str) -> int:
+  """Catalogue des devices posables (Device.ListDeviceAssets) : assetPath exact. Lecture seule."""
+  try:
+    items = client_for(workspace).value("Device", "ListDeviceAssets", {"nameFilter": name_filter}) or []
+  except McpError as exc:
+    return mcp_failure("list-devices", exc)
+  if not items:
+    emit({"status": "FAILED", "command": "list-devices", "filter": name_filter, "count": 0,
+          "error_kind": "DEVICE_ASSET_NOT_FOUND",
+          "detail": "aucun device ne correspond : ne pas deviner un chemin approchant."})
+    return 1
+  emit({"status": "PASSED", "command": "list-devices", "filter": name_filter,
+        "count": len(items), "devices": items[:100]})
+  return 0
+
+
 def cmd_verse_grep(workspace: str, pattern: str, symbols: str | None, path_glob: str,
                    max_results: int) -> int:
   cli = client_for(workspace)
@@ -2186,6 +2286,81 @@ def cmd_audit_legality(workspace: str, fix: bool = False, remove_unmatched: bool
   return 0 if report.get("status") == "PASSED" else 1
 
 
+LOG_TS_RE = re.compile(r"^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]")
+# Formats reels (2026-10-29) : "...references disallowed object /Pkg/Nom.Nom." (fin de ligne) et
+# "...references disallowed object /Pkg/Nom.Nom. (FortValidator_FortExposedActors)".
+DISALLOWED_RE = re.compile(r"references disallowed object (/\S+)")
+
+
+def _disallowed_paths(line: str) -> list[str]:
+  return [p.rstrip(".") for p in DISALLOWED_RE.findall(line)]
+
+
+def _log_lines(res) -> list[str]:
+  """GetLogEntries rend des chaines horodatees '[2026.10.29-13.49.20:431][776]Cat: ...'
+  (editeur reel) ou des objets {message} (anciens retours) : on normalise en chaines."""
+  if isinstance(res, str):
+    try:
+      res = json.loads(res)
+    except ValueError:
+      res = [res]
+  out = []
+  for e in res or []:
+    out.append(e if isinstance(e, str) else str(e.get("message", json.dumps(e, ensure_ascii=False))))
+  return out
+
+
+def cmd_check_validator(workspace: str, no_save: bool, update_catalogue: bool) -> int:
+  """Verdict de legalite du validateur UEFN (seule preuve, cf. _commun/legalite-assets.md) :
+  1) repere la derniere ligne du journal, 2) sauvegarde (declenche la validation),
+  3) ne garde QUE les lignes posterieures (le journal garde les vieilles erreurs),
+  4) extrait les chemins 'references disallowed object'."""
+  cli = client_for(workspace)
+  try:
+    last = _log_lines(cli.value("Logs", "GetLogEntries", {"category": "", "pattern": "", "maxEntries": 1}))
+    m = LOG_TS_RE.match(last[-1]) if last else None
+    since = m.group(1) if m else None
+    saved = None if no_save else cli.value("Asset", "save_assets", {"asset_paths": []})
+    lines = _log_lines(cli.value("Logs", "GetLogEntries", {
+        "category": "", "pattern": "AssetCheck|disallowed|LogValkyrieValidation: Error", "maxEntries": 1000}))
+  except McpError as exc:
+    return mcp_failure("check-validator", exc)
+
+  def ts(line: str) -> str | None:
+    mm = LOG_TS_RE.match(line)
+    return mm.group(1) if mm else None
+
+  kept = [l for l in lines if since is None or (ts(l) is not None and ts(l) > since)]
+  errors = [l for l in kept if "Error" in l and ("AssetCheck" in l or "LogValkyrieValidation" in l)]
+  refused = sorted({p for l in errors for p in _disallowed_paths(l)})
+  validation_ran = any("AssetCheck" in l for l in kept)
+  if since is None:
+    status, why = "UNKNOWN", "journal sans horodatage lisible : impossible de separer les vieilles erreurs des nouvelles"
+  elif errors:
+    status, why = "FAILED", f"{len(refused)} chemin(s) refuse(s) par le validateur"
+  elif validation_ran:
+    status, why = "PASSED", "validation lancee par la sauvegarde, aucune erreur"
+  else:
+    status, why = "UNKNOWN", ("aucune trace de validation apres la sauvegarde (niveau peut-etre non "
+                              "modifie) : ce n'est PAS une preuve de legalite")
+  catalogue_added = []
+  if update_catalogue and refused:
+    cat = load_catalogue(force=True)
+    if cat:
+      known = cat.setdefault("refuses", {}).setdefault("chemins", [])
+      catalogue_added = [p for p in refused if p not in known]
+      known.extend(catalogue_added)
+      cat["mise_a_jour"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+      save_json(CATALOGUE_PATH, cat)
+  report = {"timestamp": now_iso(), "command": "check-validator", "status": status, "reason": why,
+            "since_log_ts": since, "saved": saved, "validation_ran": validation_ran,
+            "refused_paths": refused, "error_lines": errors[:20], "error_count": len(errors),
+            "catalogue": CATALOGUE_PATH, "catalogue_added": catalogue_added}
+  save_json(os.path.join(workspace, "06b_validator_report.json"), report)
+  emit(report)
+  return 0 if status == "PASSED" else 1
+
+
 def cmd_launch_session(workspace: str, dry_run: bool, consent: bool,
                        wait_seconds: int = 90, stop_after_verify: bool = False) -> int:
   if dry_run:
@@ -2341,6 +2516,10 @@ def main() -> int:
   p.add_argument("--symbols", help="liste separee par des virgules, une recherche par symbole")
   p.add_argument("--glob", dest="path_glob", default="/Fortnite.com (Fortnite)/**")
   p.add_argument("--max-results", type=int, default=10)
+  ws(sub.add_parser("verse-read", help="relit un .verse du projet (lecture seule)")).add_argument(
+      "--path", dest="verse_path", required=True)
+  ws(sub.add_parser("list-devices", help="assetPath exact des devices posables (lecture seule)")
+     ).add_argument("--filter", dest="name_filter", default="")
   p = ws(sub.add_parser("verse-write"))
   p.add_argument("--file", required=True, help="fichier .verse local (workspace/verse/)")
   p.add_argument("--path", dest="verse_path", required=True, help="chemin .verse dans le projet")
@@ -2362,6 +2541,11 @@ def main() -> int:
   p = ws(sub.add_parser("audit-legality", help="verifie tous les acteurs du niveau ouvert via FortEditorValidatorSubsystem"))
   p.add_argument("--fix", action="store_true", help="remplace automatiquement les acteurs illegaux par leurs PPID_ legaux")
   p.add_argument("--remove-unmatched", action="store_true", help="avec --fix, supprime aussi les acteurs illegaux sans PPID_ equivalent")
+  p = ws(sub.add_parser("check-validator", help="sauvegarde puis lit le verdict du validateur UEFN "
+                                                "(seule preuve de legalite) dans le journal"))
+  p.add_argument("--no-save", action="store_true", help="ne pas sauvegarder (relit seulement)")
+  p.add_argument("--update-catalogue", action="store_true",
+                 help="ajoute les chemins refuses a agent-team/_commun/catalogue-verifie.json")
   p = ws(sub.add_parser("launch-session", help="verifie la legalite puis lance StartSession / PushChanges et suit la connexion"), dry=True)
   p.add_argument("--i-agree-to-launch-session", dest="consent", action="store_true")
   p.add_argument("--wait-seconds", type=int, default=90)
@@ -2410,6 +2594,10 @@ def main() -> int:
     return cmd_verse_scan(workspace, a.root, a.recursive)
   if c == "verse-grep":
     return cmd_verse_grep(workspace, a.pattern, a.symbols, a.path_glob, a.max_results)
+  if c == "verse-read":
+    return cmd_verse_read(workspace, a.verse_path)
+  if c == "list-devices":
+    return cmd_list_devices(workspace, a.name_filter)
   if c == "verse-write":
     return cmd_verse_write(workspace, a.file, a.verse_path, a.i_agree_to_modify_project)
   if c == "verse-build":
@@ -2425,6 +2613,8 @@ def main() -> int:
     return cmd_search_playsets(workspace, a.query, a.asset_type, a.max_results)
   if c == "audit-legality":
     return cmd_audit_legality(workspace, a.fix, a.remove_unmatched)
+  if c == "check-validator":
+    return cmd_check_validator(workspace, a.no_save, a.update_catalogue)
   if c == "launch-session":
     return cmd_launch_session(workspace, a.dry_run, a.consent, a.wait_seconds, a.stop_after_verify)
   if c == "cleanup":

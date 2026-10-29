@@ -1,0 +1,434 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Narrative_Designer.v1",
+  "title": "Narrative_Designer - contrat du livrable 01_lore.json",
+  "description": "Schema de sortie de l'agent Narrative_Designer (agent 06, pole Design, phase DESIGN). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md) ; le payload porte le cadre diegetique : faits etablis sources, regles d'univers, couches de lecture rattachees aux zones reelles du GDD, silences voulus, exclusions narratives, intentions d'implantation. Chaque champ est choisi pour etre cochable par un validateur Python, jamais pour plaire : un fait sans source est un rejet, une contrainte spatiale en coordonnees est un rejet, une replique ecrite a la place du lore est un rejet. Agent Design : acces_mcp = none, donc aucune coordonnee, aucun chemin /Game/, aucun PPID_/PID_ final, aucun device.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Narrative_Designer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "const": "01_lore.json"
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "univers",
+        "high_concept",
+        "faits_etablis",
+        "regles_d_univers",
+        "couches_de_lecture",
+        "intention_implantation",
+        "silences_voulus",
+        "ce_qu_on_ne_raconte_pas",
+        "continuite_avec_vision",
+        "contradictions_levees",
+        "zones_non_couvertes",
+        "gate_hitl"
+      ],
+      "properties": {
+        "univers": { "$ref": "#/definitions/univers" },
+        "high_concept": {
+          "type": "string",
+          "minLength": 60,
+          "maxLength": 400,
+          "pattern": "^(?!.*(X ?=|Y ?=|Z ?=|/Game/|PPID_|PID_|cm)).+$",
+          "description": "Le cadre narratif en 3 a 5 phrases : ce que le lieu est, ce qu'il commemor(e), ce qu'il ne dit pas. Pas une synoppsis de quete : les missions sont au role 05."
+        },
+        "faits_etablis": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 20,
+          "items": { "$ref": "#/definitions/fait" },
+          "description": "Le canon. Cinq faits minimum, chacun avec une source parmi les artefacts amont ou UNKNOWN. Un fait sans source et sans UNKNOWN est un fait invente : rejet."
+        },
+        "regles_d_univers": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 10,
+          "items": { "$ref": "#/definitions/regle" },
+          "description": "Ce qui est possible ou interdit dans ce monde et dans sa representation. Trois minimum : sans elles, n'importe quelle quete ou replique downstream est compatible."
+        },
+        "couches_de_lecture": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 10,
+          "items": { "$ref": "#/definitions/couche" },
+          "description": "La narration environnementale en cadre, pas en pose : ce qu'on voit, ce que ca raconte, comment un juge verifie la lecture. Rattachee obligationnellement a un zone_id du GDD."
+        },
+        "intention_implantation": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "#/definitions/intention" },
+          "description": "La seule facon autorisee d'ecrire une contrainte spatiale issue du lore : une intention referencee par zone_id, tranchee par un role aval. Jamais de coordonnee."
+        },
+        "silences_voulus": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": { "$ref": "#/definitions/silence" },
+          "description": "Ce que l'univers ne dit pas volontairement, et pourquoi. Un silence ecrit est une reserve exploitable par 07 ; un silence subi devient du flou artistique ou une invention downstream."
+        },
+        "ce_qu_on_ne_raconte_pas": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 8, "maxLength": 160 },
+          "description": "Exclusions narratives (equivalent narratif des anti-references du CD) : vengeance, enquete, complot devoile, mort a l'ecran. Sans elles, la premiere quete aval reecrit l'univers."
+        },
+        "continuite_avec_vision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["statut", "vision_ref", "rationale"],
+          "properties": {
+            "statut": {
+              "enum": ["alignee", "ecart_assume", "non_verifiee"],
+              "description": "alignee = conforme a 00_vision.json emis ; ecart_assume = divergence inscrite aussi dans contradictions_levees ; non_verifiee = vision absente du run (le champ ne s'invente pas)."
+            },
+            "vision_ref": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Chemin ou identifiant de l'artefact amont relu, ou UNKNOWN si 00_vision.json n'a pas ete emis."
+            },
+            "rationale": { "type": "string", "minLength": 20, "maxLength": 300 },
+            "ecarts": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "contradictions_levees": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "items": { "$ref": "#/definitions/contradiction" },
+          "description": "Les divergences entre artefacts amont, inscrit es avec leur arbitrage. Une liste vide pretend que l'amont est coherent : a justifier sinon."
+        },
+        "zones_non_couvertes": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 9,
+          "description": "Les zones du GDD que ce lore ne couche pas, chacune avec son motif. Une zone silencieuse se declare : le silence subi n'a pas le meme contrat que le silence voulu (silences_voulus). Liste vide = les neuf zones sont couchees.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["zone_id", "motif"],
+            "properties": {
+              "zone_id": { "$ref": "#/definitions/zone_id" },
+              "motif": { "type": "string", "minLength": 8, "maxLength": 200 }
+            }
+          }
+        },
+        "gate_hitl": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["numero", "statut", "arbitre_par"],
+          "description": "Gate HITL #2 (pack de design valide par l'humain via le Producteur). L'agent ne peut ecrire que PENDING : VALIDE_HUMAIN et REJETE_HUMAIN s'inscrivent sous la main de l'humain, jamais celle du modele (WP4 p.20).",
+          "properties": {
+            "numero": { "const": 2 },
+            "statut": { "enum": ["PENDING", "VALIDE_HUMAIN", "REJETE_HUMAIN"] },
+            "arbitre_par": { "type": "string", "minLength": 1 },
+            "iterations": { "type": "integer", "minimum": 0, "maximum": 3 }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["acces_mcp", "must_preserve", "forbidden"],
+      "properties": {
+        "acces_mcp": {
+          "const": "none",
+          "description": "Agent Design : aucun appel MCP, aucune ecriture dans l'editeur."
+        },
+        "must_preserve": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "Garde-fous narratifs transmis en aval : ce que 07, 05, 09, 17 appliquent sans redemander le contexte amont."
+        },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "must_ask_producer": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Questions bloquantes remontees au Producteur (jamais posees a l'utilisateur en direct). 15 max par phase."
+        },
+        "zones_non_couvertes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/zone_id" },
+          "description": "Zones du GDD ou le lore ne pose volontairement rien. Les passer sous silence serait une promesse cachee faite a Level_Designer."
+        },
+        "hors_perimetre": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ce que ce role ne produit pas et ne prejuge pas : repliques (07), missions (05), topologie (09), audio pose (17-20)."
+        }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue, ce qui est tronque, ce qui est reconstitue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "high_concept_present_max_400_chars",
+          "facts_min_5_each_with_source_or_unknown",
+          "fact_without_source_declared_unknown_not_fictionalized",
+          "no_fact_contradicts_amont_artifacts",
+          "universe_rules_min_3",
+          "reading_layers_min_4_each_on_zone_id",
+          "all_zone_ids_declared_in_01_gdd",
+          "spatial_facts_written_as_implantation_intent",
+          "silences_declared_min_2",
+          "anti_narrative_exclusions_min_3",
+          "continuity_with_vision_declared",
+          "contradictions_listed_with_arbitrage",
+          "uncovered_zones_declared",
+          "no_coordinates_no_asset_path_no_device",
+          "no_replica_no_mission_no_topology",
+          "design_gate_hitl_2_pending"
+        ]
+      },
+      "description": "Criteres cochables par un validateur Python : compter des faits, verifier une source, comparer un zone_id a la liste du GDD, chercher une coordonnee. Jamais un jugement de LLM (WP4 p.20) : 'c'est emouvant' n'est pas un critere."
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "zone_id": {
+      "enum": [
+        "Zone_SW_South",
+        "Zone_South",
+        "Zone_SE_South",
+        "Zone_West",
+        "Zone_Center",
+        "Zone_East",
+        "Zone_NW_North",
+        "Zone_North",
+        "Zone_NE_North"
+      ],
+      "description": "Les neuf zones declarees dans 01_gdd.json (run Corpo Plaza). Un zone_id invente est refuse par l'enum : le lore ne peut decrire que ce qui existe dans le GDD."
+    },
+    "source": {
+      "enum": ["00_vision.json", "01_gdd.json", "journal_run", "decision_utilisateur", "UNKNOWN"],
+      "description": "Artefact amont reellement relu, ou UNKNOWN. Il n'existe pas d'autre source admise : une source flattee ('le brief', 'l'ambiance') est hors enum."
+    },
+    "fiabilite": {
+      "enum": ["fact_amont", "lecture_proposee", "UNKNOWN"],
+      "description": "fact_amont = reproductible ligne par ligne dans un artefact ; lecture_proposee = cadre offert au downstream, non canonique ; UNKNOWN = lacune declaree. Un UNKNOWN n'est jamais une legende plausible."
+    },
+    "univers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nom_projet", "lieu", "periode", "etat_au_t0", "ce_que_ce_nest_pas"],
+      "properties": {
+        "nom_projet": { "type": "string", "minLength": 3 },
+        "lieu": { "type": "string", "minLength": 3 },
+        "periode": { "type": "string", "minLength": 1, "description": "Valeur reelle ou UNKNOWN si l'amont ne la precise pas." },
+        "etat_au_t0": { "type": "string", "minLength": 10, "maxLength": 240, "description": "Ce qui est vrai quand le joueur arrive, aligne sur gameplay_timeline_sec." },
+        "ce_que_ce_nest_pas": { "type": "string", "minLength": 10 },
+        "echelle": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fait": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fait", "source", "fiabilite"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^F[0-9]{1,3}$" },
+        "fait": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 220,
+          "pattern": "^(?!.*(X ?=|Y ?=|Z ?=|/Game/|PPID_|PID_|cm)).+$"
+        },
+        "source": { "$ref": "#/definitions/source" },
+        "source_detail": {
+          "type": "string",
+          "minLength": 3,
+          "description": "Champ ou section relue (ex. 01_gdd.json:notes, 01_gdd.json:requested_assets.tree, journal_run:s.2)."
+        },
+        "fiabilite": { "$ref": "#/definitions/fiabilite" },
+        "zone_ref": { "$ref": "#/definitions/zone_id" },
+        "impact_en_aval": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "regle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "regle", "portee", "source"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^R[0-9]{1,2}$" },
+        "regle": { "type": "string", "minLength": 12, "maxLength": 220 },
+        "portee": {
+          "enum": ["diegetique", "representation", "interdit_de_forme"],
+          "description": "diegetique = ce qui est vrai dans le monde ; representation = ce qui peut etre montre ; interdit_de_forme = ce qu'un role aval ne doit pas ecrire."
+        },
+        "source": { "$ref": "#/definitions/source" },
+        "statut": {
+          "enum": ["deduite_d_un_fait", "proposition_non_adosee", "contrainte_de_pipeline"],
+          "description": "Honnetete du statut : une regle inventee par le role s'assume comme proposition, elle ne devient pas canon."
+        },
+        "consequence_pour_aval": { "type": "string", "minLength": 6 }
+      }
+    },
+    "couche": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "zone_id", "niveau", "ce_qu_on_voit", "ce_que_ca_raconte", "verif_par"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^C[0-9]{1,2}$" },
+        "zone_id": { "$ref": "#/definitions/zone_id" },
+        "niveau": {
+          "enum": ["premiere_lecture", "seconde_lecture", "detail_reperable", "non_lisible_en_jam"],
+          "description": "premiere_lecture = visible des l'apparition ; seconde_lecture = a l'attention ; detail_reperable = de pres ; non_lisible_en_jam = intention signalee, pas promise."
+        },
+        "ce_qu_on_voit": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "pattern": "^(?!.*(X ?=|Y ?=|Z ?=|/Game/|PPID_|PID_|cm)).+$"
+        },
+        "ce_que_ca_raconte": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "verif_par": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Comment un juge externe coche la lecture : capture, fait de timeline, inventaire d'assets. Un adjectif n'est jamais une verification."
+        },
+        "exploite_par": {
+          "type": "array",
+          "items": {
+            "enum": ["Writer_Scenariste", "Mission_Content_Designer", "Level_Designer", "Audio_Director", "UX_UI_Designer", "Graphics_Programmer", "Producer_Orchestrator"]
+          }
+        }
+      }
+    },
+    "intention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "zone_id", "intention", "fait_lie", "tranche_par"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^I[0-9]{1,2}$" },
+        "zone_id": { "$ref": "#/definitions/zone_id" },
+        "intention": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 200,
+          "pattern": "^(?!.*(X ?=|Y ?=|Z ?=|/Game/|PPID_|PID_|cm)).+$",
+          "description": "Contrainte spatiale exprimee en lecture, jamais en position : le pattern refuse toute coordonnee, tout chemin d'asset, tout nom PPID_/PID_."
+        },
+        "fait_lie": { "type": "string", "pattern": "^F[0-9]{1,3}$" },
+        "tranche_par": {
+          "enum": ["Level_Designer", "Graphics_Programmer", "Audio_Director", "UX_UI_Designer", "Producer_Orchestrator"],
+          "description": "Qui resout. Le Narrative_Designer ne resout jamais lui-meme."
+        },
+        "garde_fou": { "type": "string", "minLength": 6 }
+      }
+    },
+    "silence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sujet", "raison", "statut"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^S[0-9]{1,2}$" },
+        "sujet": { "type": "string", "minLength": 6, "maxLength": 160 },
+        "raison": { "type": "string", "minLength": 8, "maxLength": 200 },
+        "statut": {
+          "enum": ["silence_tenu", "a_arbitrer_par_producer"],
+          "description": "silence_tenu = ne sera pas revele dans ce projet ; a_arbitrer_par_producer = lacune reelle, question remontee."
+        },
+        "exploitable_par": { "type": "string", "minLength": 6 }
+      }
+    },
+    "contradiction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source_a", "source_b", "constat", "arbitrage", "statut"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^K[0-9]{1,2}$" },
+        "source_a": { "$ref": "#/definitions/source" },
+        "source_b": { "$ref": "#/definitions/source" },
+        "constat": { "type": "string", "minLength": 12, "maxLength": 240 },
+        "arbitrage": { "type": "string", "minLength": 12, "maxLength": 240 },
+        "statut": {
+          "enum": ["levee", "remontee_producer", "UNKNOWN"],
+          "description": "levee = l'amont machine fait foi et la divergence est soldee ; remontee_producer = tranche par l'humain via le Producteur ; un agent ne solde jamais seul un conflit de canon."
+        }
+      }
+    }
+  }
+}

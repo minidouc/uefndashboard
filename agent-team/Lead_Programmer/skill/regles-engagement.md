@@ -29,13 +29,19 @@
   mesure pas sur un pont non relu et je ne « corrige » pas un port moi-même.
 - La liste à mesurer vient de `01_gdd.json` → `requested_assets`. Je ne choisis pas les assets à la
   place du design ; une liste vide se rend `PALETTE_EMPTY`, pas une palette de mon cru.
-- **Légalité d'abord** : chaque chemin est issu de `search-playsets --type PPID|PID|ALL`
-  (`FortPlaysetPropItemDefinition`, `FortPlaysetItemDefinition`) ou de
-  `Device.ListDeviceAssets`. Le fichier `search_<motif>.json` qui a produit le chemin est cité dans
-  `search_ref`.
-- `/Game/Athena` et `/Game/Environments` sont **refusés**, même si l'éditeur les affiche : c'est
-  `FortValidator_FortExposedAssets` qui échoue à la validation d'île. Les playsets éditeur `/CRP_*`
-  passent, mais **avec leur source de recherche** (décision mémorisée du pipeline, pas ma tolérance).
+- **Légalité d'abord, prouvée par le validateur, jamais par le chemin**
+  (`../../_commun/legalite-assets.md`). Ordre de choix :
+  1. un asset `acceptes` de `../../_commun/catalogue-verifie.json` (déjà prouvé, déjà mesuré) ;
+  2. sinon un chemin issu d'une recherche (`search-playsets`, `Device.ListDeviceAssets`,
+     `AssetTools.find_assets`) cité dans `search_ref` : il est `UNVERIFIED` tant qu'une
+     sauvegarde suivie de la lecture du journal (`AssetCheck: Error … disallowed`, filtrée par
+     horodatage) ne l'a pas validé ;
+  3. jamais un chemin de `catalogue-verifie.json → refuses`.
+- Le préfixe ne décide **rien** : `/Game/Athena/Items/Weapons/…` et `/Game/Creative/…` sont passés
+  au validateur le 2026-10-29, alors que `/BlastBerryWeapons/…` et `/Figment_Athena_*/…` ont été
+  refusés. Les playsets éditeur `/CRP_*` restent acceptés **avec leur source de recherche**.
+- Après chaque validation propre, j'ajoute les nouveaux assets au catalogue commun avec la date ;
+  après un refus, je les ajoute à `refuses`. Le catalogue grandit de run en run.
 
 ### Pendant la mesure
 
@@ -76,7 +82,7 @@
 | `preflight_ok.json` ≠ `READY`, pont injoignable (code 2) | éditeur non opérable → `Engine_Programmer` |
 | `requested_assets` absent ou vide dans `01_gdd.json` | je ne choisis pas les assets : `PALETTE_EMPTY` → design |
 | Aucun résultat de recherche après une reformulation (`count: 0`) | asset introuvable dans le catalogue exposé → arbitrage de design via le Producer |
-| `ILLEGAL_ASSET_PATH` sur un asset demandé | validation d'île en danger → décision `Producer_Orchestrator` |
+| `ILLEGAL_ASSET_PATH` sur un asset demandé (cité `disallowed` dans le journal, ou dans `refuses`) | validation d'île en danger → décision `Producer_Orchestrator`, avec une alternative `acceptes` |
 | PID à bounds nuls sans équivalent `PPID` mesurable | asset non mesurable : mieux vaut bloquer qu'inventer une taille |
 | `WinError 10054` / code 3 répété sur les mesures | pont instable : retour `Engine_Programmer` avant d'insister |
 | Acteur `MEASURE_*` encore présent après deux tentatives de suppression | état de scène incertain → `BLOCKED`, aucune re-mesure tant que la scène n'est pas propre |

@@ -1,0 +1,368 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "uefn.handoff.Engine_Programmer.v1",
+  "title": "Engine_Programmer - contrat du livrable preflight_ok.json",
+  "description": "Schema de sortie de l'agent Engine_Programmer (agent 10). Enveloppe = uefn.handoff.v1 (util/multi_agent/04-contrat-handoff.md), identique a la maquette Physics_Programmer ; le payload porte l'etat relu de l'environnement (pont MCP, processus et RAM, niveau actif, arborescence, pagination). Validable par un validateur Python, jamais par le modele. Un READY dont une case n'est pas adossee a une sortie d'outil relue est un faux positive : le schema l'interdit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "handoff_id",
+    "from",
+    "to",
+    "artifact",
+    "mission_ref",
+    "summary_short",
+    "payload",
+    "constraints",
+    "acceptance",
+    "next_step_hint",
+    "context_budget_tokens"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "uefn.handoff.v1"
+    },
+    "handoff_id": {
+      "type": "string",
+      "pattern": "^H-[A-Z]+-[0-9]{3,}$"
+    },
+    "from": {
+      "const": "Engine_Programmer"
+    },
+    "to": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "Producer_Orchestrator",
+          "Creative_Director",
+          "Game_Designer",
+          "System_Designer",
+          "Economy_Designer",
+          "Mission_Content_Designer",
+          "Narrative_Designer",
+          "Writer_Scenariste",
+          "UX_UI_Designer",
+          "Level_Designer",
+          "Engine_Programmer",
+          "Lead_Programmer",
+          "Gameplay_Programmer",
+          "AI_Programmer",
+          "UI_Programmer",
+          "Graphics_Programmer",
+          "Physics_Programmer",
+          "Audio_Director",
+          "Composer",
+          "Sound_Designer",
+          "Voice_Designer"
+        ]
+      }
+    },
+    "artifact": {
+      "enum": ["preflight_ok.json"]
+    },
+    "mission_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "summary_short": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "checked_at",
+        "mcp_port_active",
+        "ram_usage_mb",
+        "active_level_name",
+        "verse_path_valid",
+        "checks",
+        "error_log"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["READY", "ERROR"],
+          "description": "READY exige que chaque case de checks soit OK ou NON_BLOQUANT, avec preuve relue. Toute mesure manquante vaut UNKNOWN dans le champ et status ERROR."
+        },
+        "checked_at": {
+          "type": "string",
+          "description": "Horodatage ISO du preflight. Un preflight est perime : il ne se recopie pas d'une mission a l'autre."
+        },
+        "mcp_port_active": {
+          "description": "Port qui a REPONDU au ping, pas le port documentaire.",
+          "oneOf": [
+            { "type": "integer", "enum": [8000, 8001] },
+            { "const": "UNKNOWN" }
+          ]
+        },
+        "mcp_endpoint": {
+          "enum": [
+            "http://127.0.0.1:8000/mcp",
+            "http://127.0.0.1:8001/mcp"
+          ],
+          "description": "Valeur de UEFN_MCP_URL retenue pour la run."
+        },
+        "mcp_ports_tested": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/port_test" }
+        },
+        "editor_process": { "$ref": "#/definitions/editor_process" },
+        "ram_usage_mb": {
+          "description": "Mesure systeme relue pendant le preflight. Jamais recopiee de memoire : un chiffre herite rend le READY mensonger.",
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "const": "UNKNOWN" }
+          ]
+        },
+        "ram_total_mb": { "type": "integer", "minimum": 1 },
+        "ram_usage_percent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "ram_seuil_alerte_percent": { "type": "number", "enum": [85, 90] },
+        "active_level_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "Nom reel du niveau charge (ex. claudetest), lu par Scene.get_current_level. Le nom affiche dans l'UI peut differer."
+        },
+        "active_level_path": {
+          "type": "string",
+          "description": "returnValue brut de get_current_level, guide d'acteurs inclus (ex. /dc587e05-.../claudtest)."
+        },
+        "level_confirmed_by": {
+          "enum": ["Producer_Orchestrator", "UNKNOWN"],
+          "description": "Le niveau est confirme AUPRES DE L'UTILISATEUR VIA LE PRODUCER avant toute ecriture d'un agent aval."
+        },
+        "session_status": {
+          "enum": ["Disconnected", "Connecting", "Reconnecting", "Connected", "UpdatingContent", "UNKNOWN"]
+        },
+        "modal_windows_blocking": {
+          "enum": ["NONE", "DETECTED", "UNKNOWN"],
+          "description": "Aucun outil MCP ne liste les fenetres modales de l'editeur : sans preuve, la valeur est UNKNOWN, jamais NONE."
+        },
+        "pagination_cvar": { "$ref": "#/definitions/pagination_cvar" },
+        "verse_path_valid": {
+          "type": "boolean",
+          "description": "true seulement si le dossier des scripts Verse existe ET est accessible en ecriture (test reel, pas une supposition)."
+        },
+        "workspace": { "$ref": "#/definitions/workspace_check" },
+        "harness_offline": { "$ref": "#/definitions/harness_offline" },
+        "checks": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "$ref": "#/definitions/check" }
+        },
+        "cleanup": { "$ref": "#/definitions/cleanup" },
+        "error_log": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/error_entry" }
+        },
+        "notes": { "type": "string", "maxLength": 400 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "READY" } }, "required": ["status"] },
+          "then": {
+            "required": ["pagination_cvar", "workspace", "session_status", "mcp_ports_tested"],
+            "properties": {
+              "verse_path_valid": { "const": true },
+              "mcp_port_active": { "type": "integer" },
+              "ram_usage_mb": { "type": "integer" },
+              "level_confirmed_by": { "const": "Producer_Orchestrator" },
+              "error_log": { "maxItems": 0 },
+              "cleanup": { "properties": { "performed": { "const": false } } },
+              "checks": {
+                "items": {
+                  "properties": { "status": { "enum": ["OK", "NON_BLOQUANT"] } },
+                  "required": ["evidence"]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "ERROR" } }, "required": ["status"] },
+          "then": { "properties": { "error_log": { "minItems": 1 } } }
+        }
+      ]
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["forbidden"],
+      "properties": {
+        "ram_seuil_alerte_percent": { "type": "number" },
+        "must_preserve": { "type": "array", "items": { "type": "string" } },
+        "forbidden": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "golden_example_ref": {
+      "type": "string"
+    },
+    "exemple_annotations": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Cle reservee aux fichiers de skill/exemples/ (commentaire pedagogique : pourquoi cet exemple passe ou echoue). Elle ne doit jamais apparaitre dans un handoff reel."
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "bridge_ping_relu",
+          "port_declared",
+          "ram_measured",
+          "level_name_from_tool",
+          "pagination_cvar_200",
+          "session_state_read",
+          "workspace_writable",
+          "verse_path_valid",
+          "harness_offline_ok",
+          "no_actor_written",
+          "no_verse_written",
+          "error_log_filled"
+        ]
+      }
+    },
+    "next_step_hint": {
+      "type": "string",
+      "maxLength": 400
+    },
+    "context_budget_tokens": {
+      "type": "integer",
+      "maximum": 4000
+    }
+  },
+  "definitions": {
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check", "status", "evidence"],
+      "properties": {
+        "check": {
+          "enum": [
+            "pont_mcp",
+            "processus_et_ram",
+            "niveau_actif",
+            "fenetres_bloquantes",
+            "arborescence_et_ecriture",
+            "pagination_cvar",
+            "etat_session",
+            "harnais_hors_editeur"
+          ]
+        },
+        "status": { "enum": ["OK", "NON_BLOQUANT", "DEGRADE", "FAILED", "UNKNOWN"] },
+        "evidence": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 400,
+          "description": "La sortie d'outil relue qui soutient la case (outil + valeur). Une case sans evidence n'est pas une case verifiee."
+        },
+        "measured_at": { "type": "string" },
+        "detail": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "port_test": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["port", "result", "return_code"],
+      "properties": {
+        "port": { "type": "integer", "enum": [8000, 8001] },
+        "result": { "enum": ["ONLINE", "OFFLINE", "TIMEOUT", "UNKNOWN"] },
+        "return_code": { "type": "integer", "enum": [0, 1, 2, 3] },
+        "raw_message": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "editor_process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["running"],
+      "properties": {
+        "running": { "type": "boolean" },
+        "name": { "type": "string" },
+        "pid": { "type": "integer" },
+        "working_set_mb": { "type": "integer" }
+      }
+    },
+    "pagination_cvar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value_at_start", "value_written", "value_relayed"],
+      "description": "La pagination 0 est dangereuse : les listes sortent tronquees sans erreur. Ecriture puis RELURE obligatoire.",
+      "properties": {
+        "name": { "const": "ModelContextProtocol.PaginationPageSize" },
+        "value_at_start": { "type": "string" },
+        "value_written": { "const": "200" },
+        "value_relayed": { "type": "string" },
+        "set_returned_null": { "type": "boolean", "description": "SetCVarValue renvoie returnValue null sans erreur : c'est la relecture par GetCVarValue qui fait preuve." }
+      }
+    },
+    "workspace_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_dir", "verse_dir", "output_dir", "all_writable"],
+      "properties": {
+        "content_dir": { "type": "string" },
+        "verse_dir": { "type": "string" },
+        "output_dir": { "type": "string" },
+        "all_writable": { "type": "boolean" },
+        "workspace_inside_skill": { "type": "boolean", "description": "true = refuse par le CLI (WORKSPACE_INSIDE_SKILL)." }
+      }
+    },
+    "harness_offline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "status", "passed", "total"],
+      "properties": {
+        "command": { "const": "python script/tests/verify.py" },
+        "status": { "enum": ["PASSED", "FAILED", "NOT_RUN"] },
+        "passed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 1 },
+        "note": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["performed"],
+      "description": "Destructif : performed true uniquement sur demande explicite du Producer, avec save prealable et inventaire des acteurs retires.",
+      "properties": {
+        "performed": { "type": "boolean" },
+        "requested_by": { "type": "string" },
+        "save_before": { "type": "boolean" },
+        "tag": { "type": "string" },
+        "removed_count": { "type": "integer", "minimum": 0 },
+        "removed_refpaths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "error_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "source"],
+      "properties": {
+        "code": {
+          "enum": [
+            "OFFLINE",
+            "MCP_PORT_UNREACHABLE",
+            "TIMEOUT",
+            "RAM_CRITICAL",
+            "NO_EDITOR_PROCESS",
+            "NO_LEVEL_LOADED",
+            "MODAL_BLOCKING",
+            "WORKSPACE_NOT_WRITABLE",
+            "WORKSPACE_INSIDE_SKILL",
+            "PAGINATION_NOT_RELIEF",
+            "OUTPUT_TOO_LARGE",
+            "UNKNOWN"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "source": { "type": "string", "maxLength": 200 },
+        "return_code": { "type": "integer", "enum": [0, 1, 2, 3] }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+ "outil": "SceneTools.find_actors",
+ "rc": 0,
+ "args": {
+  "name": ""
+ },
+ "payload": {
+  "returnValue": [
+   {
+    "name": "PRE_1"
+   },
+   {
+    "name": "PRE_2"
+   },
+   {
+    "name": "CP_S0_SOL"
+   },
+   {
+    "name": "CP_SPAWN_S0"
+   },
+   {
+    "name": "CP_S0_RAMPE_1"
+   },
+   {
+    "name": "CP_S1_PLANCHER"
+   },
+   {
+    "name": "CP_S0_POTEAU"
+   },
+   {
+    "name": "CP_S0_LUM_1"
+   },
+   {
+    "name": "CP_S0_CAISSE"
+   }
+  ]
+ }
+}

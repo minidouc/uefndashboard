@@ -89,12 +89,13 @@ reasoning* »). Chaque `acceptance` du handoff est cochée par un script Python 
 
 | Critère | Vérification |
 |---|---|
-| `schema_valid` | JSON conforme à `templates/handoff.schema.json` |
+| `schema_valid` | JSON conforme au `schema-de-sortie.json` complet de l'agent — `agent-team/_commun/studio.py validate` |
 | `0_overlap` | aucun bounding-box intersectant (via `get_actor_bounds`) |
 | `0_floating` | chaque prop ancré à un support dans sa Z-slice |
 | `spawn_reachable` | chemin spawn → objectif sans trou |
 | `mcp_ok` | `preflight_ok.json` frais + ping port 8000/8001 |
-| `pid_legal` | tout `PID_`/`PPID_` présent dans la palette autorisée |
+| `pid_legal` | tout chemin de la palette autorisée, ni `ILLEGAL_ASSET_PATH` ni `UNVERIFIED_ASSET_PATH` (catalogue commun `agent-team/_commun/catalogue-verifie.json`) |
+| `validator_clean` | `check-validator` → `status: "PASSED"` postérieur au dernier changement de scène. **Seule preuve de légalité** : le préfixe d'un chemin ne prouve rien (`agent-team/_commun/legalite-assets.md`) |
 
 Un validateur en échec → le Producer **rejette** et renvoie UNE mission corrective. Jamais
 deux fois le même payload (détection de delta → STOP, voir `01` couche 5).

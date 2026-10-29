@@ -247,10 +247,7 @@
         "uefn_path": {
           "type": "string",
           "pattern": "^/[A-Za-z0-9_./-]+$",
-          "description": "asset_path exact relu dans le catalogue. Doit etre un PPID_, un PID_, un chemin /Engine/BasicShapes ou un playset editeur /CRP_ assume.",
-          "allOf": [
-            { "not": { "pattern": "^/Game/(Athena|Environments)(/|$)" } }
-          ]
+          "description": "asset_path exact relu (catalogue commun agent-team/_commun/catalogue-verifie.json, ou sortie de recherche archivee). La legalite ne se lit PAS dans le prefixe : elle est prouvee par le journal du validateur UEFN (_commun/legalite-assets.md). Les chemins de catalogue-verifie.json -> refuses sont rejetes par le validateur Python du pipeline."
         },
         "asset_path": { "type": "string" },
         "asset_id": { "type": "string" },

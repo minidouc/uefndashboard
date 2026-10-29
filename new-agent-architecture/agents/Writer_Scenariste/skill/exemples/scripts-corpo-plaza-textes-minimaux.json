@@ -1,0 +1,78 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-007",
+  "from": "Writer_Scenariste",
+  "to": ["UX_UI_Designer", "UI_Programmer", "Level_Designer", "Voice_Designer", "Producer_Orchestrator"],
+  "artifact": "01_scripts.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-07",
+  "summary_short": "Scene contemplative validee : nom de l'ile, 1 carton memorial, 2 labels de zones, menu. 0 replique de PNJ (aucun PNJ programme).",
+  "payload": {
+    "lignes": [
+      { "cle": "ui_menus.island_name", "destination": "menu", "locuteur": "systeme_ui", "texte": "Corpo Plaza - Memorial Park", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE" },
+      { "cle": "ui_menus.menu_title", "destination": "menu", "locuteur": "systeme_ui", "texte": "Menu", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE" },
+      { "cle": "ui_hud.memorial_card", "destination": "hud", "locuteur": "systeme_ui", "texte": "En memoire. Traversez lentement, ecoutez la ville.", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE" },
+      { "cle": "ui_panneaux.zone_west_label", "destination": "panneau_in_world", "locuteur": "systeme_ui", "texte": "Anneaux ouest - Koi cyan", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "Zone_West" },
+      { "cle": "ui_panneaux.zone_east_label", "destination": "panneau_in_world", "locuteur": "systeme_ui", "texte": "Anneaux est - Koi orange", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "REDIGE", "ref_amont": "Zone_East" },
+      { "cle": "voix.replique_pnj_01", "destination": "voix", "locuteur": "UNKNOWN", "texte": "UNKNOWN", "longueur_cm_estimate": "UNKNOWN", "variables_inline_declarees": [], "statut": "NON_REDIGE" }
+    ],
+    "inventaire_par_ecran": [
+      { "ecran": "ecran_menu", "cles": ["ui_menus.island_name", "ui_menus.menu_title"] },
+      { "ecran": "carton_memorial", "cles": ["ui_hud.memorial_card"] },
+      { "ecran": "panneau_zone_west", "cles": ["ui_panneaux.zone_west_label"] },
+      { "ecran": "panneau_zone_east", "cles": ["ui_panneaux.zone_east_label"] },
+      { "ecran": "voix_hors_perimetre", "cles": ["voix.replique_pnj_01"] }
+    ],
+    "contraintes_de_place": {
+      "max_caracteres_par_chaine": 80,
+      "max_chaines_par_ecran": 4,
+      "gabarit_source": "UNKNOWN (run geometrique, 08/14 non alimentes)",
+      "encodage": "ascii"
+    },
+    "ton_reference": {
+      "registre": "laconique, recueilli, non promotionnel.",
+      "exemple_correct": { "cle": "ui_hud.memorial_card", "texte": "En memoire. Traversez lentement, ecoutez la ville." },
+      "exemple_hors_ton": { "cle": "ui_hud.memorial_card", "texte": "Bienvenue sur la plus epoustouflante place cyberpunk, preparez-vous a en prendre plein les yeux !" },
+      "motif_hors_ton": "Superlatifs promotionnels : contredit le ton 'recueilli' et les anti_references de 00_vision.json (derogation requise via le Producteur)."
+    }
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "must_preserve": [
+      "cle de chaine stable par ligne (ui_hud.*, ui_menus.*, ui_panneaux.*, voix.*)",
+      "destination obligatoire ; tout nombre = variable d'inline declaree ; inventaire coherent pour que 14 ne retouche pas son .verse"
+    ],
+    "forbidden": [
+      "locuteur par coordonnee ou nom d'asset ; replique sans PNJ existant",
+      "invention de lore (06) ou mission (05) ; contact utilisateur direct"
+    ],
+    "gaps_de_perimetre": [
+      "01_scripts.json jamais emis (run geometrique) : payload reconstitue depuis 01_gdd.json + journal",
+      "aucun PNJ (verse_modules vide, NO_VERSE_STAGED) : 0 replique ; GDD 'aucune sauvegarde ni publication'"
+    ]
+  },
+  "golden_example_ref": "skill/exemples/scripts-corpo-plaza-textes-minimaux.json",
+  "acceptance": [
+    "all_lines_carry_stable_string_key",
+    "all_lines_carry_destination_in_enum",
+    "all_lines_carry_locuteur_label_not_coordinate",
+    "no_hardcoded_computed_number",
+    "inline_variables_declared",
+    "no_line_exceeds_display_gabarit",
+    "no_duplicate_or_overwritten_string_key",
+    "inventaire_par_ecran_counts_match_lines",
+    "npc_replication_only_if_npc_exists",
+    "missing_data_marked_unknown_not_invented",
+    "no_coordinate_game_path_or_final_pid",
+    "delivered_text_is_ascii_encodable",
+    "ton_reference_has_in_ton_and_off_tone_pair"
+  ],
+  "next_step_hint": "08 dimensionne les panneaux sur ces cles puis transmet le gabarit a 14 ; 09 pose les 2 labels ; 20 n'enregistre rien tant que voix est NON_REDIGE.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - forme attendue de 01_scripts.json (scene contemplative)",
+    "source": "Artefact NON EMIS pendant la run (geometrique) ; payload reconstitue depuis 01_gdd.json + journal 2026-10-24 (Zone_West/Zone_East, verse_modules vide, 'aucune sauvegarde ni publication'). Absents = UNKNOWN/NON_REDIGE, jamais invente.",
+    "contrainte_encodage": "ENCODAGE du paquet : .json en ascii pur (exemples sans accents), PAS une regle d'ecriture du jeu.",
+    "pourquoi_il_passe": "inventaire minimal et honnete : 0 replique car 0 PNJ ; clef+destination+locuteur-label par ligne ; la paire few-shot correct/hors-ton enseigne le ton",
+    "acceptance_revendiquee": "13 criteres sur 13, aucun retire pour la troncature (6 lignes sur un inventaire qui serait plus long). Chacun est montre par le payload : les 6 cles sont uniques et stables, chaque ligne porte un locuteur qui est un label et non une coordonnee, variables_inline_declarees est declaree vide partout, aucun chiffre calcule (longueur_cm_estimate = UNKNOWN partout), aucun /Game/ ni PID final, textes ascii, et la paire in-tone/off-tone est en bas du payload."
+  }
+}

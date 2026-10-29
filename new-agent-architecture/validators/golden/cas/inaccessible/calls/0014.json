@@ -1,0 +1,24 @@
+{
+ "outil": "ActorTools.get_actor_bounds",
+ "rc": 0,
+ "args": {
+  "actor": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S1_PILIER"
+  }
+ },
+ "payload": {
+  "returnValue": {
+   "min": {
+    "x": 2400,
+    "y": -100,
+    "z": 0
+   },
+   "max": {
+    "x": 2600,
+    "y": 100,
+    "z": 1400
+   },
+   "isValid": true
+  }
+ }
+}

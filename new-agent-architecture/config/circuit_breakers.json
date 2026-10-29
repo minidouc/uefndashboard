@@ -1,0 +1,6 @@
+{
+  "$comment": "Circuit breaker (WP5 p.21) : ajouter ici un outil 'Toolset.outil' pour le couper INSTANTANEMENT. Relu a chaque appel par la passerelle. Seul l'humain edite ce fichier.",
+  "outils_coupes": [],
+  "ecritures_coupees": false,
+  "raison": null
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cameras.json -- points de vue de preuve (ecrit par le level designer)",
+  "type": "object",
+  "required": ["cameras"],
+  "properties": {
+    "cameras": {
+      "type": "object",
+      "description": "cle = nom de capture (S-1, S0 ... S4, nuit_S0, nuit_ensemble). Les noms 'nuit_*' sont juges sur l'obscurite et le neon.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["location", "rotation", "intention"],
+        "properties": {
+          "location": {"type": "object", "required": ["x", "y", "z"]},
+          "rotation": {"type": "object", "required": ["pitch", "yaw", "roll"]},
+          "intention": {"type": "string", "description": "ce que la capture doit prouver (lu par la critique visuelle)"}
+        }
+      }
+    }
+  }
+}

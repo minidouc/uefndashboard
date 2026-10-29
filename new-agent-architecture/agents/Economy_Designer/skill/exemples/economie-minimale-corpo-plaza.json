@@ -1,0 +1,58 @@
+{
+  "$schema": "uefn.handoff.v1",
+  "handoff_id": "H-DESIGN-004",
+  "from": "Economy_Designer",
+  "to": ["Mission_Content_Designer", "Gameplay_Programmer", "UI_Programmer", "Producer_Orchestrator"],
+  "artifact": "01_economy.json",
+  "mission_ref": "M-CORPOPLAZA-DESIGN-04",
+  "summary_short": "Economie NON_IMPOSEE (modele AUCUN) : 0 ressource persistante, 1 device pose, 0 compteur cable, 2 reserves a tester.",
+  "payload": {
+    "statut_economie": "NON_IMPOSEE",
+    "modele_economique": "AUCUN",
+    "justification_modele": "01_gdd.json : aucune sauvegarde ni publication, timeline 5 s sans recompense, verse_modules vide.",
+    "ressources": [
+      { "id": "R_MONNAIE", "nom": "Monnaie persistante", "statut": "NON_IMPOSE", "transfers": "aucun", "taux": [],
+        "sources": [ { "id": "SRC_OR_TRAVERSEE", "cote": "puits", "statut": "NON_IMPOSE", "declencheur": "traversee des 9 zones", "valeur": "NON_IMPOSEE", "statut_preuve": "UNKNOWN" } ],
+        "sinks": [ { "id": "SNK_OR_BOUTIQUE", "cote": "sink", "statut": "NON_IMPOSE", "declencheur": "achat de skin, ecran absent", "valeur": "NON_IMPOSEE", "statut_preuve": "UNKNOWN" } ] },
+      { "id": "R_PRESENCE", "nom": "Score de presence", "statut": "UNKNOWN", "transfers": "aucun",
+        "taux": [ { "id": "TX_OBSERVATION", "objet": "duree d'observation d'une zone", "valeur": 20, "unite": "s_par_zone", "statut_preuve": "reserve", "test_departage": "chronometrer 3 traverses, comparer 10/20/40 s" } ],
+        "sources": [ { "id": "SRC_PRESENCE_ZONE", "cote": "puits", "statut": "UNKNOWN", "declencheur": "sejour en zone", "valeur": "UNKNOWN", "statut_preuve": "reserve", "test_departage": "une session chronometree par zone" } ],
+        "sinks": [ { "id": "SNK_PRESENCE_RESET", "cote": "sink", "statut": "UNKNOWN", "declencheur": "reset de fin de seance", "valeur": "UNKNOWN", "statut_preuve": "UNKNOWN" } ] }
+    ],
+    "horizon_partie": {
+      "duree_de_vie": "seance", "persistance_requise": false, "sauvegarde_autorisee": "INTERDITE_PAR_BRIEF",
+      "seance_reference": { "valeur": 300, "statut_preuve": "reserve", "test_departage": "3 traverses chronometrees : 5 s n'est pas une duree de partie" },
+      "equilibre_puits_sinks": { "statut_preuve": "UNKNOWN", "commentaire": "0 puits et 0 sink reels : solde non mesurable." }
+    },
+    "courbe_progression": { "statut": "NON_IMPOSEE", "paliers": [], "time_to_max": { "valeur": "UNKNOWN", "statut_preuve": "UNKNOWN" }, "motif_statut": "aucun niveau demande" },
+    "compteurs_exposes": [
+      { "nom": "Spawner_Plaza_01", "device_classe": "player_spawner_device", "compteur_cable": false, "valeur": 1, "statut_preuve": "mesure", "preuve": "04_devices.json : 1 device", "source_reelle": "04_devices.json" },
+      { "nom": "Compteurs_score", "device_classe": "player_spawner_device", "compteur_cable": false, "valeur": 0, "statut_preuve": "mesure", "preuve": "10_editables.json : 0 editable", "source_reelle": "10_editables.json" }
+    ],
+    "non_imposes": [ "aucune sauvegarde inter-session", "aucune boutique ni argent reel", "aucun farm repetable : 0 puits cable" ],
+    "anti_exploits": [
+      { "signature": "respawn infini branche a un puits", "parade": "le spawner ne cable aucun flux", "statut": "NON_CONCERNE", "type": "farm_infini" },
+      { "signature": "une drop table apres coup : puits sans sink", "parade": "derogation au gate HITL #2 avant recompense", "statut": "PARADE_ECRITE", "type": "aucun_flux" }
+    ],
+    "gate_hitl_2": { "numero": 2, "statut": "PENDING", "valide_par": "UNKNOWN", "iterations": 0 }
+  },
+  "constraints": {
+    "acces_mcp": "none",
+    "must_preserve": [ "0 ressource inter-session", "chaque valeur porte un statut de preuve", "compteurs reels : 1 device, 0 compteur" ],
+    "forbidden": [ "aucun /Game/ ni PPID_ ou PID_ final", "aucun chiffre de tete (WP2 p.9)" ],
+    "must_ask_producer": [ "Monetisation prevue apres la jam ?", "Persistance voulue ?" ],
+    "tuning_reserves": [ "TX_OBSERVATION 20 s/zone : chronometrage", "seance 300 s : 3 traverses" ]
+  },
+  "golden_example_ref": "skill/exemples/economie-minimale-corpo-plaza.json",
+  "acceptance": [ "economy_model_declared", "every_value_carries_proof_status", "every_rate_has_tie_breaker_test", "every_measure_cites_source_file", "playthrough_lifetime_declared", "zero_persistent_resource_when_save_forbidden", "no_sink_without_source", "no_infinite_farm_loop", "counters_declared_match_real_devices", "non_imposed_scope_written", "exploit_checklist_present", "no_coordinate_or_asset_path", "unknown_used_not_invented", "economy_gate_hitl_2_pending" ],
+  "next_step_hint": "05 : aucune recompense meta. 12 et 14 : aucun compteur a lire avant que le gate HITL #2 tranche les 2 reserves.",
+  "context_budget_tokens": 4000,
+  "exemple_annotations": {
+    "role": "GOLDEN - 01_economy.json attendu",
+    "source": "Artefact NON EMIS pendant la run : payload reconstruit depuis 01_gdd.json, 04_devices.json, 10_editables.json, journal 2026-10-24 section 17.",
+    "statut_des_chiffres": "1 et 0 sont des mesures citees ; 20 s/zone et 300 s sont des RESERVES.",
+    "troncature": "Tronque pour tenir sous 5 Ko : 2 ressources sur 6, 1 taux, 2 compteurs.",
+    "regle_de_troncature": "Les 14 criteres d'acceptation sont tous revendiques : aucun n'a ete retire pour faire renter la troncature. Chacun est verifie sur les donnees presentes ici (2 ressources avec puits ET sink, horizon_partie complet, compteurs branches sur 04_devices.json et 10_editables.json, 3 non_imposes, 2 anti_exploits). Un golden qui ampute sa liste d'acceptation enseigne la triche, pas le format.",
+    "pourquoi_il_passe": [ "puits et sinks ecrits avec leur statut", "aucun taux presente comme equilibre", "compteurs branches sur les fichiers reels" ]
+  }
+}

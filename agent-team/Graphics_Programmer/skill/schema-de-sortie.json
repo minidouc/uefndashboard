@@ -122,7 +122,7 @@
         "legal_asset_prefixes": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "Prefixes de catalogues autorises (PID_ / PPID_ exposes aux createurs UEFN). Un chemin /Game/Athena ou /Game/Environments est refuse."
+          "description": "Prefixes de catalogues autorises pour l'ambiance (PID_ / PPID_). Ce n'est PAS un critere de legalite : la legalite est le verdict du validateur UEFN (agent-team/_commun/legalite-assets.md)."
         },
         "audit_amont_requis": {
           "const": "06_audit_report.json PASSED source live"
@@ -197,7 +197,7 @@
         "asset_path": {
           "type": "string",
           "pattern": "^/.+\\.(PID_|PPID_)[A-Za-z0-9_.]+$",
-          "description": "Chemin exact rendu par search-playsets ; le motif impose un identifiant PID_ ou PPID_ et donc exclut /Game/Athena et /Game/Environments."
+          "description": "Chemin exact rendu par search-playsets ; le motif impose un identifiant PID_ ou PPID_ (choix de perimetre pour l'ambiance, pas une preuve de legalite : voir agent-team/_commun/legalite-assets.md)."
         },
         "source_recherche": {
           "type": "string",

@@ -51,7 +51,7 @@
       "audit.source = 'spec' : le schema exige 'live'. Hors editeur, un TILE_ANCHOR est par construction au sol, donc GRAVITY_ERROR est indetectable - 4 enseignes enfoncees (-3,2 puis -5,86 puis -3,07 cm) ont passe comme ca.",
       "audit.status PASSED avec 91 OVERLAP_ERROR reels non relus : un compteur theorie ne prouve rien (les bounds rotatifs sont plus grands que la taille theorique).",
       "device sans ref_path : les agents 12/13/14 ne peuvent pas cabler ; le contrat exige ref_path + xform relue pour tout status 'placed'.",
-      "asset_path /Game/Athena/... : interdit (FortValidator echoue au lancement de session) ; le chemin n'est pas dans 02_palette.json et n'a pas ete mesure.",
+      "asset_path /Game/Athena/... : le chemin n'est pas dans 02_palette.json et n'a pas ete mesure ni prouve par le validateur. (Le prefixe /Game/ n'est pas la faute : des /Game/Creative/... et /Game/Athena/... sont legaux.)",
       "actor_label 'Spawner Plaza 01' contient des espaces : pattern refuse, et l'identifiant devient introuvable dans l'Outliner.",
       "notes 'repositionne a la main dans l'editeur' : la correction doit passer par la spec puis compile-transforms + place-scene, sinon le prochain batch ecrase le geste manuel et l'audit n'est plus reproductible.",
       "acceptance avec des criteres subjectifs (audit_ok, collisions_ok, tout_est_pose) au lieu des criteres cochables (0_overlap, 0_floating, audit_source_live...).",

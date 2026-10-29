@@ -1,0 +1,58 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python scripts/state.py:*)",
+      "Bash(python validators/run_all.py:*)",
+      "Bash(python scripts/preflight.py:*)",
+      "Bash(python scripts/pose_lot.py simuler:*)",
+      "Bash(python scripts/pose_lot.py plan)",
+      "Bash(python scripts/capture.py liste:*)",
+      "Bash(python -m scripts.uefn.mcp_gateway:*)",
+      "Bash(python scripts/handoff.py:*)",
+      "Bash(python scripts/generer_plan.py:*)",
+      "Bash(python scripts/gen_cameras.py:*)",
+      "Bash(python scripts/suggerer_exceptions.py:*)",
+      "Bash(python scripts/check_plan.py:*)",
+      "Bash(python scripts/nouveau_projet.py:*)"
+    ],
+    "ask": [
+      "Bash(python scripts/build_complet.py:*)",
+      "Bash(python scripts/pose_lot.py lot:*)",
+      "Bash(python scripts/pose_lot.py plan --refaire:*)",
+      "Bash(python scripts/rollback.py:*)",
+      "Bash(python scripts/spike_capacite.py:*)",
+      "Bash(python scripts/capture.py prendre:*)",
+      "Bash(python scripts/capture.py toutes:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Bash(python tools/lock_validators.py:*)",
+      "Bash(python tools/make_golden.py:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/garde.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/demarrage.py\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

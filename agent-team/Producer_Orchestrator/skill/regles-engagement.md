@@ -14,6 +14,28 @@ Chaque tour = **UNE** décision parmi `DISPATCH | VALIDATE | REJECT | ESCALATE_U
 Jamais deux. Tu ne lances jamais plus d'une mission à la fois (16 Go de RAM = 1 seul agent actif,
 WP1 p.25 Sequential, archi couche 1). Pas de Tree-of-Thoughts, pas de Self-Consistency multiple.
 
+**Ce que reçoit un spécialiste Flash au DISPATCH** : son `prompt.flash.md` (instruction système,
+compilé) + le handoff de mission. **Rien d'autre** : ni `persona.md`, ni `SKILL.md`, ni les fichiers
+de `skill/`, qui sont la documentation de référence (≈ 19 000 tokens par agent, contre ≈ 8 500 pour
+le prompt compilé). Avant chaque phase, `python agent-team/_commun/compiler_prompts.py --check` doit
+rendre 0 ; sinon tu recompiles (`compiler_prompts.py` sans option) avant de dispatcher.
+De même, `python agent-team/_commun/verifier_outils.py` doit rendre 0 : chaque commande CLI et
+chaque outil MCP cité par un agent existe (sinon tu signales l'écart, tu ne dispatches pas). Sur un échec
+précis, tu peux joindre au handoff UN fichier `tool-output/*.md` utile, par son chemin.
+
+**Procédure de dispatch (identique dans tout harness, code = `agent-team/_commun/studio.py`)** :
+
+1. Écris le handoff de mission `<projet>/handoff/H-<PHASE>-<seq>__Producer__to__<Agent>.json`.
+2. `python agent-team/_commun/studio.py dispatch --mission <ce fichier>` → rc 0 obligatoire
+   (rc 1 = mission invalide ou entrée manquante : corrige, ne dispatche pas).
+3. Appelle l'outil de sous-agent avec **exactement** le champ `prompt_sous_agent` de la sortie.
+   Tu ne recopies, ne résumes et ne complètes jamais le prompt toi-même.
+4. Au retour, lance la commande `apres_retour` (ajoute `--workspace` en BUILD). Tu suis
+   `decision_conseillee` : `VALIDATE` · `LANCER_VERIFICATIONS` (lance chaque `a_lancer`, puis
+   revalide) · `REJECT` (re-dispatch : l'étape 2 inclut d'elle-même les corrections) ·
+   `ESCALATE_USER` · `HALT_PHASE`. Ce que dit le sous-agent dans sa réponse ne compte pas : seule
+   cette sortie fait foi. Les `criteres_non_verifiables_par_code` relèvent de ton contrôle §4.
+
 ## 2. Conditions d'arrêt anti-boucle (dures)
 
 Les WP ne fournissent **aucun** compteur d'itération : ces seuils sont du code (WP1 p.35). Tu
@@ -44,12 +66,12 @@ Tu fais respecter :
   hors schéma = échec, **même si l'outil n'a pas levé d'erreur**.
 - **Zéro coordonnée calculée par un LLM** (WP2 p.9) : toute valeur `transform`/`bounds`/`overlap`
   vient d'un `get_actor_bounds` lu dans l'éditeur OU d'un batch Python. Tu exposes des **tâches, pas
-  des API** (WP2 p.18) : `place_prop_from_grid(cell_id, prop_preset)`, jamais `place_actor(x,y,z,…)`.
+  des API** (WP2 p.18) : `compile-transforms` + `place-scene` (le code résout x/y/z), jamais `Scene.add_to_scene_from_asset` avec des coordonnées écrites par un modèle.
 - **Erreur = STOP, jamais « faire comme si »** (WP4 p.20 n°3) : `isError:true` (WP2 p.30), code
   ∈ {4xx,5xx,`-32601`}, réponse vide/tronquée/non-JSON → `UNKNOWN`, tu n'itères pas, tu escalades ou
   tu redemandes un `preflight_ok.json` frais. Message « Wait 15 seconds » → cooldown `[AM]`, pas de retry.
-- **HITL sur toute écriture destructrice** (WP2 p.27/36/43, WP5 p.14/18) : `save`, `delete_actor`,
-  `set_material`, `batch_place`, `apply_physics`, `run_python` à effet de bord = *sensitive sink* →
+- **HITL sur toute écriture destructrice** (WP2 p.27/36/43, WP5 p.14/18) : `Asset.save_assets`, `Scene.save_actor`, `Scene.remove_from_scene`, `Asset.delete`, `Scene.replace_actors_with_asset`, `Object.set_properties`, `Verse.WriteFile`/`Verse.Delete`, `Prog.execute_tool_script` à effet de bord,
+  `Session.StartSession`/`PushChanges` = *sensitive sink* →
   approbation explicite, **peu importe** `destructiveHint=false` (« annotations are only hints », WP2 p.27).
 - **Least privilege** (WP2 p.47) : périmètre rappelé dans `next_step_hint`. Secrets/PAT Qoder Cloud
   **jamais** dans un contexte d'agent. Credentials courte durée.
@@ -94,12 +116,13 @@ Vocabulaire standard (`long-term-memory.json → acceptance_vocabulary`) :
 
 | Critère | Vérification déterministe |
 |---|---|
-| `schema_valid` | JSON conforme à `templates/handoff.schema.json` (draft-07) |
+| `schema_valid` | JSON conforme au `schema-de-sortie.json` **complet** de l'agent (`studio.py validate`, qui coche aussi `pid_legal`, émetteur, `mission_ref`, budget, tentatives) |
 | `0_overlap` | aucune bounding-box intersectante (via `get_actor_bounds`) |
 | `0_floating` | chaque prop ancré à un support dans sa Z-slice |
 | `spawn_reachable` | chemin spawn → objectif sans trou |
 | `mcp_ok` | `preflight_ok.json` frais + ping port 8000/8001 |
-| `pid_legal` | tout `PID_`/`PPID_` présent dans la palette autorisée |
+| `pid_legal` | tout chemin présent dans la palette autorisée **et** non `ILLEGAL_ASSET_PATH`/`UNVERIFIED_ASSET_PATH` pour `validate-scene` (catalogue commun `../../_commun/catalogue-verifie.json`) |
+| `validator_clean` | `check-validator` → `06b_validator_report.json` `status: "PASSED"` **postérieur** au dernier changement de scène (`UNKNOWN` ne compte pas) |
 
 Un validateur en échec → `REJECT` + UNE mission corrective. Jamais deux fois le même payload
 (détection de delta → HALT, §2). **Clamp déterministe** (archi 05 §3) : le Python borne X/Y/Z aux
@@ -114,6 +137,12 @@ La validation exige un **readback déterministe de l'éditeur** :
 ```
 save → get_actor_bounds → CaptureViewport → validateur Python → (seulement là) VALIDATE
 ```
+
+- **Légalité** : après toute pose ou tout remplissage de liste d'objets (armes, soins), tu lances
+  `check-validator --update-catalogue` (gate HITL : il sauvegarde). Le livrable n'est `VALIDATE`
+  qu'avec `status: "PASSED"`. C'est le seul juge : le 2026-10-29, des armes acceptées par l'éditeur
+  ont été refusées par le validateur UEFN, ce qu'aucune règle de chemin n'avait prévu
+  (`../../_commun/legalite-assets.md`).
 
 - Si le readback éditeur est absent ou en échec → `REJECT`, pas de `VALIDATE`.
 - Tu enregistres la provenance dans `schema-de-sortie.json → validation_source`

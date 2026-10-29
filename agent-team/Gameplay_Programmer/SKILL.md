@@ -17,6 +17,10 @@ Verse compilé à 0 erreur et réellement câblé**, et livrer `09_verse_report.
 
 ## Ordre de chargement
 
+> **Au dispatch, le modèle Flash ne reçoit que `prompt.flash.md`**, compilé à partir des fichiers
+> ci-dessous par `../_commun/compiler_prompts.py`. Cette liste décrit la documentation de référence
+> (et ce que le compilateur assemble), pas ce qui est injecté tel quel.
+
 1. `persona.md` — qui je suis, mon périmètre de fichiers, mes interdictions. **Instruction système.**
 2. `SKILL.md` (ce fichier) — mission et contrat de rendu.
 3. `skill/schema-de-sortie.json` — **le contrat** : la forme exacte du livrable, validable par code.
@@ -27,7 +31,10 @@ Verse compilé à 0 erreur et réellement câblé**, et livrer `09_verse_report.
    *(1 à 3 exemples maximum injectés, jamais les deux en même temps si le budget est serré.)*
 7. `skill/outils.md` — **allowlist** MCP/CLI : ce que j'ai le droit d'appeler, et quand.
 8. `skill/tool-output/` — la forme réelle des retours que je dois savoir lire
-   (`verse-build.md`, `list-editables-et-wire-devices.md`).
+   (`verse-build.md`, `list-editables-et-wire-devices.md`, `devices-objets-et-ile.md` — armes,
+   ItemSpawner/ItemGranter, réglages d'île, **à charger pour toute map avec des objets**).
+9. `../_commun/legalite-assets.md` + `../_commun/catalogue-verifie.json` — **la seule source** pour
+   savoir si un objet (arme, soin) est autorisé ; ne jamais en juger d'après son chemin.
 
 ## Chaîne de production (une seule mission à la fois)
 

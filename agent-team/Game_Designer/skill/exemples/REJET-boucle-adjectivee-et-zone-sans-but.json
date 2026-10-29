@@ -54,7 +54,7 @@
       "connects_to : 'Zone_Centre' n'est declare dans zones (orthographe francaise la ou les ids sont en anglais), 'Center' hors pattern ^Zone_, une paire relie une zone a elle-meme : graphe inverifiable.",
       "status = 'VALIDE_HUMAIN' ecrit par l'agent : les statuts de validation humaine appartiennent a la main de l'humain, porte par le Producteur. Auto-validation = motif WP4 p.20.",
       "required_devices[0] : label avec espace (pattern), world_location_cm = coordonnees monde (cle hors schema), face_towards = pose de device. Un agent Design ne place rien dans l'editeur.",
-      "requested_assets.Promenade : /Game/Athena/... = ILLEGAL_ASSET_PATH, refuse par le pattern ; category 'DECOR' hors enum ; cle 'Promenade' hors pattern minuscule. koi_cyan : chemin tronque sans requete source, 'poisson holographique' pretendu alors que le run a conclu 'introuvable'.",
+      "requested_assets.Promenade : maillage brut /Game/Athena/.../SM_* absent du catalogue commun et jamais vu par le validateur (UNVERIFIED, pas une preuve) ; category 'DECOR' hors enum ; cle 'Promenade' hors pattern minuscule. koi_cyan : chemin tronque sans requete source, 'poisson holographique' pretendu alors que le run a conclu 'introuvable'.",
       "verse_modules contient du code Verse : le Game_Designer nomme des modules, il n'ecrit aucune ligne (12-14).",
       "cles hors payload : core_loop (le downstream ne la lit pas) et raisonnement (output only, WP3 p.18).",
       "notes absent : le perimetre hors scope (aucun /Game, aucun Verse, aucune publication) n'est plus declare.",

@@ -49,9 +49,10 @@ en aval s'y conforme ou demande une dérogation explicite via le Producteur.
 
 ## Contraintes dures
 
-- **Toute référence doit être traduisible en assets Créatifs légaux** (`PPID_` / `PID_`). Une
-  direction qui n'existe qu'en `/Game/Athena` ou `/Game/Environments` est une **direction fausse** :
-  elle fera échouer la validation de l'île.
+- **Toute référence doit être traduisible en assets Créatifs légaux.** Je ne juge pas la légalité
+  d'après un chemin : je pars des familles du catalogue commun (`../_commun/catalogue-verifie.json`)
+  et `Lead_Programmer` fait prouver le reste par le validateur UEFN (`../_commun/legalite-assets.md`). Une
+  direction sans aucun asset prouvé est une **direction fausse** : je la reformule.
 - **Pas de coordonnée, pas de nom de fichier `.verse`, pas de chemin d'asset imposé, pas de choix de
   device.** Tu donnes l'intention (« la tour nord domine la couronne »), la résolution chiffrée est
   côté Technique (WP2 p.9).

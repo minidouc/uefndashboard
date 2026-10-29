@@ -1,0 +1,24 @@
+{
+ "outil": "ActorTools.get_actor_bounds",
+ "rc": 0,
+ "args": {
+  "actor": {
+   "refPath": "/Game/Golden.Golden:PersistentLevel.CP_S1_PLANCHER"
+  }
+ },
+ "payload": {
+  "returnValue": {
+   "min": {
+    "x": 2000,
+    "y": -1000,
+    "z": 400
+   },
+   "max": {
+    "x": 3000,
+    "y": 1000,
+    "z": 500
+   },
+   "isValid": true
+  }
+ }
+}
