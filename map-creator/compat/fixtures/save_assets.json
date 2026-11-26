@@ -1,0 +1,10 @@
+{
+  "fixture": "AssetTools.save_assets",
+  "captured_at": "2026-10-28T14:24:11Z",
+  "uefn_version": "38.20",
+  "tool": "AssetTools.save_assets",
+  "rc": 0,
+  "payload": {
+    "returnValue": true
+  }
+}

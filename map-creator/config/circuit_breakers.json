@@ -1,0 +1,6 @@
+{
+  "$comment": "Coupe-circuit MCP relu a CHAQUE appel par le coeur Rust. Seul l'humain modifie ce fichier.",
+  "writes_halted": false,
+  "blocked_tools": [],
+  "reason": null
+}

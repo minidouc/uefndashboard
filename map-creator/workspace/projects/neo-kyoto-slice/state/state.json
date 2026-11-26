@@ -1,0 +1,54 @@
+{
+  "$schema": "map-creator.state.v3",
+  "project_slug": "neo-kyoto-slice",
+  "title": "Neo-Kyoto — Quartier Esplanade (Vertical Slice)",
+  "phase": "3_GRAYBOX",
+  "mode": "production",
+  "updated_at": "2026-11-26T19:11:13Z",
+  "counters": {
+    "phase_iterations": 1,
+    "questions_total": 6
+  },
+  "gates": {
+    "brief": {
+      "ts_utc": "2026-11-26T17:05:00Z",
+      "citation": "OK pour le brief vertical slice Esplanade, on valide le périmètre IN/OUT.",
+      "scope": "Phase 1"
+    },
+    "conception": {
+      "ts_utc": "2026-11-26T17:45:00Z",
+      "citation": "Keyshots et palette validés, on peut passer en graybox.",
+      "scope": "Phase 2B"
+    },
+    "ecriture_uefn": {
+      "ts_utc": "2026-11-26T17:50:00Z",
+      "citation": "Autorisé à poser la graybox par lots via l'outbox.",
+      "scope": "Phase 3"
+    },
+    "salle_grise": {
+      "ts_utc": "2026-11-26T17:20:00Z",
+      "citation": "Testé 10 min en salle grise : le verbe d'escalade/balise est fluide.",
+      "scope": "Phase 2A"
+    },
+    "texte": {
+      "ts_utc": "2026-11-26T17:35:00Z",
+      "citation": "Plans du quartier Esplanade validés sur les 4 couches.",
+      "scope": "Phase 2A"
+    }
+  },
+  "locks": {
+    "deliverables/brief.json": {
+      "path": "deliverables/brief.json",
+      "locked_at": "2026-11-26T17:05:00Z",
+      "sha256": "locked-at-phase-1",
+      "human_citation": "OK pour le brief vertical slice Esplanade, on valide le périmètre IN/OUT."
+    }
+  },
+  "change_requests": [],
+  "lots": {
+    "lot_01": "VALIDE"
+  },
+  "derogation": null,
+  "last_validation": "PASS (2026-11-26T19:11:13Z)",
+  "next_action": "Envoyer le lot_02 via l'Outbox puis lancer la validation protégée (20 cas Golden + règles) avant le playtest Phase 4."
+}

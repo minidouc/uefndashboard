@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/library_entry.schema.json",
+  "title": "Mémoire Niveau 3 — Fiche d'entrée Bibliothèque Réutilisable",
+  "type": "object",
+  "required": ["id", "category", "title", "tags", "provenance", "created_at", "uefn_version", "status", "artifact_path"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+    "category": {
+      "type": "string",
+      "enum": ["3d_asset", "verse_module", "plan_snippet", "image_prompt", "device_config", "model_benchmark"]
+    },
+    "title": { "type": "string" },
+    "summary": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "provenance": {
+      "type": "string",
+      "enum": ["validator", "editor_readback", "human"],
+      "description": "Seul ce qui est prouvé entre (jamais agent_claim)"
+    },
+    "proof_ref": { "type": "string" },
+    "source_project": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "uefn_version": { "type": "string" },
+    "license": { "type": "string" },
+    "memory_kb": { "type": ["integer", "null"] },
+    "status": { "type": "string", "enum": ["verified", "suspect", "retired"] },
+    "artifact_path": { "type": "string" }
+  }
+}

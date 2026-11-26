@@ -1,0 +1,53 @@
+{
+  "updated_at": "2026-11-26T18:00:00Z",
+  "lessons": [
+    {
+      "id": "L-001",
+      "rule": "Un validateur ne lit jamais un champ déclaré par un agent : il remonte toujours à la réponse MCP brute stockée dans outbox/responses/.",
+      "incident": "corpo-plaza (oct. 2026) : rc=0 et bornes inventées quand la relecture échouait.",
+      "provenance": "validator",
+      "added_at": "2026-10-27T10:00:00Z",
+      "active": true
+    },
+    {
+      "id": "L-002",
+      "rule": "Un validateur qui passe toujours est cassé : les 20 cas Golden Set (18 pièges) tournent avant chaque validation réelle.",
+      "incident": "corpo-plaza (oct. 2026) : test de chevauchement forcé à True, 344 chevauchements ignorés.",
+      "provenance": "validator",
+      "added_at": "2026-10-27T10:15:00Z",
+      "active": true
+    },
+    {
+      "id": "L-003",
+      "rule": "Cube plus fin que 256 uu : une surface s'épaissit vers le bas (dessus à la cote), un objet posé dessus s'épaissit vers le haut.",
+      "incident": "corpo-plaza : sols rehaussés de ~125 uu, spawn enterré.",
+      "provenance": "editor_readback",
+      "added_at": "2026-10-27T11:00:00Z",
+      "active": true
+    },
+    {
+      "id": "L-004",
+      "rule": "Pas d'erreur ne veut pas dire réussi : seule la relecture groupée find_actors + save_assets + is_dirty=false prouve un lot.",
+      "incident": "corpo-plaza : set_actor_folder rendait rc=0 sans effet (folderPath=None).",
+      "provenance": "editor_readback",
+      "added_at": "2026-10-27T14:30:00Z",
+      "active": true
+    },
+    {
+      "id": "L-005",
+      "rule": "Un test automatique ne remplace jamais un playtest humain : verrouiller le gameplay (Phase 4) avant de produire planches 2B+ et modèles 3D.",
+      "incident": "Final Cut (MegaJam nov. 2026) : auto-test PASS alors que la 1re vraie partie n'avait aucun ennemi.",
+      "provenance": "human",
+      "added_at": "2026-11-16T09:00:00Z",
+      "active": true
+    },
+    {
+      "id": "L-006",
+      "rule": "Verrouiller l'exposition caméra dès le début des finitions (Phase 7) pour éviter l'auto-exposition UEFN qui fausse les réglages de lumière.",
+      "incident": "corpo-plaza & Final Cut : scène éclaircie automatiquement dans le viewport.",
+      "provenance": "human",
+      "added_at": "2026-11-16T09:15:00Z",
+      "active": true
+    }
+  ]
+}

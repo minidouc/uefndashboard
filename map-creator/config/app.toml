@@ -1,0 +1,184 @@
+# Map Creator — Configuration principale (inspirée de l'architecture Codex App Server)
+# Modifiable à chaud depuis l'interface Svelte ou à la main.
+
+[server]
+host = "127.0.0.1"
+port = 4310
+active_project = "neo-kyoto-slice"
+uefn_version = "39.10"
+# Mode d'exécution MCP par défaut : "simulator" (hors ligne avec fixtures) ou "live" (UEFN connecté)
+mcp_mode = "simulator"
+
+[grid]
+tile_size_uu = 512.0
+floor_height_uu = 384.0
+default_district_tiles_x = 24
+default_district_tiles_y = 24
+min_passage_width_uu = 180.0
+max_step_height_uu = 120.0
+contact_tolerance_uu = 10.0
+
+[theme]
+preset = "atelier-clair"
+font_sans = "'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif"
+font_mono = "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace"
+radius_sm = "6px"
+radius_md = "10px"
+
+[theme.vars]
+bg_canvas = "#F5F3EE"
+bg_surface = "#FFFFFF"
+bg_elevated = "#EFECE4"
+bg_sidebar = "#1A1C1E"
+text_primary = "#17191C"
+text_secondary = "#5B6068"
+text_sidebar = "#ECEAE4"
+text_sidebar_muted = "#9BA1A8"
+border_subtle = "#DDD8CC"
+border_strong = "#C5BEB0"
+accent = "#C84B28"
+accent_hover = "#A93B1D"
+accent_soft = "#FBECE7"
+status_pass = "#1D7F54"
+status_pass_bg = "#E5F5ED"
+status_warn = "#B77213"
+status_warn_bg = "#FDF3E2"
+status_fail = "#C23630"
+status_fail_bg = "#FCE9E8"
+layer_a = "#1E6091"
+layer_b = "#6C757D"
+layer_c = "#D97706"
+layer_d = "#0F766E"
+
+[shortcuts]
+nav_pipeline = "g p"
+nav_plan = "g m"
+nav_outbox = "g o"
+nav_memory = "g l"
+nav_proofs = "g v"
+nav_agent = "g a"
+nav_settings = "g s"
+run_validators = "Ctrl+Shift+V"
+dispatch_outbox = "Ctrl+Shift+D"
+toggle_theme = "Ctrl+Shift+T"
+
+[tools]
+enabled = [
+  "read_file",
+  "write_file",
+  "list_dir",
+  "run_shell",
+  "state_show",
+  "state_event",
+  "outbox_submit",
+  "outbox_status",
+  "plan_check",
+  "library_search",
+  "validator_run",
+  "mcp_call"
+]
+
+[providers.builtin_local]
+kind = "builtin_local"
+endpoint = ""
+api_key_env = ""
+default_model = "local-harness-deterministic"
+
+[providers.openai_compatible]
+kind = "openai_compatible"
+endpoint = "https://api.openai.com/v1/chat/completions"
+api_key_env = "OPENAI_API_KEY"
+default_model = "gpt-4.1"
+
+[providers.openrouter]
+kind = "openai_compatible"
+endpoint = "https://openrouter.ai/api/v1/chat/completions"
+api_key_env = "OPENROUTER_API_KEY"
+default_model = "qwen/qwen3-coder"
+
+[providers.anthropic]
+kind = "anthropic"
+endpoint = "https://api.anthropic.com/v1/messages"
+api_key_env = "ANTHROPIC_API_KEY"
+default_model = "claude-sonnet-4-20250514"
+
+# Équipe Map Creator v3 : 1 Orchestrateur + 9 Sous-agents (dont Concepteur d'images et Critique)
+[roles.orchestrateur]
+label = "Orchestrateur"
+tier = "grand"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu es le seul orchestrateur du studio Map Creator. Tu lis l'état (< 20 Ko), choisis UNE action par tour, ne calcules aucune coordonnée et ne valides rien à l'œil. Tu passes par les scripts, l'outbox et les validateurs protégés."
+
+[roles.directeur_creatif]
+label = "Directeur créatif"
+tier = "grand"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu chasses les mots vagues et les contradictions (max 10 questions par tour), puis rédiges le brief, la bible d'univers, la bible visuelle et le guide de direction artistique avec bloc de style et bloc d'interdits."
+
+[roles.game_designer]
+label = "Game designer"
+tier = "grand"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu conçois le verbe principal, la mécanique signature réalisable avec le catalogue UEFN/Verse, le câblage des appareils et tu traduis les retours de playtest en corrections de plan ou de réglages."
+
+[roles.level_designer]
+label = "Level designer"
+tier = "grand"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu conçois la vue d'ensemble puis chaque quartier en 4 couches (a·Scène, b·Fonds, c·Détails, d·Effets) + coupe, selon les 3 passes (réel, jouable, admirable). Chaque objet a une raison explicite."
+
+[roles.concepteur_images]
+label = "Concepteur d'images"
+tier = "petit"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu remplis strictement le modèle de prompt du guide de direction artistique (sujet, zone, cadrage, lumière, éléments obligatoires) sans jamais altérer le bloc de style ni le bloc d'interdits."
+
+[roles.designer_interface]
+label = "Designer d'interface"
+tier = "moyen"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu rédiges la bible d'interface et conçois les écrans (HUD, menus, écran de fin) après le verrou gameplay."
+
+[roles.narration]
+label = "Narration"
+tier = "petit"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu rédiges les fiches de personnages et les textes du jeu courts, cohérents avec la bible d'univers verrouillée."
+
+[roles.audio]
+label = "Audio"
+tier = "petit"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu rédiges le brief sonore par zone (ambiances, SFX, musique en dernier) en indiquant la source et la licence attendue."
+
+[roles.programmeur_verse]
+label = "Programmeur Verse"
+tier = "moyen"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = false
+system_prompt = "Tu écris des modules Verse propres et compilables (salle grise, mécaniques bêta, interface, game feel). Tu cherches d'abord dans la bibliothèque réutilisable avant d'écrire du neuf."
+
+[roles.critique]
+label = "Critique (Juge)"
+tier = "moyen"
+provider = "builtin_local"
+model = "local-harness-deterministic"
+readonly = true
+system_prompt = "Tu es le juge indépendant en LECTURE SEULE. Tu compares images, planches et captures à la grille écrite en une passe. Tu ne modifies jamais ce que tu juges."

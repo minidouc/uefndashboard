@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/phase_0_questionnaire.schema.json",
+  "title": "Phase 0 — Questionnaire Auteur",
+  "type": "object",
+  "required": ["project_slug", "title", "intention", "theme", "players", "gameplay", "visual_style", "forbidden", "unknowns"],
+  "properties": {
+    "project_slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "title": { "type": "string", "minLength": 2 },
+    "mode": { "type": "string", "enum": ["production", "prototype"], "default": "production" },
+    "intention": { "type": "string" },
+    "theme": { "type": "string" },
+    "players": {
+      "type": "object",
+      "required": ["min", "max", "session_minutes"],
+      "properties": {
+        "min": { "type": "integer", "minimum": 1 },
+        "max": { "type": "integer", "minimum": 1 },
+        "session_minutes": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "gameplay": { "type": "string" },
+    "visual_style": { "type": "string" },
+    "forbidden": { "type": "array", "items": { "type": "string" } },
+    "unknowns": {
+      "type": "array",
+      "description": "Liste explicite des 'Je ne sais pas' transmis à la Phase 1",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "job_id": "lot_01_graybox",
+  "lot_id": "lot_01",
+  "district_id": "district_plaza",
+  "attempt": 1,
+  "ts_utc": "2026-11-26T17:52:00Z",
+  "operations": [
+    { "op_id": "op_001", "plan_item_id": "SOL_PLAZA", "tool": "PrimitiveTools.add_cube", "rc": 0 },
+    { "op_id": "op_002", "plan_item_id": "TERRASSE_NORD", "tool": "PrimitiveTools.add_cube", "rc": 0 },
+    { "op_id": "op_003", "plan_item_id": "RAMPE_NORD", "tool": "PrimitiveTools.add_cube", "rc": 0 },
+    { "op_id": "op_004", "plan_item_id": "SPAWN_EST", "tool": "DeviceToolset.PlaceDevice", "rc": 0 },
+    { "op_id": "op_005", "plan_item_id": "MONOLITHE_CENTRE", "tool": "SceneTools.add_to_scene_from_asset", "rc": 0 },
+    { "op_id": "op_006", "plan_item_id": "COUVERT_OUEST", "tool": "PrimitiveTools.add_cube", "rc": 0 },
+    { "op_id": "op_007", "plan_item_id": "BALISE_FIN", "tool": "DeviceToolset.PlaceDevice", "rc": 0 },
+    { "op_id": "op_008", "plan_item_id": "TOUR_HORIZON_SW", "tool": "PrimitiveTools.add_cube", "rc": 0 },
+    { "op_id": "op_009", "plan_item_id": "TOUR_HORIZON_SE", "tool": "PrimitiveTools.add_cube", "rc": 0 }
+  ],
+  "closure": {
+    "find_actors": {
+      "rc": 0,
+      "tool": "SceneTools.find_actors",
+      "payload": {
+        "returnValue": [
+          { "name": "WorldSettings", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.WorldSettings", "bounds": { "min": { "x": -10000.0, "y": -10000.0, "z": -500.0 }, "max": { "x": 10000.0, "y": 10000.0, "z": 5000.0 } } },
+          { "name": "LevelBounds_0", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.LevelBounds_0", "bounds": { "min": { "x": -12288.0, "y": -12288.0, "z": -512.0 }, "max": { "x": 12288.0, "y": 12288.0, "z": 6144.0 } } },
+          { "name": "MC_SOL_PLAZA", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_SOL_PLAZA", "bounds": { "min": { "x": 1024.0, "y": 1024.0, "z": -257.28 }, "max": { "x": 7168.0, "y": 7168.0, "z": 0.0 } } },
+          { "name": "MC_TERRASSE_NORD", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_TERRASSE_NORD", "bounds": { "min": { "x": 2560.0, "y": 0.0, "z": -161.28 }, "max": { "x": 5632.0, "y": 1024.0, "z": 96.0 } } },
+          { "name": "MC_RAMPE_NORD", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_RAMPE_NORD", "bounds": { "min": { "x": 3584.0, "y": 1024.0, "z": 0.0 }, "max": { "x": 4608.0, "y": 1536.0, "z": 96.0 } } },
+          { "name": "MC_SPAWN_EST", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_SPAWN_EST", "bounds": { "min": { "x": 1536.0, "y": 3584.0, "z": 0.0 }, "max": { "x": 2048.0, "y": 4096.0, "z": 192.0 } } },
+          { "name": "MC_MONOLITHE_CENTRE", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_MONOLITHE_CENTRE", "bounds": { "min": { "x": 3584.0, "y": 3584.0, "z": 0.0 }, "max": { "x": 4608.0, "y": 4608.0, "z": 960.0 } } },
+          { "name": "MC_COUVERT_OUEST", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_COUVERT_OUEST", "bounds": { "min": { "x": 2048.0, "y": 2560.0, "z": 0.0 }, "max": { "x": 2560.0, "y": 3584.0, "z": 192.0 } } },
+          { "name": "MC_BALISE_FIN", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_BALISE_FIN", "bounds": { "min": { "x": 3840.0, "y": 256.0, "z": 96.0 }, "max": { "x": 4352.0, "y": 768.0, "z": 288.0 } } },
+          { "name": "MC_TOUR_HORIZON_SW", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_TOUR_HORIZON_SW", "bounds": { "min": { "x": 0.0, "y": 7168.0, "z": 0.0 }, "max": { "x": 2048.0, "y": 8192.0, "z": 1344.0 } } },
+          { "name": "MC_TOUR_HORIZON_SE", "actorPath": "/Game/neo-kyoto-slice/Main.Main:PersistentLevel.MC_TOUR_HORIZON_SE", "bounds": { "min": { "x": 6144.0, "y": 7168.0, "z": 0.0 }, "max": { "x": 8192.0, "y": 8192.0, "z": 1536.0 } } }
+        ]
+      }
+    },
+    "save_assets": { "rc": 0, "tool": "AssetTools.save_assets", "payload": { "returnValue": true } },
+    "is_dirty": { "rc": 0, "tool": "AssetTools.is_dirty", "payload": { "returnValue": false } },
+    "level_bounds": {
+      "rc": 0,
+      "tool": "ActorTools.get_actor_bounds",
+      "payload": {
+        "returnValue": {
+          "min": { "x": -12288.0, "y": -12288.0, "z": -512.0 },
+          "max": { "x": 12288.0, "y": 12288.0, "z": 6144.0 }
+        }
+      }
+    }
+  }
+}

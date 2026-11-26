@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/phase_2b_images.schema.json",
+  "title": "Phases 2B & 2B+ — Concept Arts et Planches de Production",
+  "type": "object",
+  "required": ["stage", "assets"],
+  "properties": {
+    "stage": { "type": "string", "enum": ["2B_world", "2B_plus_production"] },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "zone", "subject", "framing", "lighting", "mandatory_elements", "assembled_prompt", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string", "enum": ["world_concept", "rendered_plan", "keyshot", "character_sheet_4view", "prop_sheet_4view", "ui_screen"] },
+          "zone": { "type": "string" },
+          "subject": { "type": "string" },
+          "framing": { "type": "string" },
+          "lighting": { "type": "string" },
+          "mandatory_elements": { "type": "array", "items": { "type": "string" } },
+          "reference_images": { "type": "array", "items": { "type": "string" } },
+          "assembled_prompt": { "type": "string" },
+          "output_path": { "type": ["string", "null"] },
+          "critic_verdict": { "type": ["string", "null"], "enum": ["PASS", "FAIL", null] },
+          "status": { "type": "string", "enum": ["draft", "generated", "measured", "critiqued", "approved", "rejected"] }
+        }
+      }
+    }
+  }
+}

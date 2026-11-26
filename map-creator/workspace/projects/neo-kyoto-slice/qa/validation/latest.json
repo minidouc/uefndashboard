@@ -1,0 +1,271 @@
+{
+  "ts_utc": "2026-11-26T19:11:13Z",
+  "project_slug": "neo-kyoto-slice",
+  "manifest_integrity": "OK",
+  "manifest_mismatches": [],
+  "golden_set_passed": true,
+  "golden_total": 20,
+  "golden_results": [
+    {
+      "case_id": "01_sain",
+      "expected_fail_rules": [],
+      "actual_fail_rules": [],
+      "passed": true
+    },
+    {
+      "case_id": "02_chevauchement_justifie",
+      "expected_fail_rules": [],
+      "actual_fail_rules": [],
+      "passed": true
+    },
+    {
+      "case_id": "03_bornes_falsifiees",
+      "expected_fail_rules": [
+        "integrite_preuves"
+      ],
+      "actual_fail_rules": [
+        "integrite_preuves"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "04_acteur_non_relu",
+      "expected_fail_rules": [
+        "integrite_preuves"
+      ],
+      "actual_fail_rules": [
+        "integrite_preuves"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "05_pose_non_prouvee",
+      "expected_fail_rules": [
+        "integrite_preuves"
+      ],
+      "actual_fail_rules": [
+        "integrite_preuves"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "06_lot_interrompu",
+      "expected_fail_rules": [
+        "integrite_preuves"
+      ],
+      "actual_fail_rules": [
+        "integrite_preuves"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "07_acteur_hors_niveau",
+      "expected_fail_rules": [
+        "integrite_preuves"
+      ],
+      "actual_fail_rules": [
+        "integrite_preuves"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "08_chevauchement",
+      "expected_fail_rules": [
+        "zero_overlap"
+      ],
+      "actual_fail_rules": [
+        "zero_overlap"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "09_exception_sans_justification",
+      "expected_fail_rules": [
+        "zero_overlap"
+      ],
+      "actual_fail_rules": [
+        "zero_overlap"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "10_flottant",
+      "expected_fail_rules": [
+        "zero_flottant"
+      ],
+      "actual_fail_rules": [
+        "zero_flottant"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "11_groupe_flottant",
+      "expected_fail_rules": [
+        "zero_flottant"
+      ],
+      "actual_fail_rules": [
+        "zero_flottant"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "12_inaccessible",
+      "expected_fail_rules": [
+        "accessibilite"
+      ],
+      "actual_fail_rules": [
+        "accessibilite"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "13_preexistant_supprime",
+      "expected_fail_rules": [
+        "preexistants_intacts"
+      ],
+      "actual_fail_rules": [
+        "preexistants_intacts"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "14_save_echoue",
+      "expected_fail_rules": [
+        "persistance"
+      ],
+      "actual_fail_rules": [
+        "persistance"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "15_dirty_apres_save",
+      "expected_fail_rules": [
+        "persistance"
+      ],
+      "actual_fail_rules": [
+        "persistance"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "16_level_bounds_regresse",
+      "expected_fail_rules": [
+        "persistance"
+      ],
+      "actual_fail_rules": [
+        "persistance"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "17_improvisation",
+      "expected_fail_rules": [
+        "source_coordonnees"
+      ],
+      "actual_fail_rules": [
+        "source_coordonnees"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "18_deplace_hors_plan",
+      "expected_fail_rules": [
+        "source_coordonnees"
+      ],
+      "actual_fail_rules": [
+        "source_coordonnees"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "19_item_oublie_et_spawn_absent",
+      "expected_fail_rules": [
+        "couverture_plan",
+        "gameplay"
+      ],
+      "actual_fail_rules": [
+        "couverture_plan",
+        "gameplay"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "20_captures_mur_et_nuit_jour",
+      "expected_fail_rules": [
+        "captures_visuelles"
+      ],
+      "actual_fail_rules": [
+        "captures_visuelles"
+      ],
+      "passed": true
+    }
+  ],
+  "golden_failures": [],
+  "verdict": "PASS",
+  "lot_verdicts": {
+    "lot_01": "PASS"
+  },
+  "rules": [
+    {
+      "rule": "integrite_preuves",
+      "verdict": "PASS",
+      "checked_count": 9,
+      "violations": []
+    },
+    {
+      "rule": "persistance",
+      "verdict": "PASS",
+      "checked_count": 3,
+      "violations": []
+    },
+    {
+      "rule": "preexistants_intacts",
+      "verdict": "PASS",
+      "checked_count": 2,
+      "violations": []
+    },
+    {
+      "rule": "source_coordonnees",
+      "verdict": "PASS",
+      "checked_count": 9,
+      "violations": []
+    },
+    {
+      "rule": "zero_overlap",
+      "verdict": "PASS",
+      "checked_count": 36,
+      "violations": []
+    },
+    {
+      "rule": "zero_flottant",
+      "verdict": "PASS",
+      "checked_count": 9,
+      "violations": []
+    },
+    {
+      "rule": "accessibilite",
+      "verdict": "PASS",
+      "checked_count": 3,
+      "violations": []
+    },
+    {
+      "rule": "couverture_plan",
+      "verdict": "PASS",
+      "checked_count": 9,
+      "violations": []
+    },
+    {
+      "rule": "gameplay",
+      "verdict": "PASS",
+      "checked_count": 1,
+      "violations": []
+    },
+    {
+      "rule": "captures_visuelles",
+      "verdict": "PASS",
+      "checked_count": 1,
+      "violations": []
+    }
+  ]
+}

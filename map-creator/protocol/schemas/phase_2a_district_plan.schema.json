@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/phase_2a_district_plan.schema.json",
+  "title": "Phase 2A — Plan de Quartier en 4 Couches + Vue en Coupe",
+  "type": "object",
+  "required": ["district_id", "name", "grid", "memory_budget_kb", "layers", "section_view"],
+  "properties": {
+    "district_id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+    "name": { "type": "string" },
+    "role": { "type": "string" },
+    "grid": {
+      "type": "object",
+      "required": ["tile_size_uu", "floor_height_uu", "tiles_x", "tiles_y", "origin_uu"],
+      "properties": {
+        "tile_size_uu": { "type": "number", "default": 512.0 },
+        "floor_height_uu": { "type": "number", "default": 384.0 },
+        "tiles_x": { "type": "integer", "minimum": 4, "maximum": 100 },
+        "tiles_y": { "type": "integer", "minimum": 4, "maximum": 100 },
+        "origin_uu": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+      }
+    },
+    "memory_budget_kb": { "type": "integer", "minimum": 100 },
+    "connectors": {
+      "type": "array",
+      "description": "Raccords verrouillés avec la vue d'ensemble",
+      "items": {
+        "type": "object",
+        "required": ["id", "target_district", "tile_x", "tile_y", "width_tiles"],
+        "properties": {
+          "id": { "type": "string" },
+          "target_district": { "type": "string" },
+          "tile_x": { "type": "number" },
+          "tile_y": { "type": "number" },
+          "width_tiles": { "type": "number" }
+        }
+      }
+    },
+    "layers": {
+      "type": "object",
+      "required": ["a_scene", "b_fonds", "c_details", "d_effets"],
+      "properties": {
+        "a_scene": { "$ref": "#/$defs/layerItems" },
+        "b_fonds": { "$ref": "#/$defs/layerItems" },
+        "c_details": { "$ref": "#/$defs/layerItems" },
+        "d_effets": { "$ref": "#/$defs/layerItems" }
+      }
+    },
+    "section_view": {
+      "type": "object",
+      "required": ["axis", "slice_tile", "elevations"],
+      "properties": {
+        "axis": { "type": "string", "enum": ["X", "Y"] },
+        "slice_tile": { "type": "number" },
+        "elevations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "start_tile", "end_tile", "floor_z", "height_floors"],
+            "properties": {
+              "label": { "type": "string" },
+              "start_tile": { "type": "number" },
+              "end_tile": { "type": "number" },
+              "floor_z": { "type": "number" },
+              "height_floors": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "overlap_exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["a", "b", "justification"],
+        "properties": {
+          "a": { "type": "string" },
+          "b": { "type": "string" },
+          "justification": { "type": "string", "minLength": 5 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "layerItems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "kind", "pass", "reason", "tile_x", "tile_y", "floor_z", "size_tiles_x", "size_tiles_y", "height_floors"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "kind": { "type": "string", "enum": ["surface", "structure", "cover", "ramp", "spawn", "device", "backdrop", "prop", "light", "vfx", "audio_zone"] },
+          "pass": { "type": "string", "enum": ["reel", "jouable", "admirable"] },
+          "reason": { "type": "string", "minLength": 5, "description": "Chaque objet a une raison explicite d'être là" },
+          "tile_x": { "type": "number" },
+          "tile_y": { "type": "number" },
+          "floor_z": { "type": "number" },
+          "size_tiles_x": { "type": "number", "exclusiveMinimum": 0 },
+          "size_tiles_y": { "type": "number", "exclusiveMinimum": 0 },
+          "height_floors": { "type": "number", "exclusiveMinimum": 0 },
+          "yaw_deg": { "type": "number", "default": 0 },
+          "asset_ref": { "type": "string", "default": "GRAYBOX:CUBE" },
+          "estimated_memory_kb": { "type": "integer", "default": 12 },
+          "floating_exempt": { "type": "boolean", "default": false }
+        }
+      }
+    }
+  }
+}

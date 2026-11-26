@@ -1,0 +1,21 @@
+{
+  "fixture": "SceneTools.find_actors",
+  "captured_at": "2026-10-28T14:22:10Z",
+  "uefn_version": "38.20",
+  "tool": "SceneTools.find_actors",
+  "rc": 0,
+  "payload": {
+    "returnValue": [
+      {
+        "name": "WorldSettings",
+        "actorPath": "/Game/NeoKyoto/Main.Main:PersistentLevel.WorldSettings",
+        "bounds": { "min": { "x": -10000.0, "y": -10000.0, "z": -500.0 }, "max": { "x": 10000.0, "y": 10000.0, "z": 5000.0 } }
+      },
+      {
+        "name": "LevelBounds_0",
+        "actorPath": "/Game/NeoKyoto/Main.Main:PersistentLevel.LevelBounds_0",
+        "bounds": { "min": { "x": -6144.0, "y": -6144.0, "z": -256.0 }, "max": { "x": 6144.0, "y": 6144.0, "z": 3840.0 } }
+      }
+    ]
+  }
+}

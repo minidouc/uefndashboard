@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/validation_report.schema.json",
+  "title": "Rapport de Validateurs Protégés",
+  "type": "object",
+  "required": ["ts_utc", "project_slug", "manifest_integrity", "golden_set_passed", "golden_total", "verdict", "rules", "lot_verdicts"],
+  "properties": {
+    "ts_utc": { "type": "string", "format": "date-time" },
+    "project_slug": { "type": "string" },
+    "manifest_integrity": { "type": "string", "enum": ["OK", "ALTERED", "MISSING"] },
+    "manifest_mismatches": { "type": "array", "items": { "type": "string" } },
+    "golden_set_passed": { "type": "boolean" },
+    "golden_total": { "type": "integer", "minimum": 20 },
+    "golden_failures": { "type": "array", "items": { "type": "string" } },
+    "verdict": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "lot_verdicts": { "type": "object", "additionalProperties": { "type": "string", "enum": ["PASS", "FAIL"] } },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "verdict", "checked_count", "violations"],
+        "properties": {
+          "rule": { "type": "string" },
+          "verdict": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "checked_count": { "type": "integer" },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["lot_id", "detail"],
+              "properties": {
+                "lot_id": { "type": ["string", "null"] },
+                "detail": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

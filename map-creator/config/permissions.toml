@@ -1,0 +1,62 @@
+# Map Creator — Politique de permissions du cœur Rust
+# Règle d'or : rendre la triche impossible, pas seulement interdite.
+# Niveaux : "allow" | "ask" | "deny"
+
+[defaults]
+read_file = "allow"
+list_dir = "allow"
+write_file = "ask"
+run_shell = "ask"
+mcp_read = "allow"
+mcp_write = "ask"
+outbox_submit = "allow"
+outbox_dispatch = "ask"
+state_event = "allow"
+plan_check = "allow"
+library_search = "allow"
+validator_run = "allow"
+
+[protected_paths]
+# Aucun agent ne peut JAMAIS écrire dans ces chemins (rejet dur DENY même si approuvé).
+deny_write = [
+  "validators/**",
+  "validators/MANIFEST.json",
+  "config/permissions.toml",
+  "config/circuit_breakers.json",
+  "workspace/projects/*/outbox/responses/**",
+  "workspace/projects/*/qa/validation/**",
+  "workspace/projects/*/state/state.json",
+  "workspace/projects/*/state/events.jsonl"
+]
+
+# Chemins autorisés en écriture libre pour les agents (dossier d'envoi & brouillons de livrables)
+allow_write = [
+  "workspace/projects/*/outbox/pending/**",
+  "workspace/projects/*/deliverables/**",
+  "workspace/projects/*/plans/**"
+]
+
+[shell]
+# Commandes strictement interdites
+deny_patterns = [
+  "rm -rf",
+  "sudo ",
+  "mkfs",
+  "dd if=",
+  "lock-validators",
+  "lock_validators",
+  "chmod 777",
+  "curl | sh",
+  "wget | sh"
+]
+
+# Commandes lecture-seule autorisées sans demande humaine
+allow_prefixes = [
+  "git status",
+  "git diff",
+  "git log",
+  "ls",
+  "cat ",
+  "head ",
+  "wc "
+]

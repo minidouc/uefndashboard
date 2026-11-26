@@ -1,0 +1,295 @@
+{
+  "district_id": "district_plaza",
+  "name": "Quartier Esplanade (Vertical Slice)",
+  "role": "Hub central d'orientation et de circulation vers la terrasse de balise",
+  "grid": {
+    "tile_size_uu": 512.0,
+    "floor_height_uu": 384.0,
+    "tiles_x": 16,
+    "tiles_y": 16,
+    "origin_uu": [0.0, 0.0, 0.0]
+  },
+  "memory_budget_kb": 2400,
+  "connectors": [
+    {
+      "id": "CONN_NORD_MARCHE",
+      "target_district": "district_market",
+      "tile_x": 8.0,
+      "tile_y": 0.0,
+      "width_tiles": 4.0
+    }
+  ],
+  "layers": {
+    "a_scene": [
+      {
+        "id": "SOL_PLAZA",
+        "label": "Dalle Esplanade",
+        "kind": "surface",
+        "pass": "reel",
+        "reason": "Sol principal dégagé permettant une lecture immédiate des axes et des couverts.",
+        "tile_x": 2.0,
+        "tile_y": 2.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 12.0,
+        "size_tiles_y": 12.0,
+        "height_floors": 0.67,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:CUBE",
+        "estimated_memory_kb": 24,
+        "floating_exempt": false
+      },
+      {
+        "id": "TERRASSE_NORD",
+        "label": "Terrasse Balise",
+        "kind": "surface",
+        "pass": "jouable",
+        "reason": "Plateforme surélevée de 96 uu créant un objectif visuel clair au nord.",
+        "tile_x": 5.0,
+        "tile_y": 0.0,
+        "floor_z": 0.25,
+        "size_tiles_x": 6.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 0.67,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:CUBE",
+        "estimated_memory_kb": 18,
+        "floating_exempt": false
+      },
+      {
+        "id": "RAMPE_NORD",
+        "label": "Rampe d'accès",
+        "kind": "ramp",
+        "pass": "jouable",
+        "reason": "Relie l'esplanade à la terrasse nord avec une pente douce accessible sans saut.",
+        "tile_x": 7.0,
+        "tile_y": 2.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 2.0,
+        "size_tiles_y": 1.0,
+        "height_floors": 0.25,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:RAMP",
+        "estimated_memory_kb": 14,
+        "floating_exempt": false
+      },
+      {
+        "id": "SPAWN_EST",
+        "label": "Spawn Joueur",
+        "kind": "spawn",
+        "pass": "jouable",
+        "reason": "Point d'apparition orienté vers le monolithe central et la terrasse nord.",
+        "tile_x": 3.0,
+        "tile_y": 7.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 1.0,
+        "size_tiles_y": 1.0,
+        "height_floors": 0.5,
+        "yaw_deg": 0.0,
+        "asset_ref": "DEVICE:PlayerSpawner",
+        "estimated_memory_kb": 12,
+        "floating_exempt": false
+      },
+      {
+        "id": "MONOLITHE_CENTRE",
+        "label": "Monolithe Repère",
+        "kind": "structure",
+        "pass": "admirable",
+        "reason": "Repère vertical central (landmark) visible dès le spawn pour ancrer l'orientation.",
+        "tile_x": 7.0,
+        "tile_y": 7.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 2.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 2.5,
+        "yaw_deg": 0.0,
+        "asset_ref": "ASSET:/CRP_Sunburst/BP_Monolith_01",
+        "estimated_memory_kb": 145,
+        "floating_exempt": false
+      },
+      {
+        "id": "COUVERT_OUEST",
+        "label": "Muret Couvert Ouest",
+        "kind": "cover",
+        "pass": "jouable",
+        "reason": "Coupe la ligne de vue latérale et rythme la traversée ouest de la place.",
+        "tile_x": 4.0,
+        "tile_y": 5.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 1.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 0.5,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:CUBE",
+        "estimated_memory_kb": 12,
+        "floating_exempt": false
+      },
+      {
+        "id": "BALISE_FIN",
+        "label": "Balise Objectif",
+        "kind": "device",
+        "pass": "jouable",
+        "reason": "Appareil d'objectif principal relié au module Verse de manche.",
+        "tile_x": 7.5,
+        "tile_y": 0.5,
+        "floor_z": 0.25,
+        "size_tiles_x": 1.0,
+        "size_tiles_y": 1.0,
+        "height_floors": 0.5,
+        "yaw_deg": 0.0,
+        "asset_ref": "DEVICE:CaptureArea",
+        "estimated_memory_kb": 16,
+        "floating_exempt": false
+      }
+    ],
+    "b_fonds": [
+      {
+        "id": "TOUR_HORIZON_SW",
+        "label": "Tour Horizon Sud-Ouest",
+        "kind": "backdrop",
+        "pass": "admirable",
+        "reason": "Ferme l'horizon sud-ouest et donne l'échelle métropolitaine du quartier.",
+        "tile_x": 0.0,
+        "tile_y": 14.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 4.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 3.5,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:CUBE",
+        "estimated_memory_kb": 28,
+        "floating_exempt": false
+      },
+      {
+        "id": "TOUR_HORIZON_SE",
+        "label": "Tour Horizon Sud-Est",
+        "kind": "backdrop",
+        "pass": "admirable",
+        "reason": "Équilibre la silhouette sud-est et encadre le ciel depuis la terrasse.",
+        "tile_x": 12.0,
+        "tile_y": 14.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 4.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 4.0,
+        "yaw_deg": 0.0,
+        "asset_ref": "GRAYBOX:CUBE",
+        "estimated_memory_kb": 28,
+        "floating_exempt": false
+      }
+    ],
+    "c_details": [
+      {
+        "id": "KIOSQUE_CAFE",
+        "label": "Kiosque Narratif",
+        "kind": "prop",
+        "pass": "reel",
+        "reason": "Narration par le décor : trace de vie quotidienne avant l'évacuation du quartier.",
+        "tile_x": 11.0,
+        "tile_y": 5.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 2.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 0.75,
+        "yaw_deg": 0.0,
+        "asset_ref": "ASSET:/Fortnite/Props/Kiosk_01",
+        "estimated_memory_kb": 34,
+        "floating_exempt": false
+      },
+      {
+        "id": "BANC_OMBRE",
+        "label": "Banc Béton",
+        "kind": "prop",
+        "pass": "reel",
+        "reason": "Mobilier urbain structurant le bord est sans gêner la largeur de passage.",
+        "tile_x": 10.0,
+        "tile_y": 9.0,
+        "floor_z": 0.0,
+        "size_tiles_x": 2.0,
+        "size_tiles_y": 1.0,
+        "height_floors": 0.25,
+        "yaw_deg": 0.0,
+        "asset_ref": "ASSET:/Fortnite/Props/Bench_02",
+        "estimated_memory_kb": 10,
+        "floating_exempt": false
+      }
+    ],
+    "d_effets": [
+      {
+        "id": "LUMIERE_MONOLITHE",
+        "label": "Spot Ambre Monolithe",
+        "kind": "light",
+        "pass": "admirable",
+        "reason": "Met en valeur le monolithe central comme balise visuelle dans la brume.",
+        "tile_x": 7.0,
+        "tile_y": 7.0,
+        "floor_z": 2.6,
+        "size_tiles_x": 2.0,
+        "size_tiles_y": 2.0,
+        "height_floors": 0.4,
+        "yaw_deg": 0.0,
+        "asset_ref": "DEVICE:CustomizableLight",
+        "estimated_memory_kb": 14,
+        "floating_exempt": true
+      },
+      {
+        "id": "AMBIANCE_PLAZA",
+        "label": "Zone Sonore Esplanade",
+        "kind": "audio_zone",
+        "pass": "admirable",
+        "reason": "Nappe sonore de vent urbain et bourdonnement électrique doux sur l'esplanade.",
+        "tile_x": 4.0,
+        "tile_y": 4.0,
+        "floor_z": 0.5,
+        "size_tiles_x": 8.0,
+        "size_tiles_y": 8.0,
+        "height_floors": 1.0,
+        "yaw_deg": 0.0,
+        "asset_ref": "DEVICE:AudioPlayer",
+        "estimated_memory_kb": 16,
+        "floating_exempt": true
+      }
+    ]
+  },
+  "section_view": {
+    "axis": "X",
+    "slice_tile": 7.5,
+    "elevations": [
+      {
+        "label": "Terrasse Balise (+0.25F)",
+        "start_tile": 5.0,
+        "end_tile": 11.0,
+        "floor_z": 0.0,
+        "height_floors": 0.25
+      },
+      {
+        "label": "Muret Couvert",
+        "start_tile": 4.0,
+        "end_tile": 5.0,
+        "floor_z": 0.0,
+        "height_floors": 0.5
+      },
+      {
+        "label": "Monolithe Repère (+2.5F)",
+        "start_tile": 7.0,
+        "end_tile": 9.0,
+        "floor_z": 0.0,
+        "height_floors": 2.5
+      },
+      {
+        "label": "Kiosque",
+        "start_tile": 11.0,
+        "end_tile": 13.0,
+        "floor_z": 0.0,
+        "height_floors": 0.75
+      },
+      {
+        "label": "Tour Sud-Est (+4F)",
+        "start_tile": 12.0,
+        "end_tile": 16.0,
+        "floor_z": 0.0,
+        "height_floors": 4.0
+      }
+    ]
+  },
+  "overlap_exceptions": []
+}

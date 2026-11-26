@@ -1,0 +1,63 @@
+# Map Creator — Extensions MCP pluggables (sans toucher au cœur Rust)
+# Chaque prise (éditeur, images, 3D, custom) se branche ici.
+
+[servers.uefn_editor]
+label = "UEFN Editor MCP (Passerelle)"
+enabled = true
+transport = "http"
+endpoint = "http://127.0.0.1:8000/mcp"
+timeout_secs = 120
+cooldown_secs = 16
+max_retries = 3
+# Mode : "simulator" pour travailler hors ligne avec compat/fixtures, "live" pour UEFN réel
+mode = "simulator"
+allowed_read_tools = [
+  "SceneTools.get_current_level",
+  "SceneTools.find_actors",
+  "ActorTools.get_actor_bounds",
+  "AssetTools.is_dirty",
+  "AssetTools.find_assets",
+  "DeviceToolset.ListDeviceAssets",
+  "ObjectTools.get_properties"
+]
+allowed_write_tools = [
+  "SceneTools.add_to_scene_from_class",
+  "SceneTools.add_to_scene_from_asset",
+  "SceneTools.remove_from_scene",
+  "SceneTools.set_actor_folder",
+  "PrimitiveTools.add_cube",
+  "PrimitiveTools.add_cylinder",
+  "ActorTools.add_tag",
+  "ActorTools.set_label",
+  "ActorTools.set_actor_transform",
+  "DeviceToolset.PlaceDevice",
+  "AssetTools.save_assets",
+  "EditorAppToolset.SetCameraTransform",
+  "EditorAppToolset.SetCVarValue",
+  "VerseToolset.BuildAll"
+]
+forbidden_tools = [
+  "GetDynamicInputSchema"
+]
+
+[servers.image_gen]
+label = "Prise Images (Concept Art & Planches)"
+enabled = true
+transport = "http"
+endpoint = "http://127.0.0.1:8010/mcp"
+timeout_secs = 90
+mode = "simulator"
+allowed_read_tools = ["ImageGen.list_models", "ImageGen.check_status"]
+allowed_write_tools = ["ImageGen.generate", "ImageGen.render_plan_overlay"]
+forbidden_tools = []
+
+[servers.mesh_3d]
+label = "Prise 3D (Meshy / Tripo)"
+enabled = true
+transport = "http"
+endpoint = "http://127.0.0.1:8020/mcp"
+timeout_secs = 180
+mode = "simulator"
+allowed_read_tools = ["Mesh3D.list_jobs", "Mesh3D.inspect_budget"]
+allowed_write_tools = ["Mesh3D.generate_from_sheet", "Mesh3D.export_lod"]
+forbidden_tools = []

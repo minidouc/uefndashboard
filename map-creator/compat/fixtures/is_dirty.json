@@ -1,0 +1,10 @@
+{
+  "fixture": "AssetTools.is_dirty",
+  "captured_at": "2026-10-28T14:24:13Z",
+  "uefn_version": "38.20",
+  "tool": "AssetTools.is_dirty",
+  "rc": 0,
+  "payload": {
+    "returnValue": false
+  }
+}

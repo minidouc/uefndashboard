@@ -1,0 +1,9 @@
+{"ts_utc":"2026-11-26T17:00:00Z","provenance":"script","message":"Projet 'neo-kyoto-slice' initialisé en phase 0_QUESTIONNAIRE (mode=production)","proof":null,"meta":{}}
+{"ts_utc":"2026-11-26T17:05:00Z","provenance":"human","message":"Porte 'brief' validée par l'auteur","proof":"deliverables/brief.json","meta":{"gate":"brief"}}
+{"ts_utc":"2026-11-26T17:20:00Z","provenance":"human","message":"Porte 'salle_grise' validée après 10 min de playtest mécanique","proof":null,"meta":{"gate":"salle_grise"}}
+{"ts_utc":"2026-11-26T17:35:00Z","provenance":"agent_claim","message":"Level Designer déclare le plan 4 couches district_plaza prêt (ne compte pas comme preuve)","proof":"plans/district_plaza.json","meta":{"role":"level_designer"}}
+{"ts_utc":"2026-11-26T17:36:00Z","provenance":"script","message":"Contrôle plan district_plaza PASS (0 chevauchement, 0 flottant, budget 266/2400 Ko)","proof":"plans/district_plaza.json","meta":{"verdict":"PASS"}}
+{"ts_utc":"2026-11-26T17:52:00Z","provenance":"editor_readback","message":"Outbox 'lot_01_graybox' -> validated (9 acteurs relus, save=true, is_dirty=false:true)","proof":"outbox/responses/lot_01_graybox_attempt_1.json","meta":{"lot_id":"lot_01"}}
+{"ts_utc":"2026-11-26T19:10:58Z","provenance":"validator","message":"Validation protégée : FAIL (MANIFEST=MISSING, Golden=0/0)","proof":"qa/validation/latest.json","meta":{"verdict":"FAIL"}}
+{"ts_utc":"2026-11-26T19:10:58Z","provenance":"agent_claim","message":"Mission 'Level designer' terminée (7 étapes) — ne compte pas comme preuve","proof":null,"meta":{"role":"level_designer","session_id":"agt_0f97f818"}}
+{"ts_utc":"2026-11-26T19:11:13Z","provenance":"validator","message":"Validation protégée : PASS (MANIFEST=OK, Golden=20/20)","proof":"qa/validation/latest.json","meta":{"verdict":"PASS"}}

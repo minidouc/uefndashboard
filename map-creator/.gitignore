@@ -1,0 +1,15 @@
+# Rust build artifacts
+core/target/
+**/*.rs.bk
+
+# Frontend build & deps
+ui/node_modules/
+ui/dist/
+
+# Runtime logs & temporary traces
+workspace/**/trace.jsonl
+workspace/**/trace.jsonl.tmp
+*.log
+.DS_Store
+__pycache__/
+*.pyc

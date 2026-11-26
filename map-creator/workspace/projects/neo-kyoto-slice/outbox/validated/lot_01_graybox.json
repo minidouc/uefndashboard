@@ -1,0 +1,99 @@
+{
+  "job_id": "lot_01_graybox",
+  "project_slug": "neo-kyoto-slice",
+  "phase": "3_GRAYBOX",
+  "lot_id": "lot_01",
+  "district_id": "district_plaza",
+  "layers_included": ["a_scene", "b_fonds"],
+  "status": "validated",
+  "attempts": 1,
+  "max_attempts": 3,
+  "created_at": "2026-11-26T17:50:00Z",
+  "updated_at": "2026-11-26T17:52:00Z",
+  "raw_response_path": "outbox/responses/lot_01_graybox_attempt_1.json",
+  "readback_verified": true,
+  "error_excerpt": null,
+  "operations": [
+    {
+      "op_id": "op_001",
+      "plan_item_id": "SOL_PLAZA",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "SOL_PLAZA" },
+      "expected_bounds_cm": { "min": [1024.0, 1024.0, -257.28], "max": [7168.0, 7168.0, 0.0] }
+    },
+    {
+      "op_id": "op_002",
+      "plan_item_id": "TERRASSE_NORD",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "TERRASSE_NORD" },
+      "expected_bounds_cm": { "min": [2560.0, 0.0, -161.28], "max": [5632.0, 1024.0, 96.0] }
+    },
+    {
+      "op_id": "op_003",
+      "plan_item_id": "RAMPE_NORD",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "RAMPE_NORD" },
+      "expected_bounds_cm": { "min": [3584.0, 1024.0, 0.0], "max": [4608.0, 1536.0, 96.0] }
+    },
+    {
+      "op_id": "op_004",
+      "plan_item_id": "SPAWN_EST",
+      "server": "uefn_editor",
+      "tool": "DeviceToolset.PlaceDevice",
+      "write": true,
+      "arguments": { "label": "SPAWN_EST" },
+      "expected_bounds_cm": { "min": [1536.0, 3584.0, 0.0], "max": [2048.0, 4096.0, 192.0] }
+    },
+    {
+      "op_id": "op_005",
+      "plan_item_id": "MONOLITHE_CENTRE",
+      "server": "uefn_editor",
+      "tool": "SceneTools.add_to_scene_from_asset",
+      "write": true,
+      "arguments": { "label": "MONOLITHE_CENTRE" },
+      "expected_bounds_cm": { "min": [3584.0, 3584.0, 0.0], "max": [4608.0, 4608.0, 960.0] }
+    },
+    {
+      "op_id": "op_006",
+      "plan_item_id": "COUVERT_OUEST",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "COUVERT_OUEST" },
+      "expected_bounds_cm": { "min": [2048.0, 2560.0, 0.0], "max": [2560.0, 3584.0, 192.0] }
+    },
+    {
+      "op_id": "op_007",
+      "plan_item_id": "BALISE_FIN",
+      "server": "uefn_editor",
+      "tool": "DeviceToolset.PlaceDevice",
+      "write": true,
+      "arguments": { "label": "BALISE_FIN" },
+      "expected_bounds_cm": { "min": [3840.0, 256.0, 96.0], "max": [4352.0, 768.0, 288.0] }
+    },
+    {
+      "op_id": "op_008",
+      "plan_item_id": "TOUR_HORIZON_SW",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "TOUR_HORIZON_SW" },
+      "expected_bounds_cm": { "min": [0.0, 7168.0, 0.0], "max": [2048.0, 8192.0, 1344.0] }
+    },
+    {
+      "op_id": "op_009",
+      "plan_item_id": "TOUR_HORIZON_SE",
+      "server": "uefn_editor",
+      "tool": "PrimitiveTools.add_cube",
+      "write": true,
+      "arguments": { "label": "TOUR_HORIZON_SE" },
+      "expected_bounds_cm": { "min": [6144.0, 7168.0, 0.0], "max": [8192.0, 8192.0, 1536.0] }
+    }
+  ]
+}

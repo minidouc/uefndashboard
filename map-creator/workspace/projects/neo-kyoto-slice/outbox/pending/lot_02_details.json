@@ -1,0 +1,46 @@
+{
+  "job_id": "lot_02_details",
+  "project_slug": "neo-kyoto-slice",
+  "phase": "5_VRAIS_OBJETS",
+  "lot_id": "lot_02",
+  "district_id": "district_plaza",
+  "layers_included": ["c_details"],
+  "status": "pending",
+  "attempts": 0,
+  "max_attempts": 3,
+  "created_at": "2026-11-26T17:58:00Z",
+  "updated_at": "2026-11-26T17:58:00Z",
+  "raw_response_path": null,
+  "readback_verified": false,
+  "error_excerpt": null,
+  "operations": [
+    {
+      "op_id": "op_001",
+      "plan_item_id": "KIOSQUE_CAFE",
+      "server": "uefn_editor",
+      "tool": "SceneTools.add_to_scene_from_asset",
+      "write": true,
+      "arguments": {
+        "label": "KIOSQUE_CAFE",
+        "plan_item_id": "KIOSQUE_CAFE",
+        "asset_ref": "ASSET:/Fortnite/Props/Kiosk_01",
+        "expected_bounds": { "min": { "x": 5632.0, "y": 2560.0, "z": 0.0 }, "max": { "x": 6656.0, "y": 3584.0, "z": 288.0 } }
+      },
+      "expected_bounds_cm": { "min": [5632.0, 2560.0, 0.0], "max": [6656.0, 3584.0, 288.0] }
+    },
+    {
+      "op_id": "op_002",
+      "plan_item_id": "BANC_OMBRE",
+      "server": "uefn_editor",
+      "tool": "SceneTools.add_to_scene_from_asset",
+      "write": true,
+      "arguments": {
+        "label": "BANC_OMBRE",
+        "plan_item_id": "BANC_OMBRE",
+        "asset_ref": "ASSET:/Fortnite/Props/Bench_02",
+        "expected_bounds": { "min": { "x": 5120.0, "y": 4608.0, "z": 0.0 }, "max": { "x": 6144.0, "y": 5120.0, "z": 96.0 } }
+      },
+      "expected_bounds_cm": { "min": [5120.0, 4608.0, 0.0], "max": [6144.0, 5120.0, 96.0] }
+    }
+  ]
+}

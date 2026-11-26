@@ -1,0 +1,19 @@
+{
+  "project_slug": "neo-kyoto-slice",
+  "pitch": "Un quartier esplanade brutaliste et chaleureux où le joueur enchaîne escalade et activation de balises sous contrainte de rythme.",
+  "core_promise": "Lire le terrain en 2 secondes, choisir sa trajectoire verticale et ressentir un flux fluide dès la graybox.",
+  "scope_in": [
+    "Quartier Esplanade 16x16 tuiles (512 uu) sur 2 niveaux reliés par une rampe",
+    "Mécanique signature d'activation de balise vérifiée en salle grise",
+    "90 % d'assets catalogue Fortnite/Fab + 1 monolithe héros"
+  ],
+  "scope_out": [
+    "Pas de terrain Landscape (sans solution MCP)",
+    "Pas de système d'inventaire complexe ni boutique"
+  ],
+  "agent_assumptions": [
+    "Taille de grille par défaut 512 uu / étage 384 uu reprise de Final Cut"
+  ],
+  "locked": true,
+  "human_citation": "OK pour le brief vertical slice Esplanade, on valide le périmètre IN/OUT."
+}

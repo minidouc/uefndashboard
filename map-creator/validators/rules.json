@@ -1,0 +1,30 @@
+{
+  "$schema": "map-creator.validator-rules.v3",
+  "immutable_order": [
+    "1_manifest_sha256_integrity",
+    "2_golden_set_20_cases",
+    "3_real_raw_evidence_rules"
+  ],
+  "thresholds": {
+    "contact_tolerance_uu": 10.0,
+    "max_step_height_uu": 120.0,
+    "max_walk_gap_uu": 200.0,
+    "max_plan_gap_ratio": 0.15,
+    "min_capture_variance": 5.0,
+    "max_night_luminance": 90.0,
+    "min_night_neon_ratio": 0.01
+  },
+  "golden_cases_count": 20,
+  "rules": [
+    "integrite_preuves",
+    "persistance",
+    "preexistants_intacts",
+    "source_coordonnees",
+    "zero_overlap",
+    "zero_flottant",
+    "accessibilite",
+    "couverture_plan",
+    "gameplay",
+    "captures_visuelles"
+  ]
+}

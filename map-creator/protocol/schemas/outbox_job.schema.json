@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/outbox_job.schema.json",
+  "title": "Dossier d'envoi (Outbox Job)",
+  "type": "object",
+  "required": ["job_id", "project_slug", "phase", "lot_id", "district_id", "layers_included", "status", "attempts", "max_attempts", "created_at", "operations"],
+  "properties": {
+    "job_id": { "type": "string" },
+    "project_slug": { "type": "string" },
+    "phase": { "type": "string" },
+    "lot_id": { "type": "string" },
+    "district_id": { "type": "string" },
+    "layers_included": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["pending", "sent", "validated", "failed"] },
+    "attempts": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1, "default": 3 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "raw_response_path": { "type": ["string", "null"] },
+    "readback_verified": { "type": "boolean" },
+    "error_excerpt": { "type": ["string", "null"], "description": "Erreur minimale renvoyée à l'agent (jamais tout le journal)" },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op_id", "plan_item_id", "server", "tool", "write", "arguments", "expected_bounds_cm"],
+        "properties": {
+          "op_id": { "type": "string" },
+          "plan_item_id": { "type": "string" },
+          "server": { "type": "string" },
+          "tool": { "type": "string" },
+          "write": { "type": "boolean" },
+          "arguments": { "type": "object" },
+          "expected_bounds_cm": {
+            "type": "object",
+            "required": ["min", "max"],
+            "properties": {
+              "min": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+              "max": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

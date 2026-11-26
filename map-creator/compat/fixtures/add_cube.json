@@ -1,0 +1,16 @@
+{
+  "fixture": "PrimitiveTools.add_cube",
+  "captured_at": "2026-10-28T14:23:02Z",
+  "uefn_version": "38.20",
+  "tool": "PrimitiveTools.add_cube",
+  "rc": 0,
+  "payload": {
+    "returnValue": {
+      "actorPath": "/Game/NeoKyoto/Main.Main:PersistentLevel.MC_ESPLANADE_FLOOR_0",
+      "bounds": {
+        "min": { "x": 0.0, "y": 0.0, "z": -256.0 },
+        "max": { "x": 3072.0, "y": 3072.0, "z": 0.0 }
+      }
+    }
+  }
+}

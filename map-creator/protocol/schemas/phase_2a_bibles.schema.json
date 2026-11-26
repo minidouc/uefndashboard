@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/phase_2a_bibles.schema.json",
+  "title": "Phase 2A — Bibles (Univers, Gameplay, Visuelle, Guide DA & Vue d'ensemble)",
+  "type": "object",
+  "required": ["world_bible", "gameplay", "visual_bible", "art_guide", "overview_plan"],
+  "properties": {
+    "world_bible": {
+      "type": "object",
+      "required": ["history", "what_happened_here", "tone", "vocabulary"],
+      "properties": {
+        "history": { "type": "string" },
+        "what_happened_here": { "type": "string" },
+        "tone": { "type": "string" },
+        "vocabulary": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "gameplay": {
+      "type": "object",
+      "required": ["core_verb", "signature_mechanic", "required_devices", "verse_modules", "grey_room_tested"],
+      "properties": {
+        "core_verb": { "type": "string" },
+        "signature_mechanic": { "type": "string" },
+        "required_devices": { "type": "array", "items": { "type": "string" } },
+        "verse_modules": { "type": "array", "items": { "type": "string" } },
+        "grey_room_tested": { "type": "boolean" },
+        "grey_room_verdict": { "type": ["string", "null"] }
+      }
+    },
+    "visual_bible": {
+      "type": "object",
+      "required": ["palette", "shapes", "materials", "lighting_by_zone"],
+      "properties": {
+        "palette": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["hex", "name", "role"],
+            "properties": {
+              "hex": { "type": "string" },
+              "name": { "type": "string" },
+              "role": { "type": "string" }
+            }
+          }
+        },
+        "shapes": { "type": "string" },
+        "materials": { "type": "array", "items": { "type": "string" } },
+        "lighting_by_zone": { "type": "object" }
+      }
+    },
+    "art_guide": {
+      "type": "object",
+      "required": ["image_generator", "style_block", "forbidden_block", "prompt_template"],
+      "properties": {
+        "image_generator": { "type": "string" },
+        "style_block": { "type": "string", "minLength": 10 },
+        "forbidden_block": { "type": "string", "minLength": 10 },
+        "fixed_phrases": { "type": "array", "items": { "type": "string" } },
+        "prompt_template": { "type": "string" }
+      }
+    },
+    "overview_plan": {
+      "type": "object",
+      "required": ["districts", "main_route", "total_memory_budget_kb"],
+      "properties": {
+        "districts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "role", "memory_budget_kb"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "memory_budget_kb": { "type": "integer" }
+            }
+          }
+        },
+        "main_route": { "type": "array", "items": { "type": "string" } },
+        "total_memory_budget_kb": { "type": "integer" }
+      }
+    }
+  }
+}

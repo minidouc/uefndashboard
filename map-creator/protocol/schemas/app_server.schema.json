@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "map-creator/app_server.schema.json",
+  "title": "Map Creator App Server JSON-RPC Protocol",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "RpcRequest",
+      "required": ["jsonrpc", "id", "method"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "type": ["string", "integer"] },
+        "method": { "type": "string" },
+        "params": { "type": "object" }
+      }
+    },
+    {
+      "title": "RpcResponse",
+      "required": ["jsonrpc", "id"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "id": { "type": ["string", "integer"] },
+        "result": {},
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "integer" },
+            "message": { "type": "string" },
+            "data": {}
+          }
+        }
+      }
+    },
+    {
+      "title": "ServerEventNotification",
+      "required": ["jsonrpc", "method", "params"],
+      "properties": {
+        "jsonrpc": { "const": "2.0" },
+        "method": { "const": "event" },
+        "params": {
+          "type": "object",
+          "required": ["type", "ts_utc", "payload"],
+          "properties": {
+            "type": { "type": "string" },
+            "ts_utc": { "type": "string", "format": "date-time" },
+            "payload": {}
+          }
+        }
+      }
+    }
+  ]
+}
