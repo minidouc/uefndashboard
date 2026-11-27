@@ -356,6 +356,16 @@
           "const": true,
           "description": "L'agent a ouvert le PNG et l'a decrit. false ou absent = aucune preuve."
         },
+        "controle_lecture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["quadrant_le_plus_clair", "quadrant_le_plus_sombre"],
+          "description": "Ce que l'agent VOIT dans l'image ; recalcule par le validateur a partir du PNG (preuve de lecture).",
+          "properties": {
+            "quadrant_le_plus_clair": { "enum": ["haut_gauche", "haut_droite", "bas_gauche", "bas_droite"] },
+            "quadrant_le_plus_sombre": { "enum": ["haut_gauche", "haut_droite", "bas_gauche", "bas_droite"] }
+          }
+        },
         "observations": { "type": "string", "minLength": 1, "maxLength": 600 },
         "notes": { "type": "string", "maxLength": 300 }
       }

@@ -89,6 +89,7 @@
           "camera_requested": { "location": { "x": 6912.0, "y": 6912.0, "z": 35000.0 }, "rotation": { "pitch": -90.0, "yaw": 0.0, "roll": 0.0 } },
           "camera_read_back": { "location": { "x": 6912, "y": 6912, "z": 35000 }, "rotation": { "pitch": -90, "yaw": 0, "roll": 0 } },
           "image_lue": true,
+          "controle_lecture": { "quadrant_le_plus_clair": "haut_droite", "quadrant_le_plus_sombre": "bas_gauche" },
           "observations": "plateforme carree complete, couronne de 16 tours, bassin central, trois anneaux lisibles, deux poissons opposes (orange a l'ouest, cyan a l'est), 4 enseignes aux bords"
         },
         {
@@ -98,6 +99,7 @@
           "camera_requested": { "location": { "x": 3328.0, "y": 6912.0, "z": 260.0 }, "rotation": { "pitch": 12.0, "yaw": 0.0, "roll": 0.0 } },
           "camera_read_back": { "location": { "x": 3328, "y": 6912, "z": 260 }, "rotation": { "pitch": 12.000000000000002, "yaw": 0, "roll": 0 } },
           "image_lue": true,
+          "controle_lecture": { "quadrant_le_plus_clair": "haut_gauche", "quadrant_le_plus_sombre": "bas_droite" },
           "observations": "vue depuis le spawner sud : les deux enseignes poisson neon encadrent le champ ; le mannequin translucide central est l'apercu editeur du Player Spawner, pas un acteur de decor"
         }
       ],

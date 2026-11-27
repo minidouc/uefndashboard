@@ -16,7 +16,8 @@
 | `audit-legality` *(lecture seule)* | **avant tout placement** : la scène reste légale après mes poses | scène live | `06_legality_report.json` : `valid_actors`, `illegal_count`, `illegal_actors` |
 | `preflight` | état du pont, session, niveau monté | — | `preflight_ok.json` (`READY`) ; session ≠ `Disconnected` = écritures à risque |
 | `apply-properties --dry-run` | compter ce qui sera écrit et repérer les acteurs non posés | `04_devices.json`, `_placed.json` | `DRY_RUN` + `not_placed` + le rappel « `values` en **chaîne JSON** » |
-| `visual-snapshot` | preuve visuelle d'une pose ou d'un réglage | workspace | PNG + `bytes` + `camera_requested` + `camera_read_back` |
+| `visual-snapshot` | preuve visuelle d'une pose ou d'un réglage | workspace | PNG + `image` (contraste, bords, noir/blanc) + `camera_requested` + `camera_read_back` ; FAILED si l'image est inexploitable |
+| `check-image --image <png>` | juger le **contenu** d'une capture de `capture_view.py` | chemin(s) PNG | `IMAGE_UNIFORME` / `IMAGE_NOIRE` / `IMAGE_SUREXPOSEE`, ou PASSED |
 | `tools/capture_view.py` (client fourni) | cadrage maîtrisé (jour, nuit, oblique, vue joueur) | `--location x y z --pitch --yaw` | PNG + `<nom>_camera.json` (`requested` vs `read_back`) |
 | `verse-scan` / `verse-grep` | **jamais** : lire du Verse n'est pas mon rôle (agents 12/13/14) | — | — |
 

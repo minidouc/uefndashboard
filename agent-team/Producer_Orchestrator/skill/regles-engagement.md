@@ -20,7 +20,9 @@ de `skill/`, qui sont la documentation de référence (≈ 19 000 tokens par age
 le prompt compilé). Avant chaque phase, `python agent-team/_commun/compiler_prompts.py --check` doit
 rendre 0 ; sinon tu recompiles (`compiler_prompts.py` sans option) avant de dispatcher.
 De même, `python agent-team/_commun/verifier_outils.py` doit rendre 0 : chaque commande CLI et
-chaque outil MCP cité par un agent existe (sinon tu signales l'écart, tu ne dispatches pas). Sur un échec
+chaque outil MCP cité par un agent existe (sinon tu signales l'écart, tu ne dispatches pas).
+Enfin `python agent-team/_commun/sync_qoder.py --check` : rc 1 = les agents du harness ne portent
+pas le dernier prompt compilé → `sync_qoder.py` (sans option), puis tu continues. Sur un échec
 précis, tu peux joindre au handoff UN fichier `tool-output/*.md` utile, par son chemin.
 
 **Procédure de dispatch (identique dans tout harness, code = `agent-team/_commun/studio.py`)** :
@@ -28,7 +30,9 @@ précis, tu peux joindre au handoff UN fichier `tool-output/*.md` utile, par son
 1. Écris le handoff de mission `<projet>/handoff/H-<PHASE>-<seq>__Producer__to__<Agent>.json`.
 2. `python agent-team/_commun/studio.py dispatch --mission <ce fichier>` → rc 0 obligatoire
    (rc 1 = mission invalide ou entrée manquante : corrige, ne dispatche pas).
-3. Appelle l'outil de sous-agent avec **exactement** le champ `prompt_sous_agent` de la sortie.
+3. Appelle l'outil de sous-agent avec **exactement** le champ `prompt_sous_agent` de la sortie, et
+   le type d'agent donné par `subagent_type` (le nom du rôle). Jamais `general-purpose` : il
+   tourne sur le modèle de la session, le plus cher, au lieu du modèle Flash du rôle.
    Tu ne recopies, ne résumes et ne complètes jamais le prompt toi-même.
 4. Au retour, lance la commande `apres_retour` (ajoute `--workspace` en BUILD). Tu suis
    `decision_conseillee` : `VALIDATE` · `LANCER_VERIFICATIONS` (lance chaque `a_lancer`, puis
@@ -144,6 +148,9 @@ save → get_actor_bounds → CaptureViewport → validateur Python → (seuleme
   ont été refusées par le validateur UEFN, ce qu'aucune règle de chemin n'avait prévu
   (`../../_commun/legalite-assets.md`).
 
+- **Captures** : le poids d'un PNG ne prouve rien. Une capture compte seulement si `check-image`
+  (ou `visual-snapshot`) rend PASSED **et** si `studio.py validate --workspace` confirme le
+  `controle_lecture` de l'agent (`IMAGE_NON_LUE` = l'agent n'a pas regardé l'image).
 - Si le readback éditeur est absent ou en échec → `REJECT`, pas de `VALIDATE`.
 - Tu enregistres la provenance dans `schema-de-sortie.json → validation_source`
   (`editor_readback` obligatoire en BUILD/POLISH ; `deterministic_validator` ailleurs ;

@@ -356,6 +356,24 @@ def tool(tool_name: str, args: dict):
   return None
 
 
+def scene_png() -> str:
+  """Capture factice MAIS lisible : quadrant haut-gauche clair, bas-droite sombre, quadrillage.
+  Le controle de lecture du validateur doit y trouver ces reponses."""
+  import io
+  from PIL import Image, ImageDraw
+  im = Image.new("L", (320, 180), 120)
+  d = ImageDraw.Draw(im)
+  d.rectangle((0, 0, 159, 89), fill=225)
+  d.rectangle((160, 90, 319, 179), fill=25)
+  for x in range(0, 320, 20):
+    d.line((x, 0, x, 179), fill=70)
+  for y in range(0, 180, 20):
+    d.line((0, y, 319, y), fill=70)
+  buf = io.BytesIO()
+  im.convert("RGB").save(buf, "PNG")
+  return base64.b64encode(buf.getvalue()).decode()
+
+
 def call_tool(toolset: str, tool_name: str, args: dict):
   """Contenu MCP d'un appel : enveloppe `returnValue`, image pour CaptureViewport."""
   if tool_name in cfg().get("fail_tools", []):
@@ -363,8 +381,8 @@ def call_tool(toolset: str, tool_name: str, args: dict):
                          "text": json.dumps({"error": f"boom du mock sur {tool_name}"})}],
             "isError": True}
   if tool_name == "CaptureViewport":
-    return {"content": [{"type": "image", "mimeType": "image/png",
-                         "data": base64.b64encode(base64.b64decode(PNG_1PX)).decode()}],
+    data = PNG_1PX if cfg().get("capture") == "uniforme" else scene_png()
+    return {"content": [{"type": "image", "mimeType": "image/png", "data": data}],
             "isError": False}
   if tool_name == "execute_tool_script":
     # Le script du CLI definit run() et appelle execute_tool(nom_complet, chaine_json).

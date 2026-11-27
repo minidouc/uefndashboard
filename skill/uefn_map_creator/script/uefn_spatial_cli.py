@@ -32,6 +32,7 @@ if sys.version_info < (3, 10):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mcp_client import McpClient, McpError, McpOffline, McpTimeout  # noqa: E402
 import spec_schema  # noqa: E402
+import image_check  # noqa: E402
 
 SKILL_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATES_ROOT = os.path.join(SKILL_ROOT, "templates")
@@ -2238,12 +2239,38 @@ def cmd_visual_snapshot(workspace: str, output_image: str, dry_run: bool) -> int
     return 1
   data = base64.b64decode(shot["images"][0]["data"])
   os.makedirs(os.path.dirname(os.path.abspath(output_image)), exist_ok=True)
+  avant = image_check.analyser(output_image)["mesures"] if os.path.exists(output_image) else None
   with open(output_image, "wb") as f:
     f.write(data)
-  emit({"status": "PASSED", "snapshot_path": os.path.abspath(output_image), "bytes": len(data),
+  img = image_check.analyser(output_image)
+  ok = not img["erreurs"]
+  avert = []
+  if ok and avant and img["mesures"]["empreinte"] == avant.get("empreinte"):
+    avert.append("IMAGE_IDENTIQUE_A_LA_PRECEDENTE : la vue n'a pas change depuis la derniere capture.")
+  emit({"status": "PASSED" if ok else "FAILED", "snapshot_path": os.path.abspath(output_image),
+        "bytes": len(data), "image": img["mesures"], "errors": img["erreurs"], "warnings": avert,
         "camera_requested": cam_xf, "camera_read_back": read,
+        "a_faire": "OUVRIR et regarder l'image, puis remplir observations + controle_lecture : le "
+                   "validateur verifie que tu l'as vraiment regardee.",
         "note": "Pas de grille A1/B2 dessinee : reperer les tuiles via X = ligne*512, Y = colonne*512."})
-  return 0
+  return 0 if ok else 1
+
+
+def cmd_check_image(images: list[str]) -> int:
+  """Juge des PNG deja ecrits (ex. tools/capture_view.py) : exploitables ou non."""
+  res, ok = [], True
+  for p in images:
+    if not os.path.exists(p) or os.path.getsize(p) == 0:
+      res.append({"image": p, "errors": [{"type": "CAPTURE_INTROUVABLE", "detail": "absent ou vide"}]})
+      ok = False
+      continue
+    img = image_check.analyser(p)
+    ok = ok and not img["erreurs"]
+    res.append({"image": os.path.abspath(p), "bytes": os.path.getsize(p), "image_metrics": img["mesures"],
+                "errors": img["erreurs"]})
+  emit({"status": "PASSED" if ok else "FAILED", "command": "check-image", "images": res,
+        "a_faire": "OUVRIR et regarder chaque image avant d'ecrire observations + controle_lecture."})
+  return 0 if ok else 1
 
 
 def cmd_search_playsets(workspace: str, query: str, asset_type: str, max_results: int) -> int:
@@ -2533,6 +2560,8 @@ def main() -> int:
   ws(sub.add_parser("playtest-plan"))
   ws(sub.add_parser("visual-snapshot"), dry=True).add_argument(
       "--output", default=None, help="defaut : <workspace>/topdown.png")
+  p = sub.add_parser("check-image", help="juge le CONTENU d'un PNG (uniforme, noir, surexpose)")
+  p.add_argument("--image", action="append", required=True)
   ws(sub.add_parser("cleanup"))
   p = ws(sub.add_parser("search-playsets", help="cherche uniquement dans les Playsets/Props Creatif legaux (PPID/PID)"))
   p.add_argument("--query", required=True, help="mots-cles (ex: 'neon vendor', 'fortilla ramp', 'military crate')")
@@ -2557,6 +2586,8 @@ def main() -> int:
     emit({"status": "PASSED", "command": "init", "templates": list_templates(),
           "templates_root": TEMPLATES_ROOT})
     return 0
+  if c == "check-image":
+    return cmd_check_image(a.image)
   if c == "validate-grid" and a.grid_file:
     # Fichier explicite : aucune raison d'exiger un workspace (ni de le refuser).
     return cmd_validate_grid(a.grid_file)

@@ -321,7 +321,7 @@ En cas de rejet : message explicite au rôle, `attempt++`, si `attempt >= 3` →
 | `Bash` | Créer arborescence, snapshots `.backup/`, ping MCP (`python -c "import socket; …"`) |
 | `TodoWrite` | Affiche la progression de phase à l'utilisateur |
 | `AskUserQuestion` | Questions de cadrage, décisions bloquantes |
-| `Agent` (subagent_type=general-purpose) | Exécuter le travail des autres rôles — chaque appel de rôle = 1 subagent |
+| `Agent` (subagent_type = nom exact du rôle, jamais `general-purpose`) | Exécuter le travail des autres rôles — chaque appel de rôle = 1 subagent |
 | `Skill` | Charge les skills des rôles une fois qu'ils existent en plugin |
 | `memory` | Journal de bord cross-session (chat_id du projet) |
 

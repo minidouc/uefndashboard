@@ -364,8 +364,20 @@ check("F10 check-navigation -> PASSED (ecart 120 cm > 100 cm)", rc == 0 and d
       and d["status"] == "PASSED", str(d)[:200])
 rc, d, _ = cli(["visual-snapshot"], WS, env)
 snap = (d or {}).get("snapshot_path", "")
-check("F11 visual-snapshot ecrit un PNG", rc == 0 and d and d["status"] == "PASSED"
-      and os.path.exists(snap) and os.path.getsize(snap) > 0, str(d)[:200])
+check("F11 visual-snapshot ecrit un PNG lisible (contraste et bords mesures)",
+      rc == 0 and d and d["status"] == "PASSED" and os.path.exists(snap)
+      and d.get("image", {}).get("contraste_std", 0) > 12, str(d)[:200])
+SNAP_LISIBLE = os.path.join(ROOT, "capture_lisible.png")
+shutil.copy(snap, SNAP_LISIBLE)
+m.state(capture="uniforme")
+rc, d, _ = cli(["visual-snapshot"], WS, env)
+check("F11b capture unie (1 pixel, mais un PNG qui a du poids) -> IMAGE_UNIFORME, FAILED rc=1",
+      rc == 1 and d and "IMAGE_UNIFORME" in types(d), str(d)[:200])
+rc, out, _ = run([CLI, "check-image", "--image", snap, "--image", SNAP_LISIBLE])
+d = json.loads(out) if out.strip().startswith("{") else None
+check("F11c check-image juge chaque PNG : l'uni refuse, le lisible accepte",
+      rc == 1 and d and [bool(i["errors"]) for i in d["images"]] == [True, False], str(d)[:200])
+m.state(capture=None)
 
 print("== G. echelle relue : une echelle perdue doit etre signalee ==")
 m.state(drop_scale=True)
@@ -901,8 +913,11 @@ TEAM = os.path.join(os.path.dirname(os.path.dirname(SKILL)), "agent-team")
 STUDIO = os.path.join(TEAM, "_commun", "studio.py")
 
 
-def studio(args):
-  rc, out, err = run([STUDIO, *args])
+QODER_VIDE = os.path.join(ROOT, "qoder_vide")   # les tests ne lisent jamais le vrai ~/.qoder
+
+
+def studio(args, qoder=QODER_VIDE):
+  rc, out, err = run([STUDIO, *args], env={"QODER_DIR": qoder})
   try:
     return rc, json.loads(out)
   except ValueError:
@@ -1046,6 +1061,98 @@ if rc == 0:
 check("H14 re-dispatch apres refus -> les corrections du validateur sont dans la mission",
       rc == 0 and d.get("correction_incluse") and "CORRECTIONS DEMANDÉES" in contenu
       and "MAUVAISE_MISSION" in contenu, json.dumps(d)[:240])
+
+with open(os.path.join(TEAM, "Graphics_Programmer", "skill", "exemples",
+                       "ambiance-rellue-et-prouvee.json"), encoding="utf-8") as f:
+  GFX = json.load(f)
+WSG = os.path.join(ROOT, "studio_ws_gfx")
+os.makedirs(WSG, exist_ok=True)
+for nom in ("topdown.png", "player.png"):
+  shutil.copy(SNAP_LISIBLE, os.path.join(WSG, nom))   # clair en haut a gauche, sombre en bas a droite
+
+
+def captures_de(d):
+  out = []
+  def walk(v):
+    if isinstance(v, dict):
+      if str(v.get("file", "")).endswith(".png") and v.get("image_lue") is True:
+        out.append(v)
+      for x in v.values():
+        walk(x)
+    elif isinstance(v, list):
+      for x in v:
+        walk(x)
+  walk(d)
+  return out
+
+
+livg = write(os.path.join(HD, "gfx.json"), GFX)
+rc, d = studio(["validate", livg, "--essai"])
+check("H15 captures declarees lues sans --workspace -> rien n'est valide sur parole (a_lancer image_lue)",
+      rc == 0 and "image_lue" in [x["critere"] for x in d.get("a_lancer", [])], json.dumps(d)[:240])
+rc, d = studio(["validate", livg, "--essai", "--workspace", WSG])
+check("H16 controle_lecture faux sur une capture -> IMAGE_NON_LUE (la juste passe)",
+      rc == 1 and types(d, "erreurs") == ["IMAGE_NON_LUE", "IMAGE_NON_LUE"], json.dumps(d)[:300])
+for c in captures_de(GFX):
+  c["controle_lecture"] = {"quadrant_le_plus_clair": "haut_gauche",
+                           "quadrant_le_plus_sombre": "bas_droite"}
+write(livg, GFX)
+rc, d = studio(["validate", livg, "--essai", "--workspace", WSG])
+check("H17 reponses conformes a ce que montre l'image -> PASSED", rc == 0, json.dumps(d)[:300])
+del captures_de(GFX)[0]["controle_lecture"]
+write(livg, GFX)
+rc, d = studio(["validate", livg, "--essai", "--workspace", WSG])
+check("H18 image_lue sans controle_lecture -> CONTROLE_LECTURE_ABSENT",
+      rc == 1 and "CONTROLE_LECTURE_ABSENT" in types(d, "erreurs"), json.dumps(d)[:240])
+from PIL import Image  # noqa: E402
+Image.new("RGB", (640, 360), (40, 60, 160)).save(os.path.join(WSG, "topdown.png"))
+rc, d = studio(["validate", livg, "--essai", "--workspace", WSG])
+check("H19 capture « lue » mais unie (viewport bleu) -> IMAGE_UNIFORME",
+      rc == 1 and "IMAGE_UNIFORME" in types(d, "erreurs"), json.dumps(d)[:240])
+
+SYNC = os.path.join(TEAM, "_commun", "sync_qoder.py")
+QT = os.path.join(ROOT, "qoder_test")
+os.makedirs(os.path.join(QT, "agents"), exist_ok=True)
+os.makedirs(os.path.join(QT, "skills", "Level_Designer"), exist_ok=True)
+with open(os.path.join(QT, "agents", "Level_Designer.md"), "w", encoding="utf-8") as f:
+  f.write("---\nname: Level_Designer\nmodel: efficient\npermissionMode: auto\nskills:\n"
+          "  - level-designer\n---\nvieille persona\n")
+with open(os.path.join(QT, "skills", "Level_Designer", "vieux.md"), "w", encoding="utf-8") as f:
+  f.write("copie figee")
+rc, out, err = run([SYNC, "--qoder-dir", QT, "--check"])
+check("Q1 sync_qoder --check detecte agents perimes et skills copies (non relies)", rc == 1,
+      (out + err)[-200:])
+rc, out, err = run([SYNC, "--qoder-dir", QT, "--modele-producer", "performance"])
+d = json.loads(out) if out.strip().startswith("{") else {}
+with open(os.path.join(QT, "agents", "Level_Designer.md"), encoding="utf-8") as f:
+  ld = f.read()
+with open(os.path.join(QT, "agents", "Producer_Orchestrator.md"), encoding="utf-8") as f:
+  prod = f.read()
+check("Q2 sync : en-tete garde (model: efficient), corps = prompt compile, Producer en "
+      "performance, skills relies au projet, ancien contenu sauvegarde",
+      rc == 0 and d.get("status") == "PASSED" and "model: efficient" in ld
+      and 'description: "Con' in ld
+      and "## RÔLE" in ld and "vieille persona" not in ld and "model: performance" in prod
+      and os.path.exists(os.path.join(QT, "skills", "Level_Designer", "prompt.flash.md"))
+      and glob.glob(os.path.join(QT, "_backup_agent-team", "*", "skills", "Level_Designer",
+                                 "vieux.md")), (out + err)[-300:])
+rc, d = studio(["dispatch", "--mission", mis], qoder=QT)
+contenu = ""
+if rc == 0:
+  with open(d["fichier_mission"], encoding="utf-8") as f:
+    contenu = f.read()
+check("Q3 agent Qoder synchronise -> la mission ne repete pas le prompt du role",
+      rc == 0 and d.get("prompt_dans_agent") is True and "## RÔLE" not in contenu
+      and "H-DESIGN-004" in contenu and d.get("subagent_type") == "Level_Designer",
+      json.dumps(d)[:240])
+with open(os.path.join(QT, "agents", "Level_Designer.md"), "w", encoding="utf-8") as f:
+  f.write("".join(l for l in ld.splitlines(True) if not l.startswith("description:")))
+rc, out, err = run([SYNC, "--qoder-dir", QT, "--check"])
+check("Q4 agent sans description (Qoder le rejette) -> AGENT_SANS_DESCRIPTION",
+      rc == 1 and "AGENT_SANS_DESCRIPTION" in out, out[-240:])
+for lien in glob.glob(os.path.join(QT, "skills", "*")):
+  if os.path.realpath(lien) != os.path.abspath(lien):
+    os.rmdir(lien) if os.name == "nt" else os.unlink(lien)   # retire les liens, jamais agent-team
 
 print("\n== T. Noms d'outils cites par les agents (agent-team/_commun/verifier_outils.py) ==")
 VERIF = os.path.join(TEAM, "_commun", "verifier_outils.py")

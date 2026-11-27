@@ -41,7 +41,9 @@ MAX_ERREURS = 15                # au-dela, un Flash ne corrige plus rien : on co
 sys.path.insert(0, HERE)
 sys.path.insert(0, SCRIPT_CLI)
 import compiler_prompts  # noqa: E402
+import sync_qoder  # noqa: E402
 from uefn_spatial_cli import legal_status, SPEC_FILES, placed_path  # noqa: E402
+import image_check  # noqa: E402
 
 # Criteres d'acceptance que ce script ne peut pas cocher seul : la commande qui les prouve.
 A_LANCER = {
@@ -147,6 +149,49 @@ def erreurs_legalite(payload, autoriser_non_verifies: bool) -> list[dict]:
   return out
 
 
+def captures_declarees(v, chemin=""):
+  """Chaque objet du payload qui declare avoir lu un PNG (file *.png + image_lue)."""
+  if isinstance(v, dict):
+    if str(v.get("file", "")).lower().endswith(".png") and v.get("image_lue") is True:
+      yield chemin, v
+    for k, x in v.items():
+      yield from captures_declarees(x, f"{chemin}/{k}")
+  elif isinstance(v, list):
+    for i, x in enumerate(v):
+      yield from captures_declarees(x, f"{chemin}/{i}")
+
+
+def erreurs_captures(payload, workspace: str) -> list[dict]:
+  """Une capture « lue » doit etre exploitable ET l'agent doit repondre juste aux questions de
+  lecture (quadrant le plus clair / le plus sombre), recalculees ici a partir du PNG : un agent
+  qui n'a pas regarde l'image ne peut pas les deviner. Les reponses ne sont jamais publiees."""
+  out = []
+  for chemin, cap in captures_declarees(payload):
+    ou = "payload" + chemin
+    png = cap["file"] if os.path.isabs(cap["file"]) else os.path.join(workspace, cap["file"])
+    if not os.path.exists(png) or os.path.getsize(png) == 0:
+      out.append({"type": "CAPTURE_INTROUVABLE", "ou": ou,
+                  "detail": f"{png} absent ou vide : une capture non ecrite ne prouve rien."})
+      continue
+    img = image_check.analyser(png)
+    for e in img["erreurs"]:
+      out.append({"type": e["type"], "ou": ou, "detail": e["detail"]})
+    if img["erreurs"]:
+      continue
+    reponses = cap.get("controle_lecture")
+    if not isinstance(reponses, dict):
+      out.append({"type": "CONTROLE_LECTURE_ABSENT", "ou": ou + "/controle_lecture", "detail":
+                  "ouvre l'image et indique quadrant_le_plus_clair et quadrant_le_plus_sombre "
+                  "(haut_gauche, haut_droite, bas_gauche, bas_droite)."})
+      continue
+    for question, attendu in image_check.controle_lecture(png).items():
+      if reponses.get(question) != attendu:
+        out.append({"type": "IMAGE_NON_LUE", "ou": f"{ou}/controle_lecture/{question}", "detail":
+                    "reponse fausse : regarde reellement l'image avant de la decrire, puis "
+                    "corrige observations et controle_lecture."})
+  return out
+
+
 def verdict_validateur(workspace: str) -> dict | None:
   """Erreur si 06b_validator_report.json manque, n'est pas PASSED, ou date d'avant le dernier
   changement de scene ; None si la preuve tient."""
@@ -245,6 +290,9 @@ def cmd_validate(livrable: str, agent: str | None, mission: str | None, workspac
                       f"~{taille} tokens > {budget} : ecrire le gros livrable dans un fichier "
                       "separe et ne passer que son nom dans le payload."})
     erreurs += erreurs_legalite(data.get("payload"), autoriser_non_verifies)
+    captures = list(captures_declarees(data.get("payload")))
+    if captures and workspace:
+      erreurs += erreurs_captures(data.get("payload"), workspace)
 
     acceptance = [a for a in data.get("acceptance", []) if isinstance(a, str)]
     if m:
@@ -268,6 +316,9 @@ def cmd_validate(livrable: str, agent: str | None, mission: str | None, workspac
     for x in a_lancer:
       x["commande"] = (f"python {os.path.join(SCRIPT_CLI, 'uefn_spatial_cli.py')} {x['commande']}"
                        f" --workspace {workspace or '<workspace>'}")
+    if captures and not workspace:
+      a_lancer.append({"critere": "image_lue", "commande": "relancer validate avec --workspace "
+                       "(lecture des captures controlee sur les PNG)"})
     res["a_lancer"] = a_lancer
     res["criteres_non_verifiables_par_code"] = non_verifies
 
@@ -364,17 +415,31 @@ def cmd_dispatch(mission: str, agent: str | None, out: str | None) -> int:
     with open(prompt_path, "w", encoding="utf-8", newline="\n") as f:
       f.write(texte)
     res["prompt_recompile"] = True
+  # Agent Qoder deja porteur de ce prompt (sync_qoder.py) : la mission ne le repete pas.
+  agent_qoder = os.path.join(sync_qoder.qoder_dir(None), "agents", f"{agent}.md")
+  dans_agent = (os.path.exists(agent_qoder)
+                and sync_qoder.lire_agent(agent_qoder)[1].strip() == texte.strip())
+  res["prompt_dans_agent"] = dans_agent
+  if os.path.exists(agent_qoder) and not dans_agent:
+    res["avertissement"] = ("agent Qoder perime : prompt inclus dans la mission ; lancer "
+                            "python agent-team/_commun/sync_qoder.py")
 
   ident = m.get("handoff_id") or os.path.splitext(os.path.basename(mission))[0]
   rendu = os.path.abspath(out or os.path.join(racine, "handoff", f"{ident}__{agent}__retour.json"))
   validate_cmd = (f"python {os.path.abspath(__file__)} validate {rendu} --mission "
                   f"{os.path.abspath(mission)} --essai")
 
-  parts = [
-      f"# MISSION POUR {agent}",
-      f"Tu es **{agent}**. Ce fichier contient TOUT ce dont tu as besoin : ton rôle, tes règles, ta "
-      "mission. Lis-le en entier avant d'agir. Tu ne parles pas à l'utilisateur.",
-      texte.strip(),
+  if dans_agent:
+    parts = [f"# MISSION POUR {agent}",
+             f"Tu es **{agent}** : ton rôle et tes règles sont déjà dans tes instructions. Ce "
+             "fichier contient ta mission. Lis-le en entier avant d'agir. Tu ne parles pas à "
+             "l'utilisateur."]
+  else:
+    parts = [f"# MISSION POUR {agent}",
+             f"Tu es **{agent}**. Ce fichier contient TOUT ce dont tu as besoin : ton rôle, tes "
+             "règles, ta mission. Lis-le en entier avant d'agir. Tu ne parles pas à l'utilisateur.",
+             texte.strip()]
+  parts += [
       "# TA MISSION (handoff du Producer)",
       "```json\n" + json.dumps(m, ensure_ascii=False, indent=1) + "\n```",
   ]
@@ -406,6 +471,9 @@ def cmd_dispatch(mission: str, agent: str | None, out: str | None) -> int:
     f.write(contenu)
   res.update(
       status="PASSED", fichier_mission=fichier, rendu_attendu=rendu, tokens=tokens(contenu),
+      # Agent nomme du harness (modele Flash), jamais l'agent generique qui herite du modele
+      # de la session.
+      subagent_type=agent,
       prompt_sous_agent=(f"Tu es {agent}. Lis en entier le fichier {fichier} puis exécute "
                          "exactement la mission qu'il contient. Ne fais rien d'autre."),
       apres_retour=f"python {os.path.abspath(__file__)} validate {rendu} --mission "

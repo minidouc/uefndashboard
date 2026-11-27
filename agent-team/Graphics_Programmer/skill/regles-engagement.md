@@ -63,8 +63,12 @@
   `read_back` pour chaque ligne, `errors` et `not_placed` vides ou **expliquées**.
 - Chaque device posé apparaît dans `05_visuals.json` avec son `refPath` et sa transform **relue** ;
   chaque propriété visée a une ligne `properties_tentees` (y compris `NOT_FOUND` et `NON_TENTE`).
-- **Une capture n'existe que si elle est lue** : PNG ouvert, taille en octets notée, caméra relue
-  (`*_camera.json` : `requested` vs `read_back`), observations décrivant ce que l'image montre.
+- **Une capture n'existe que si elle est lue** : PNG ouvert, caméra relue (`*_camera.json` :
+  `requested` vs `read_back`), observations décrivant ce que l'image montre. Le **poids en octets ne
+  prouve rien** (un PNG uni pèse des Ko) : `visual-snapshot` / `check-image` doivent rendre PASSED
+  (ni `IMAGE_UNIFORME`, ni `IMAGE_NOIRE`, ni `IMAGE_SUREXPOSEE`), et tu remplis `controle_lecture`
+  (quadrant le plus clair, le plus sombre) **en regardant l'image** : le validateur recalcule ces
+  réponses à partir du PNG. Une réponse fausse = `IMAGE_NON_LUE`, livrable refusé.
 - Comparaison au thème (jour/nuit, ambiance, couleurs dominantes) puis **itération** tant que
   l'image ne correspond pas. Verdict honnête : `conforme` / `approxime` / `non_conforme` / `UNKNOWN`,
   avec l'écart assumé écrit (ex. enseigne néon émissive **approxime** un poisson holographique).
